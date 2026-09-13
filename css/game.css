@@ -143,12 +143,17 @@
   padding-top: 16px;
 }
 
-.game-top-actions {
+.btn-top-left {
+  position: absolute;
+  top: 10px;
+  left: 16px;
+  z-index: 20;
+}
+
+.btn-top-right {
   position: absolute;
   top: 10px;
   right: 16px;
-  display: flex;
-  gap: 8px;
   z-index: 20;
 }
 

@@ -15,6 +15,10 @@ export const CONFIG = {
   refillDelayMs: 1_000,
   fortyMultiplier: 2,
   countdownStepMs: 700,
+  // 「TIME UP!」表示から結果画面へ遷移するまでの待ち時間。
+  resultTransitionDelayMs: 2_000,
+  // 同じマスをこの時間以内に連続タップすると「破壊」（得点なしで消去）になる。
+  doubleTapThresholdMs: 350,
   // チュートリアルのバージョン。保存値がこれ未満なら再表示する。
   tutorialVersion: 2,
   storageKey: 'nazoten-save-v2',

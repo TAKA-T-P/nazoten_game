@@ -96,6 +96,14 @@ export function playFail() {
   tone({ freq: 130, freqEnd: 90, duration: 0.2, type: 'sawtooth', volume: 0.5 });
 }
 
+// 破壊（ダブルタップ消去）：ガラスが割れるような短い「ペキッ」という音。
+// 高音のノイズバーストに、砕ける音を思わせる甲高いクリック音を重ねる。
+export function playDestroy() {
+  noiseBurst({ duration: 0.05, delay: 0, volume: 0.5 });
+  tone({ freq: 3200, freqEnd: 4800, duration: 0.05, type: 'square', volume: 0.4 });
+  tone({ freq: 4600, duration: 0.03, type: 'triangle', delay: 0.025, volume: 0.3 });
+}
+
 export function playCountdownTick() {
   tone({ freq: 440, duration: 0.15, type: 'square', volume: 0.5 });
 }

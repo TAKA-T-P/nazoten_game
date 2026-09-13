@@ -85,6 +85,7 @@ export class NazotenGame extends EventTarget {
       isSelectable: (i) => this.status === STATUS.PLAYING && this.board.isSelectable(i),
       areAdjacent: (a, b) => Board.areAdjacent(a, b),
       maxLength: CONFIG.maxPathLength,
+      doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
       onSelectionStart: (i, sel) => {
         audio.playTraceNote(0);
         this._emitSelectionUpdate(sel);
@@ -95,7 +96,8 @@ export class NazotenGame extends EventTarget {
       },
       onCellRemoved: (sel) => this._emitSelectionUpdate(sel),
       onSelectionEnd: (sel) => this._finishSelection(sel),
-      onSelectionCancel: () => this._emitSelectionUpdate([])
+      onSelectionCancel: () => this._emitSelectionUpdate([]),
+      onDoubleTap: (index) => this._destroyCell(index)
     });
 
     this._setStatus(STATUS.IDLE);
@@ -248,13 +250,7 @@ export class NazotenGame extends EventTarget {
 
       const refills = this.board.clear(indices);
       this.dispatchEvent(new CustomEvent('cellsclear', { detail: { indices } }));
-
-      const timerId = setTimeout(() => {
-        this.refillTimers.delete(timerId);
-        const applied = refills.map(({ index }) => ({ index, value: this.board.refill(index) }));
-        this.dispatchEvent(new CustomEvent('cellsrefill', { detail: { cells: applied, phase: this.phase } }));
-      }, CONFIG.refillDelayMs);
-      this.refillTimers.add(timerId);
+      this._scheduleRefill(refills);
     } else {
       recordFailure(this.stats);
       this.dispatchEvent(new CustomEvent('fail', { detail: { indices } }));
@@ -262,6 +258,31 @@ export class NazotenGame extends EventTarget {
     }
 
     this._emitSelectionUpdate([]);
+  }
+
+  // 消去確定後、1秒後に補充を反映する共通処理（成功時・破壊時の両方から使う）。
+  _scheduleRefill(refills) {
+    const timerId = setTimeout(() => {
+      this.refillTimers.delete(timerId);
+      const applied = refills.map(({ index }) => ({ index, value: this.board.refill(index) }));
+      this.dispatchEvent(new CustomEvent('cellsrefill', { detail: { cells: applied, phase: this.phase } }));
+    }, CONFIG.refillDelayMs);
+    this.refillTimers.add(timerId);
+  }
+
+  // 1つの数字を連続でダブルタップすると、得点なしでその数字を破壊できる。
+  // 消去・補充の仕組みは成功時と共通（同じ数字5個制限を守るboard.clear/refill）。
+  _destroyCell(index) {
+    if (this.status !== STATUS.PLAYING) return;
+    if (!this.board.isSelectable(index)) return;
+
+    this._emitSelectionUpdate([]);
+    this.dispatchEvent(new CustomEvent('destroy', { detail: { index } }));
+    audio.playDestroy();
+
+    const refills = this.board.clear([index]);
+    this.dispatchEvent(new CustomEvent('cellsclear', { detail: { indices: [index] } }));
+    this._scheduleRefill(refills);
   }
 
   _timeUp() {
@@ -279,7 +300,7 @@ export class NazotenGame extends EventTarget {
     this.dispatchEvent(new CustomEvent('timeup', {}));
     audio.playTimeUp();
 
-    const id = setTimeout(() => this._showResult(), 900);
+    const id = setTimeout(() => this._showResult(), CONFIG.resultTransitionDelayMs);
     this.countdownTimers.push(id);
   }
 

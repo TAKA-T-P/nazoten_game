@@ -7,11 +7,13 @@ export class SelectionController {
    *   isSelectable: (index:number) => boolean,
    *   areAdjacent: (a:number, b:number) => boolean,
    *   maxLength: number,
+   *   doubleTapThresholdMs: number,
    *   onSelectionStart: (index:number, selection:number[]) => void,
    *   onCellAdded: (index:number, selection:number[]) => void,
    *   onCellRemoved: (selection:number[]) => void,
    *   onSelectionEnd: (selection:number[]) => void,
-   *   onSelectionCancel: (selection:number[]) => void
+   *   onSelectionCancel: (selection:number[]) => void,
+   *   onDoubleTap: (index:number) => void
    * }} handlers
    */
   constructor(boardEl, handlers) {
@@ -19,6 +21,9 @@ export class SelectionController {
     this.handlers = handlers;
     this.pointerId = null;
     this.selection = [];
+    // 同じマスへの連続タップ（破壊操作）を検出するための直近タップ記録。
+    this.lastTapIndex = null;
+    this.lastTapTime = 0;
 
     this._onPointerDown = this._onPointerDown.bind(this);
     this._onPointerMove = this._onPointerMove.bind(this);
@@ -90,11 +95,32 @@ export class SelectionController {
     const indices = this.selection.slice();
     this.pointerId = null;
     this.selection = [];
+
     if (cancelled) {
+      this.lastTapIndex = null;
       this.handlers.onSelectionCancel(indices);
-    } else {
-      this.handlers.onSelectionEnd(indices);
+      return;
     }
+
+    // 1マスだけのタップが、直前のタップと同じマスへ閾値時間内に行われたら
+    // 「破壊」操作として扱う（仕様: 1つの数字を連続でダブルタップすると消去できる）。
+    if (indices.length === 1) {
+      const index = indices[0];
+      const now = performance.now();
+      const isDoubleTap = index === this.lastTapIndex
+        && now - this.lastTapTime <= this.handlers.doubleTapThresholdMs;
+      if (isDoubleTap) {
+        this.lastTapIndex = null;
+        this.handlers.onDoubleTap(index);
+        return;
+      }
+      this.lastTapIndex = index;
+      this.lastTapTime = now;
+    } else {
+      this.lastTapIndex = null;
+    }
+
+    this.handlers.onSelectionEnd(indices);
   }
 
   _onPointerUp(e) {
