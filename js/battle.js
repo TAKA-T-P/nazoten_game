@@ -1,0 +1,404 @@
+// CPUバトルの進行管理：共通タイマー、両者のスコア・盤面、フィーバー、ゲージ、勝敗
+//（Phase3実装指示書 8〜16章）。既存の1人用NazotenGameとは責務を分離した独立クラスとする。
+import { CONFIG, CPU_LEVELS, BGM_DELAY_TRIGGER_MS } from './config.js';
+import { Board } from './board.js';
+import { SelectionController } from './input.js';
+import {
+  calcSum,
+  isValidSum,
+  calculateScore,
+  createStats,
+  applySuccess,
+  recordFailure,
+  recordDestroy
+} from './scoring.js';
+import { CpuController } from './cpu.js';
+import * as audio from './audio.js';
+
+export const STATUS = {
+  IDLE: 'idle',
+  COUNTDOWN: 'countdown',
+  PLAYING: 'playing',
+  ENDING: 'ending',
+  RESULT: 'result'
+};
+
+export const PHASE = {
+  NORMAL: 'normal',
+  FEVER: 'fever'
+};
+
+export const OUTCOME = {
+  WIN: 'win',
+  LOSE: 'lose',
+  DRAW: 'draw'
+};
+
+export class BattleController extends EventTarget {
+  constructor(playerBoardEl, rng = Math.random) {
+    super();
+    this.playerBoardEl = playerBoardEl;
+    this.rng = rng;
+    this.status = STATUS.IDLE;
+    this.phase = PHASE.NORMAL;
+    this.feverStarted = false;
+    this.level = '1';
+    this.playerBoard = null;
+    this.cpuBoard = null;
+    this.playerScore = 0;
+    this.cpuScore = 0;
+    this.playerStats = createStats();
+    this.cpuStats = { successCount: 0, failureCount: 0, destroyCount: 0 };
+    this.remainingMs = CONFIG.gameDurationMs;
+    this.endsAt = null;
+    this.startedAt = null;
+    this.rafId = null;
+    this.refillTimers = new Set();
+    this.countdownTimers = [];
+    this.lastFeverTickSecond = null;
+    this.bgmDelayTriggered = false;
+    this.selectionController = null;
+    this.cpuController = null;
+
+    this._onVisibilityChange = this._onVisibilityChange.bind(this);
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
+  }
+
+  destroy() {
+    this._clearAllTimers();
+    if (this.selectionController) this.selectionController.destroy();
+    if (this.cpuController) this.cpuController.stop();
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
+  }
+
+  _setStatus(status) {
+    this.status = status;
+    this.dispatchEvent(new CustomEvent('statechange', { detail: { status } }));
+  }
+
+  _clearAllTimers() {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    for (const id of this.countdownTimers) clearTimeout(id);
+    this.countdownTimers = [];
+    for (const id of this.refillTimers) clearTimeout(id);
+    this.refillTimers.clear();
+  }
+
+  // 両者が同じ初期配列から始まる独立した2盤面を作る（仕様書7.1〜7.3章）。
+  startBattle(level) {
+    this._clearAllTimers();
+    if (this.selectionController) this.selectionController.destroy();
+    if (this.cpuController) this.cpuController.stop();
+
+    this.level = level;
+    const sharedValues = Board.createInitialValues(this.rng);
+    this.playerBoard = new Board(this.rng, sharedValues);
+    this.cpuBoard = new Board(this.rng, sharedValues);
+
+    this.playerScore = 0;
+    this.cpuScore = 0;
+    this.playerStats = createStats();
+    this.cpuStats = { successCount: 0, failureCount: 0, destroyCount: 0 };
+    this.phase = PHASE.NORMAL;
+    this.feverStarted = false;
+    this.remainingMs = CONFIG.gameDurationMs;
+    this.lastFeverTickSecond = null;
+    this.bgmDelayTriggered = false;
+    audio.chooseRandomBgmTrack(this.rng);
+
+    this.selectionController = new SelectionController(this.playerBoardEl, {
+      isSelectable: (i) => this.status === STATUS.PLAYING && this.playerBoard.isSelectable(i),
+      areAdjacent: (a, b) => Board.areAdjacent(a, b),
+      maxLength: CONFIG.maxPathLength,
+      doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
+      onSelectionStart: (i, sel) => {
+        audio.playTraceNote(0);
+        this._emitPlayerSelection(sel);
+      },
+      onCellAdded: (i, sel) => {
+        audio.playTraceNote(sel.length - 1);
+        this._emitPlayerSelection(sel);
+      },
+      onCellRemoved: (sel) => this._emitPlayerSelection(sel),
+      onSelectionEnd: (sel) => this._finishPlayerSelection(sel),
+      onSelectionCancel: () => this._emitPlayerSelection([]),
+      onDoubleTap: (index) => this._destroyPlayerCell(index)
+    });
+
+    this.cpuController = new CpuController({
+      board: this.cpuBoard,
+      levelConfig: CPU_LEVELS[level],
+      rng: this.rng,
+      onSelectionChange: (sel) => this.dispatchEvent(new CustomEvent('cpuselectionupdate', { detail: { indices: sel } })),
+      onSuccess: (result) => this._applyCpuSuccess(result),
+      onFail: (indices) => this._applyCpuFail(indices),
+      onDestroy: (index) => this._applyCpuDestroy(index),
+      onCellsClear: (indices) => this.dispatchEvent(new CustomEvent('cpucellsclear', { detail: { indices } })),
+      onCellsRefill: (cells) => this.dispatchEvent(new CustomEvent('cpucellsrefill', { detail: { cells } }))
+    });
+
+    this._setStatus(STATUS.IDLE);
+    this.dispatchEvent(new CustomEvent('boardinit', {
+      detail: { playerBoard: this.playerBoard, cpuBoard: this.cpuBoard, level }
+    }));
+    this._emitGaugeUpdate();
+    this._runCountdown();
+  }
+
+  backToTitle() {
+    this._clearAllTimers();
+    audio.stopBgm();
+    if (this.selectionController) {
+      this.selectionController.destroy();
+      this.selectionController = null;
+    }
+    if (this.cpuController) {
+      this.cpuController.stop();
+      this.cpuController = null;
+    }
+    this.phase = PHASE.NORMAL;
+    this.feverStarted = false;
+    this._setStatus(STATUS.IDLE);
+  }
+
+  _emitPlayerSelection(selection) {
+    const sel = selection || [];
+    const values = sel.map((i) => this.playerBoard.getValue(i));
+    const sum = calcSum(values);
+    this.dispatchEvent(new CustomEvent('playerselectionupdate', {
+      detail: { indices: sel, values, sum, isValid: isValidSum(sum) }
+    }));
+  }
+
+  // 3・2・1・BATTLE!を表示し、BATTLE!と同時にプレイヤー入力とCPU思考を開始する
+  //（仕様書8.1章）。既存のBGMタイミング仕様は'start'トリガーを流用する。
+  _runCountdown() {
+    this._setStatus(STATUS.COUNTDOWN);
+    const steps = [
+      { label: '3', trigger: 'countdown3' },
+      { label: '2', trigger: 'countdown2' },
+      { label: '1', trigger: 'countdown1' },
+      { label: 'BATTLE!', trigger: 'start' }
+    ];
+    steps.forEach(({ label, trigger }, i) => {
+      const delay = i * CONFIG.countdownStepMs;
+      const id = setTimeout(() => {
+        if (label === 'BATTLE!') {
+          audio.playCountdownStart();
+        } else {
+          audio.playCountdownTick();
+        }
+        audio.triggerBgmStart(trigger);
+        this.dispatchEvent(new CustomEvent('countdown', { detail: { label } }));
+        if (label === 'BATTLE!') this._beginPlaying();
+      }, delay);
+      this.countdownTimers.push(id);
+    });
+  }
+
+  _beginPlaying() {
+    this.countdownTimers = [];
+    this.startedAt = performance.now();
+    this.endsAt = this.startedAt + CONFIG.gameDurationMs;
+    this._setStatus(STATUS.PLAYING);
+    this.cpuController.start({ getPhase: () => this.phase });
+    this._loop();
+  }
+
+  _evaluateTime() {
+    if (this.status !== STATUS.PLAYING) return;
+
+    const now = performance.now();
+    this.remainingMs = Math.max(0, this.endsAt - now);
+    this.dispatchEvent(new CustomEvent('timeupdate', {
+      detail: { remainingMs: this.remainingMs, phase: this.phase }
+    }));
+
+    if (this.remainingMs <= 0) {
+      this._timeUp();
+      return;
+    }
+
+    if (!this.bgmDelayTriggered && now - this.startedAt >= BGM_DELAY_TRIGGER_MS) {
+      this.bgmDelayTriggered = true;
+      audio.triggerBgmStart('delay3s');
+    }
+
+    if (this.phase === PHASE.NORMAL && !this.feverStarted && this.remainingMs <= CONFIG.feverDurationMs) {
+      this._startFever();
+    }
+
+    if (this.phase === PHASE.FEVER) {
+      const seconds = Math.ceil(this.remainingMs / 1000);
+      if (seconds >= 1 && seconds <= 10 && seconds !== this.lastFeverTickSecond) {
+        this.lastFeverTickSecond = seconds;
+        audio.playFeverTick(seconds);
+      }
+    }
+  }
+
+  _loop() {
+    this._evaluateTime();
+    if (this.status === STATUS.PLAYING) {
+      this.rafId = requestAnimationFrame(() => this._loop());
+    }
+  }
+
+  // 残り10秒以下になった最初のフレームで両者同時に一度だけ発動する（仕様書8.3章）。
+  _startFever() {
+    this.phase = PHASE.FEVER;
+    this.feverStarted = true;
+    this.dispatchEvent(new CustomEvent('feverstart', {}));
+    audio.playFeverStart();
+    this._emitGaugeUpdate();
+  }
+
+  _onVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+      this._evaluateTime();
+    }
+  }
+
+  _finishPlayerSelection(indices) {
+    if (this.status !== STATUS.PLAYING) return;
+
+    if (indices.length < 2) {
+      this._emitPlayerSelection([]);
+      return;
+    }
+
+    const values = indices.map((i) => this.playerBoard.getValue(i));
+    const sum = calcSum(values);
+
+    if (isValidSum(sum)) {
+      const isFever = this.phase === PHASE.FEVER;
+      const result = calculateScore({ sum, pathLength: indices.length, isFever });
+      this.playerScore += result.points;
+      applySuccess(this.playerStats, result);
+
+      this.dispatchEvent(new CustomEvent('playersuccess', { detail: { indices, ...result } }));
+
+      if (isFever) {
+        audio.playFeverSuccess(indices.length, result.isForty);
+      } else if (result.isForty) {
+        audio.playForty(indices.length);
+      } else {
+        audio.playSuccess(indices.length);
+      }
+
+      const refills = this.playerBoard.clear(indices);
+      this.dispatchEvent(new CustomEvent('playercellsclear', { detail: { indices } }));
+      this._scheduleRefill(this.playerBoard, refills, 'playercellsrefill');
+      this._emitGaugeUpdate();
+    } else {
+      recordFailure(this.playerStats);
+      this.dispatchEvent(new CustomEvent('playerfail', { detail: { indices } }));
+      audio.playFail();
+    }
+
+    this._emitPlayerSelection([]);
+  }
+
+  _destroyPlayerCell(index) {
+    if (this.status !== STATUS.PLAYING) return;
+    if (!this.playerBoard.isSelectable(index)) return;
+
+    this._emitPlayerSelection([]);
+    recordDestroy(this.playerStats);
+    this.dispatchEvent(new CustomEvent('playerdestroy', { detail: { index } }));
+    audio.playDestroy();
+
+    const refills = this.playerBoard.clear([index]);
+    this.dispatchEvent(new CustomEvent('playercellsclear', { detail: { indices: [index] } }));
+    this._scheduleRefill(this.playerBoard, refills, 'playercellsrefill');
+  }
+
+  _scheduleRefill(board, refills, eventName) {
+    const timerId = setTimeout(() => {
+      this.refillTimers.delete(timerId);
+      const applied = refills.map(({ index }) => ({ index, value: board.refill(index) }));
+      this.dispatchEvent(new CustomEvent(eventName, { detail: { cells: applied } }));
+    }, CONFIG.refillDelayMs);
+    this.refillTimers.add(timerId);
+  }
+
+  _applyCpuSuccess(result) {
+    if (this.status !== STATUS.PLAYING) return;
+    this.cpuScore += result.points;
+    this.cpuStats.successCount += 1;
+    this.dispatchEvent(new CustomEvent('cpusuccess', { detail: result }));
+    audio.playCpuSuccess(result.pathLength, result.isForty);
+    this._emitGaugeUpdate();
+  }
+
+  _applyCpuFail(indices) {
+    if (this.status !== STATUS.PLAYING) return;
+    this.cpuStats.failureCount += 1;
+    this.dispatchEvent(new CustomEvent('cpufail', { detail: { indices } }));
+    audio.playCpuFail();
+  }
+
+  _applyCpuDestroy(index) {
+    if (this.status !== STATUS.PLAYING) return;
+    this.cpuStats.destroyCount += 1;
+    this.dispatchEvent(new CustomEvent('cpudestroy', { detail: { index } }));
+    audio.playCpuDestroy();
+  }
+
+  // 点差を基準にした正規化ゲージ（仕様書9.3・9.4章）。フィーバー中は非表示にする。
+  _emitGaugeUpdate() {
+    if (this.phase === PHASE.FEVER) {
+      this.dispatchEvent(new CustomEvent('gaugeupdate', { detail: { visible: false, playerPercent: 50 } }));
+      return;
+    }
+    const diff = this.playerScore - this.cpuScore;
+    const normalized = Math.max(-1, Math.min(1, diff / CONFIG.gaugeFullLead));
+    const playerPercent = 50 + normalized * 45;
+    this.dispatchEvent(new CustomEvent('gaugeupdate', { detail: { visible: true, playerPercent } }));
+  }
+
+  _timeUp() {
+    this._setStatus(STATUS.ENDING);
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    if (this.selectionController) this.selectionController.forceCancel();
+    if (this.cpuController) this.cpuController.stop();
+    for (const id of this.refillTimers) clearTimeout(id);
+    this.refillTimers.clear();
+
+    this.remainingMs = 0;
+    this.dispatchEvent(new CustomEvent('timeupdate', { detail: { remainingMs: 0, phase: this.phase } }));
+    this.dispatchEvent(new CustomEvent('timeup', {}));
+    audio.playTimeUp();
+
+    const id = setTimeout(() => this._showResult(), CONFIG.resultTransitionDelayMs);
+    this.countdownTimers.push(id);
+  }
+
+  _showResult() {
+    this._setStatus(STATUS.RESULT);
+    audio.stopBgm();
+    audio.playResult();
+
+    let outcome;
+    if (this.playerScore > this.cpuScore) outcome = OUTCOME.WIN;
+    else if (this.playerScore < this.cpuScore) outcome = OUTCOME.LOSE;
+    else outcome = OUTCOME.DRAW;
+
+    this.dispatchEvent(new CustomEvent('result', {
+      detail: {
+        outcome,
+        level: this.level,
+        playerScore: this.playerScore,
+        cpuScore: this.cpuScore,
+        playerStats: this.playerStats,
+        cpuStats: this.cpuStats
+      }
+    }));
+  }
+}

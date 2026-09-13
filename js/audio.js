@@ -153,6 +153,29 @@ export function playFeverSuccess(count, isForty) {
   }
 }
 
+// --- CPUバトル専用SE ------------------------------------------------------
+// プレイヤーと同じ音階を使いながら音量を抑え、プレイヤーの判断を妨げないようにする
+// （Phase3実装指示書 12.3章）。1マスごとのなぞり音は省略し、成功・失敗・破壊音のみ。
+export function playCpuSuccess(count, isForty) {
+  const n = Math.min(count, SCALE.length);
+  for (let i = 0; i < n; i++) {
+    tone({ freq: SCALE[i] * 1.5, duration: 0.1, type: 'triangle', delay: i * 0.04, volume: 0.22 });
+  }
+  if (isForty) {
+    const chordDelay = n * 0.04 + 0.05;
+    tone({ freq: 1046.5, freqEnd: 1568, duration: 0.25, type: 'sine', delay: chordDelay, volume: 0.2 });
+  }
+}
+
+export function playCpuFail() {
+  tone({ freq: 110, freqEnd: 80, duration: 0.15, type: 'sawtooth', volume: 0.2 });
+}
+
+export function playCpuDestroy() {
+  noiseBurst({ duration: 0.04, delay: 0, volume: 0.22 });
+  tone({ freq: 2400, freqEnd: 3600, duration: 0.04, type: 'square', volume: 0.18 });
+}
+
 export function playTimeUp() {
   tone({ freq: 300, freqEnd: 120, duration: 0.6, type: 'sawtooth', volume: 0.6 });
 }

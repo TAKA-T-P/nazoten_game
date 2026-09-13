@@ -3,7 +3,7 @@
 import { CONFIG, BGM_DELAY_TRIGGER_MS } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
-import { calcSum, isValidSum, calculateScore, createStats, applySuccess, recordFailure } from './scoring.js';
+import { calcSum, isValidSum, calculateScore, createStats, applySuccess, recordFailure, recordDestroy } from './scoring.js';
 import * as audio from './audio.js';
 
 export const STATUS = {
@@ -277,6 +277,7 @@ export class NazotenGame extends EventTarget {
     if (!this.board.isSelectable(index)) return;
 
     this._emitSelectionUpdate([]);
+    recordDestroy(this.stats);
     this.dispatchEvent(new CustomEvent('destroy', { detail: { index } }));
     audio.playDestroy();
 

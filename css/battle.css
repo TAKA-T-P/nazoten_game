@@ -1,0 +1,315 @@
+/* CPU強さ選択画面 */
+.cpu-select-inner {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cpu-level-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.cpu-level-btn {
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-cell-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.cpu-level-btn:active {
+  transform: scale(0.97);
+}
+
+.cpu-level-btn.selected {
+  border-color: var(--color-fail);
+  background: #fdeceb;
+}
+
+.cpu-level-label {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: var(--color-fail);
+}
+
+.cpu-level-name {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.cpu-level-btn.selected .cpu-level-name {
+  color: var(--color-text);
+}
+
+.cpu-level-description {
+  min-height: 1.4em;
+  font-weight: 700;
+  color: var(--color-secondary);
+  margin: 0;
+}
+
+.cpu-level-record {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* バトル画面。高さが不足する場合はCPU盤面・余白・ラベルの順に縮め、
+   プレイヤー盤面の操作性を優先する（仕様書6.2章）。 */
+#screen-battle {
+  position: relative;
+  justify-content: flex-start;
+  padding-top: 30px;
+  padding-bottom: 4px;
+  gap: clamp(2px, 1vh, 8px);
+}
+
+.battle-side {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.battle-name {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-fail);
+}
+
+.battle-cpu-board-wrap {
+  width: clamp(72px, 24vw, 150px);
+  max-width: clamp(72px, 24vw, 150px);
+  aspect-ratio: 1 / 1;
+}
+
+.battle-cpu-board {
+  gap: 3px;
+  pointer-events: none;
+}
+
+.battle-cpu-board .cell {
+  font-size: clamp(0.55rem, 3vw, 0.9rem);
+  border-width: 1px;
+}
+
+.battle-cpu-board .order-badge {
+  width: 12px;
+  height: 12px;
+  font-size: 0.5rem;
+}
+
+.battle-center {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.battle-gauge-slot {
+  position: relative;
+  width: 100%;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.battle-gauge {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  background: var(--color-cell-border);
+  position: relative;
+}
+
+.battle-gauge-player {
+  background: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+.battle-gauge-cpu {
+  background: var(--color-fail);
+  flex: 1;
+  transition: width 0.3s ease;
+}
+
+.battle-gauge-marker {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #fff;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* フィーバー中はゲージの代わりにこのラベルを表示する。position:absoluteで
+   同じ枠内に重ねることで、切り替わってもレイアウトが動かないようにする。 */
+.battle-fever-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  font-weight: 900;
+  color: #8a5a00;
+  visibility: hidden;
+}
+
+#screen-battle.fever .battle-gauge {
+  visibility: hidden;
+}
+
+#screen-battle.fever .battle-fever-label {
+  visibility: visible;
+}
+
+.battle-gauge-labels {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.battle-gauge-label-you {
+  color: #2563eb;
+}
+
+.battle-gauge-label-cpu {
+  color: var(--color-fail);
+}
+
+.battle-side-player .hud-formula {
+  min-height: 1.4em;
+}
+
+.battle-you-label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+/* フィーバー中は両盤面を金色配色にする（仕様書8.3章）。 */
+#screen-battle.fever .cell {
+  background: linear-gradient(160deg, #fff6d9 0%, #ffdf7d 100%);
+  border-color: #e6a800;
+  color: #5b3d00;
+}
+
+#screen-battle.fever .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-battle.fever .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-battle.fever .board-wrap {
+  box-shadow: 0 0 0 3px #ffd54d, 0 0 16px 4px rgba(255, 213, 77, 0.55);
+}
+
+#screen-battle.fever .battle-hud-time-value,
+#screen-battle.fever #battle-hud-time {
+  color: var(--color-forty);
+}
+
+/* バトル結果画面 */
+.battle-outcome {
+  font-size: 1.8rem;
+  font-weight: 900;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.battle-outcome.outcome-win {
+  color: #2563eb;
+}
+
+.battle-outcome.outcome-lose {
+  color: var(--color-fail);
+}
+
+.battle-outcome.outcome-draw {
+  color: var(--color-text-muted);
+}
+
+.battle-score-compare {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.battle-score-compare td {
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--color-cell-border);
+}
+
+.battle-score-compare tr:last-child td {
+  border-bottom: none;
+}
+
+.battle-compare-label {
+  font-weight: 700;
+}
+
+.battle-compare-score {
+  text-align: right;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.battle-compare-you td {
+  color: #2563eb;
+}
+
+.battle-compare-cpu td {
+  color: var(--color-fail);
+}
+
+.battle-compare-diff td {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.battle-cpu-title {
+  font-weight: 700;
+  color: var(--color-fail);
+  margin: -6px 0 0;
+}
+
+.battle-title-btn {
+  width: 100%;
+}

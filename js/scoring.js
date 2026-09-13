@@ -32,6 +32,7 @@ export function createStats() {
   return {
     successCount: 0,
     failureCount: 0,
+    destroyCount: 0,
     sumCounts: { 10: 0, 20: 0, 30: 0, 40: 0 },
     clearedCellCount: 0,
     highestNormalScore: 0,
@@ -63,6 +64,11 @@ export function applySuccess(stats, result) {
 // 選択解除は失敗に含めないため、呼び出し側で判定してからこの関数を呼ぶこと。
 export function recordFailure(stats) {
   stats.failureCount += 1;
+}
+
+// ダブルタップ破壊は得点にも成功・失敗回数にも含めないため、専用の回数として数える。
+export function recordDestroy(stats) {
+  stats.destroyCount += 1;
 }
 
 // 成功率(%)。試行回数が0の場合はnullを返す（表示側で「—」等にする）。

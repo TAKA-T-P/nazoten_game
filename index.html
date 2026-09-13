@@ -8,6 +8,7 @@
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/battle.css">
 <link rel="stylesheet" href="css/animations.css">
 </head>
 <body>
@@ -20,12 +21,13 @@
       <p class="catchcopy">1分間の頭脳と指先の超高速チャレンジ！</p>
       <div class="title-buttons">
         <button id="btn-start" class="btn btn-primary" type="button">スコアアタック</button>
+        <button id="btn-cpu-battle" class="btn btn-primary" type="button">CPUバトル</button>
         <button id="btn-howto" class="btn btn-secondary" type="button">遊び方</button>
       </div>
       <p class="fever-hint">60秒／ラスト10秒は得点3倍！</p>
       <p class="best-score">ベストスコア：<span id="title-best-score">0</span></p>
       <button id="btn-sound-mode" class="btn-sound-mode" type="button" aria-label="サウンドモードを切り替える（BGMあり・効果音のみ・音なし）">BGMあり</button>
-      <p class="version">Phase 2 - v2.1.0</p>
+      <p class="version">Phase 3 - v3.0.0</p>
     </div>
   </section>
 
@@ -126,6 +128,166 @@
           <tr><td>消した数字</td><td id="stat-cleared">0</td></tr>
           <tr><td>通常タイムの最大得点</td><td id="stat-highest">0</td></tr>
           <tr><td>フィーバー中の最大得点</td><td id="stat-fever-highest">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="screen-cpu-howto" class="screen" data-screen="cpu-howto" hidden>
+    <div class="howto-inner">
+      <h2>CPUバトルのルール</h2>
+      <ol class="howto-steps">
+        <li>同じ数字の並びからCPUと同時にスタートする。</li>
+        <li>開始後の消去・補充は、プレイヤーとCPUでそれぞれ独立している。</li>
+        <li>プレイ中は正確な点数を表示しない。中央のゲージで優勢を確認する。</li>
+        <li>ラスト10秒は両者とも得点3倍。ゲージが消えるため最後まで勝敗は分からない。</li>
+        <li>60秒後に両者の得点と勝敗を発表する。</li>
+      </ol>
+      <button id="btn-cpu-howto-start" class="btn btn-primary" type="button">スタート</button>
+      <button id="btn-cpu-howto-back" class="btn btn-secondary" type="button">タイトルへ</button>
+    </div>
+  </section>
+
+  <section id="screen-cpu-select" class="screen" data-screen="cpu-select" hidden>
+    <div class="cpu-select-inner">
+      <h2>CPUの強さを選ぶ</h2>
+      <div id="cpu-level-grid" class="cpu-level-grid">
+        <button class="cpu-level-btn" data-level="1" type="button">
+          <span class="cpu-level-label">強さ1</span>
+          <span class="cpu-level-name">ゆっくり</span>
+        </button>
+        <button class="cpu-level-btn" data-level="2" type="button">
+          <span class="cpu-level-label">強さ2</span>
+          <span class="cpu-level-name">やさしい</span>
+        </button>
+        <button class="cpu-level-btn" data-level="3" type="button">
+          <span class="cpu-level-label">強さ3</span>
+          <span class="cpu-level-name">ふつう</span>
+        </button>
+        <button class="cpu-level-btn" data-level="4" type="button">
+          <span class="cpu-level-label">強さ4</span>
+          <span class="cpu-level-name">つよい</span>
+        </button>
+        <button class="cpu-level-btn" data-level="5" type="button">
+          <span class="cpu-level-label">強さ5</span>
+          <span class="cpu-level-name">すごくつよい</span>
+        </button>
+        <button class="cpu-level-btn" data-level="MAX" type="button">
+          <span class="cpu-level-label">MAX</span>
+          <span class="cpu-level-name">超速</span>
+        </button>
+      </div>
+      <p id="cpu-level-description" class="cpu-level-description">はじめてのCPUバトルにおすすめ</p>
+      <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝0敗0分</p>
+      <button id="btn-cpu-start" class="btn btn-primary" type="button">バトル開始</button>
+      <button id="btn-cpu-select-back" class="btn btn-secondary" type="button">タイトルへ</button>
+      <button id="btn-cpu-rules" class="btn-sound-mode" type="button">バトルルール</button>
+    </div>
+  </section>
+
+  <section id="screen-battle" class="screen" data-screen="battle" hidden>
+    <button id="btn-battle-back" class="btn-small btn-top-left" type="button">もどる</button>
+    <button id="btn-battle-retry" class="btn-small btn-top-right" type="button">リトライ</button>
+
+    <div class="battle-side battle-side-cpu">
+      <p class="battle-name">CPU（<span id="battle-cpu-level-label">強さ1</span>）</p>
+      <div class="board-wrap battle-cpu-board-wrap">
+        <div id="cpu-board" class="board battle-cpu-board" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="battle-center">
+      <div class="hud-row hud-time">
+        <span class="hud-label">のこり</span>
+        <span id="battle-hud-time" class="hud-time-value">60</span>
+      </div>
+      <div class="battle-gauge-slot">
+        <div id="battle-gauge" class="battle-gauge">
+          <div id="battle-gauge-player" class="battle-gauge-player"></div>
+          <div id="battle-gauge-cpu" class="battle-gauge-cpu"></div>
+          <div class="battle-gauge-marker"></div>
+        </div>
+        <div id="battle-fever-label" class="battle-fever-label">MILLION FEVER!<br>SCORE ×3</div>
+      </div>
+      <div class="battle-gauge-labels">
+        <span class="battle-gauge-label-you">YOU</span>
+        <span class="battle-gauge-label-cpu">CPU</span>
+      </div>
+    </div>
+
+    <div class="battle-side battle-side-player">
+      <div class="hud-row hud-formula">
+        <span id="battle-hud-formula" class="hud-formula-text">&nbsp;</span>
+      </div>
+      <div class="board-wrap">
+        <div id="player-board" class="board" role="grid" aria-label="自分の盤面"></div>
+        <div id="battle-floating-layer" class="floating-layer" aria-hidden="true"></div>
+
+        <div id="battle-countdown-overlay" class="countdown-overlay" hidden>
+          <span id="battle-countdown-label" class="countdown-label"></span>
+        </div>
+
+        <div id="battle-timeup-overlay" class="timeup-overlay" hidden>
+          <span class="timeup-label">TIME UP!</span>
+        </div>
+      </div>
+      <p class="battle-you-label">YOU</p>
+    </div>
+  </section>
+
+  <section id="screen-battle-result" class="screen" data-screen="battle-result" hidden>
+    <div class="result-inner">
+      <p id="battle-outcome" class="battle-outcome">YOU WIN!</p>
+      <p id="battle-result-newbest" class="result-newbest" hidden>NEW BEST!</p>
+
+      <table class="battle-score-compare">
+        <tbody>
+          <tr class="battle-compare-you">
+            <td class="battle-compare-label">YOU</td>
+            <td id="battle-player-score" class="battle-compare-score">0</td>
+          </tr>
+          <tr class="battle-compare-cpu">
+            <td class="battle-compare-label">CPU（<span id="battle-result-level-label">強さ1</span>）</td>
+            <td id="battle-cpu-score" class="battle-compare-score">0</td>
+          </tr>
+          <tr class="battle-compare-diff">
+            <td>点差</td>
+            <td id="battle-score-diff">0</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p id="battle-player-title" class="result-title"></p>
+      <p id="battle-cpu-title" class="battle-cpu-title"></p>
+
+      <div class="result-buttons">
+        <button id="btn-battle-rematch" class="btn btn-primary" type="button">もう一度</button>
+        <button id="btn-battle-change-level" class="btn btn-secondary" type="button">強さ変更</button>
+      </div>
+      <button id="btn-battle-result-title" class="btn btn-secondary battle-title-btn" type="button">タイトルへ</button>
+
+      <table class="result-breakdown">
+        <tbody>
+          <tr><td>通常タイム</td><td id="battle-breakdown-normal">0</td></tr>
+          <tr><td>フィーバータイム</td><td id="battle-breakdown-fever">0</td></tr>
+          <tr class="breakdown-total"><td>合計</td><td id="battle-breakdown-total">0</td></tr>
+        </tbody>
+      </table>
+
+      <table class="result-stats">
+        <tbody>
+          <tr><td>成功回数</td><td id="battle-stat-success">0</td></tr>
+          <tr><td>失敗回数</td><td id="battle-stat-failure">0</td></tr>
+          <tr><td>成功率</td><td id="battle-stat-rate">—</td></tr>
+          <tr><td>10を作った回数</td><td id="battle-stat-10">0</td></tr>
+          <tr><td>20を作った回数</td><td id="battle-stat-20">0</td></tr>
+          <tr><td>30を作った回数</td><td id="battle-stat-30">0</td></tr>
+          <tr><td>40を作った回数</td><td id="battle-stat-40">0</td></tr>
+          <tr><td>破壊回数</td><td id="battle-stat-destroy">0</td></tr>
+          <tr><td>CPU成功回数</td><td id="battle-stat-cpu-success">0</td></tr>
+          <tr><td>CPU失敗回数</td><td id="battle-stat-cpu-failure">0</td></tr>
+          <tr><td>CPU破壊回数</td><td id="battle-stat-cpu-destroy">0</td></tr>
+          <tr><td>この強さの通算成績</td><td id="battle-record-summary">0勝0敗0分</td></tr>
         </tbody>
       </table>
     </div>
