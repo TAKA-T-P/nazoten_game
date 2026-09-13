@@ -1,4 +1,5 @@
 // 初期化、各モジュールの接続（仕様書 15.1章）。
+import { CONFIG } from './config.js';
 import * as storage from './storage.js';
 import * as audio from './audio.js';
 import * as ui from './ui.js';
@@ -7,14 +8,14 @@ import { NazotenGame, STATUS } from './game.js';
 function initAudioOnce() {
   audio.init();
   audio.resume();
-  audio.setEnabled(storage.isSoundEnabled());
+  audio.setSoundMode(storage.getSoundMode());
   window.removeEventListener('pointerdown', initAudioOnce);
   window.removeEventListener('keydown', initAudioOnce);
 }
 
 function main() {
   ui.init();
-  audio.setEnabled(storage.isSoundEnabled());
+  audio.setSoundMode(storage.getSoundMode());
 
   // 最初のユーザー操作でAudioContextを開始する（モバイルの自動再生制限対策）。
   window.addEventListener('pointerdown', initAudioOnce, { once: true });
@@ -27,7 +28,11 @@ function main() {
     if (e.detail.status === STATUS.PLAYING) ui.hideTimeUp();
   });
   game.addEventListener('boardinit', (e) => {
-    ui.setFeverActive(false);
+    // 新しいプレイの開始時に前回の TIME UP! / フィーバー演出を確実に消しておく。
+    // これをしないと、リトライ直後のカウントダウン中も前回のオーバーレイが
+    // 盤面を覆ったままになり、3・2・1が見えなくなる。
+    ui.hideTimeUp();
+    ui.updateTimer(CONFIG.gameDurationMs);
     ui.renderBoard(e.detail.board);
   });
   game.addEventListener('countdown', (e) => ui.showCountdown(e.detail.label));
@@ -86,14 +91,21 @@ function main() {
     ui.showScreen('title');
   });
 
-  function toggleSound() {
-    const next = !storage.isSoundEnabled();
-    storage.setSoundEnabled(next);
-    audio.setEnabled(next);
-    ui.refreshSoundButtons();
-  }
-  document.getElementById('btn-sound-title').addEventListener('click', toggleSound);
-  document.getElementById('btn-sound-game').addEventListener('click', toggleSound);
+  document.getElementById('btn-back-title').addEventListener('click', () => {
+    game.backToTitle();
+    ui.updateBestScoreDisplays();
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-retry-game').addEventListener('click', () => {
+    startCountdownAndPlay();
+  });
+
+  document.getElementById('btn-sound-mode').addEventListener('click', () => {
+    const next = storage.cycleSoundMode();
+    audio.setSoundMode(next);
+    ui.refreshSoundModeButton();
+  });
 
   ui.updateBestScoreDisplays();
   ui.showScreen('title');

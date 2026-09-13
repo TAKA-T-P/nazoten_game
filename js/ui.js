@@ -9,17 +9,16 @@ let reduceMotion = false;
 function cacheDom() {
   el.screens = document.querySelectorAll('.screen');
   el.titleBest = document.getElementById('title-best-score');
-  el.btnSoundTitle = document.getElementById('btn-sound-title');
+  el.btnSoundMode = document.getElementById('btn-sound-mode');
   el.screenGame = document.getElementById('screen-game');
   el.board = document.getElementById('board');
   el.hudTime = document.getElementById('hud-time');
   el.hudScore = document.getElementById('hud-score');
   el.hudBest = document.getElementById('hud-best');
   el.hudFormula = document.getElementById('hud-formula');
-  el.btnSoundGame = document.getElementById('btn-sound-game');
   el.countdownOverlay = document.getElementById('countdown-overlay');
   el.countdownLabel = document.getElementById('countdown-label');
-  el.feverStartOverlay = document.getElementById('fever-start-overlay');
+  el.feverStartBanner = document.getElementById('fever-start-banner');
   el.timeupOverlay = document.getElementById('timeup-overlay');
   el.floatingLayer = document.getElementById('floating-layer');
   el.resultNewBest = document.getElementById('result-newbest');
@@ -44,7 +43,7 @@ function cacheDom() {
 export function init() {
   cacheDom();
   reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  refreshSoundButtons();
+  refreshSoundModeButton();
   el.titleBest.textContent = storage.getBestScore();
 }
 
@@ -54,11 +53,15 @@ export function showScreen(name) {
   });
 }
 
-export function refreshSoundButtons() {
-  const on = storage.isSoundEnabled();
-  const label = on ? '🔊' : '🔇';
-  el.btnSoundTitle.textContent = label;
-  el.btnSoundGame.textContent = label;
+const SOUND_MODE_LABELS = {
+  bgm: 'BGMあり',
+  seOnly: '効果音のみ',
+  off: '音なし'
+};
+
+export function refreshSoundModeButton() {
+  const mode = storage.getSoundMode();
+  el.btnSoundMode.textContent = SOUND_MODE_LABELS[mode] || SOUND_MODE_LABELS.bgm;
 }
 
 export function updateBestScoreDisplays() {
@@ -217,11 +220,12 @@ export function setFeverActive(active) {
   el.screenGame.classList.toggle('fever', active);
 }
 
-// 残り10秒になった瞬間の開始演出。0.8〜1.2秒程度で自動的に消える。
+// 残り10秒になった瞬間の開始演出。スコア表示直下のバナーとして表示し、
+// 盤面の数字とは重ならない位置で0.8〜1.2秒程度自動的に消える。
 export function showFeverStart() {
-  el.feverStartOverlay.hidden = false;
+  el.feverStartBanner.hidden = false;
   setTimeout(() => {
-    el.feverStartOverlay.hidden = true;
+    el.feverStartBanner.hidden = true;
   }, 1000);
 }
 
@@ -231,7 +235,7 @@ export function showTimeUp() {
 
 export function hideTimeUp() {
   el.timeupOverlay.hidden = true;
-  el.feverStartOverlay.hidden = true;
+  el.feverStartBanner.hidden = true;
   setFeverActive(false);
 }
 
@@ -258,6 +262,6 @@ export function renderResult({ score, stats, isNewBest }) {
   el.stat40.textContent = String(stats.sumCounts[40]);
   el.statFeverSuccess.textContent = String(stats.feverSuccessCount);
   el.statCleared.textContent = String(stats.clearedCellCount);
-  el.statHighest.textContent = String(stats.highestSingleScore);
+  el.statHighest.textContent = String(stats.highestNormalScore);
   el.statFeverHighest.textContent = String(stats.highestFeverScore);
 }

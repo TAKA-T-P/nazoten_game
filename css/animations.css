@@ -110,7 +110,7 @@
   }
 }
 
-.fever-start-overlay:not([hidden]) {
+.fever-start-banner:not([hidden]) {
   animation: fever-start-pop 0.35s ease-out;
 }
 
@@ -120,7 +120,7 @@
   .cell.fail-shake,
   .floating-score,
   .countdown-label.countdown-pop,
-  .fever-start-overlay:not([hidden]),
+  .fever-start-banner:not([hidden]),
   #screen-game.fever .hud-time-value {
     animation: none !important;
   }

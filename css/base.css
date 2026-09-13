@@ -98,18 +98,6 @@ body {
   border: 2px solid var(--color-cell-border);
 }
 
-.btn-icon {
-  background: var(--color-surface);
-  border: 2px solid var(--color-cell-border);
-  border-radius: 999px;
-  width: 44px;
-  height: 44px;
-  font-size: 1.2rem;
-  line-height: 1;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
 button:focus-visible {
   outline: 3px solid var(--color-secondary);
   outline-offset: 2px;

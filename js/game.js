@@ -1,6 +1,6 @@
 // ゲーム開始・終了、タイマー、状態遷移（仕様書 7章・14.1章・17章、Phase2実装指示書 3〜5章）。
 // DOMは直接操作せず、CustomEventでUI層に通知する。
-import { CONFIG } from './config.js';
+import { CONFIG, BGM_DELAY_TRIGGER_MS } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
 import { calcSum, isValidSum, calculateScore, createStats, applySuccess, recordFailure } from './scoring.js';
@@ -38,6 +38,7 @@ export class NazotenGame extends EventTarget {
     this.refillTimers = new Set();
     this.countdownTimers = [];
     this.lastFeverTickSecond = null;
+    this.bgmDelayTriggered = false;
     this.selectionController = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
@@ -77,6 +78,8 @@ export class NazotenGame extends EventTarget {
     this.feverStarted = false;
     this.remainingMs = CONFIG.gameDurationMs;
     this.lastFeverTickSecond = null;
+    this.bgmDelayTriggered = false;
+    audio.chooseRandomBgmTrack(this.rng);
 
     this.selectionController = new SelectionController(this.boardEl, {
       isSelectable: (i) => this.status === STATUS.PLAYING && this.board.isSelectable(i),
@@ -103,6 +106,7 @@ export class NazotenGame extends EventTarget {
 
   backToTitle() {
     this._clearAllTimers();
+    audio.stopBgm();
     if (this.selectionController) {
       this.selectionController.destroy();
       this.selectionController = null;
@@ -122,10 +126,16 @@ export class NazotenGame extends EventTarget {
   }
 
   // 3・2・1・START!を表示し、START!と同時にプレイを開始する（仕様書 7.1章）。
+  // 各ラベルのタイミングは、選ばれたBGMの再生開始トリガーにもなる。
   _runCountdown() {
     this._setStatus(STATUS.COUNTDOWN);
-    const labels = ['3', '2', '1', 'START!'];
-    labels.forEach((label, i) => {
+    const steps = [
+      { label: '3', trigger: 'countdown3' },
+      { label: '2', trigger: 'countdown2' },
+      { label: '1', trigger: 'countdown1' },
+      { label: 'START!', trigger: 'start' }
+    ];
+    steps.forEach(({ label, trigger }, i) => {
       const delay = i * CONFIG.countdownStepMs;
       const id = setTimeout(() => {
         if (label === 'START!') {
@@ -133,6 +143,7 @@ export class NazotenGame extends EventTarget {
         } else {
           audio.playCountdownTick();
         }
+        audio.triggerBgmStart(trigger);
         this.dispatchEvent(new CustomEvent('countdown', { detail: { label } }));
         if (label === 'START!') this._beginPlaying();
       }, delay);
@@ -163,6 +174,12 @@ export class NazotenGame extends EventTarget {
     if (this.remainingMs <= 0) {
       this._timeUp();
       return;
+    }
+
+    // BGM05は「ゲーム開始（START!）から3秒後」に開始する（残り57秒のタイミング）。
+    if (!this.bgmDelayTriggered && now - this.startedAt >= BGM_DELAY_TRIGGER_MS) {
+      this.bgmDelayTriggered = true;
+      audio.triggerBgmStart('delay3s');
     }
 
     if (this.phase === PHASE.NORMAL && !this.feverStarted && this.remainingMs <= CONFIG.feverDurationMs) {
@@ -260,6 +277,7 @@ export class NazotenGame extends EventTarget {
     this.remainingMs = 0;
     this.dispatchEvent(new CustomEvent('timeupdate', { detail: { remainingMs: 0, phase: this.phase } }));
     this.dispatchEvent(new CustomEvent('timeup', {}));
+    audio.stopBgm();
     audio.playTimeUp();
 
     const id = setTimeout(() => this._showResult(), 900);

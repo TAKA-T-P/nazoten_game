@@ -5,11 +5,13 @@ import { CONFIG } from './config.js';
 
 const RECORD_KEY = 'scoreAttack60Fever10';
 const LEGACY_RECORD_KEY = 'scoreAttack30';
+const SOUND_MODES = ['bgm', 'seOnly', 'off'];
+const DEFAULT_SOUND_MODE = 'bgm';
 
 function defaultState() {
   return {
     version: 2,
-    soundEnabled: true,
+    soundMode: DEFAULT_SOUND_MODE,
     tutorialVersion: 0,
     records: {
       [RECORD_KEY]: { bestScore: 0, playCount: 0 }
@@ -24,6 +26,14 @@ function asNumber(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+// 'bgm' | 'seOnly' | 'off' の三択。旧形式（真偽値のsoundEnabled）が残っていれば
+// bgm/offへ読み替える。
+function normalizeSoundMode(mode, legacyBoolean) {
+  if (SOUND_MODES.includes(mode)) return mode;
+  if (typeof legacyBoolean === 'boolean') return legacyBoolean ? 'bgm' : 'off';
+  return DEFAULT_SOUND_MODE;
+}
+
 // 壊れた/型の不正なデータが来ても、既定値を土台に安全な形へ整える。
 function sanitize(parsed) {
   const d = defaultState();
@@ -34,7 +44,7 @@ function sanitize(parsed) {
 
   return {
     version: 2,
-    soundEnabled: typeof parsed.soundEnabled === 'boolean' ? parsed.soundEnabled : d.soundEnabled,
+    soundMode: normalizeSoundMode(parsed.soundMode, parsed.soundEnabled),
     tutorialVersion: asNumber(parsed.tutorialVersion, d.tutorialVersion),
     records: {
       [RECORD_KEY]: {
@@ -72,7 +82,7 @@ function migrateFromLegacy() {
   const legacy = readLegacyV1();
   const state = defaultState();
   if (legacy) {
-    state.soundEnabled = legacy.soundEnabled;
+    state.soundMode = legacy.soundEnabled ? 'bgm' : 'off';
     state.tutorialVersion = legacy.tutorialSeen ? 1 : 0;
     state.legacyRecords[LEGACY_RECORD_KEY].bestScore = legacy.bestScore;
   }
@@ -121,13 +131,21 @@ export function getPlayCount() {
   return state.records[RECORD_KEY].playCount;
 }
 
-export function isSoundEnabled() {
-  return state.soundEnabled;
+export function getSoundMode() {
+  return state.soundMode;
 }
 
-export function setSoundEnabled(value) {
-  state.soundEnabled = Boolean(value);
+export function setSoundMode(mode) {
+  state.soundMode = normalizeSoundMode(mode);
   persist();
+}
+
+// 'BGMあり' -> '効果音のみ' -> '音なし' -> 'BGMあり' … の順で切り替える。
+export function cycleSoundMode() {
+  const currentIndex = SOUND_MODES.indexOf(state.soundMode);
+  const next = SOUND_MODES[(currentIndex + 1) % SOUND_MODES.length];
+  setSoundMode(next);
+  return next;
 }
 
 // 保存済みチュートリアルバージョンが現行版以上なら既読とみなす。

@@ -34,7 +34,7 @@ export function createStats() {
     failureCount: 0,
     sumCounts: { 10: 0, 20: 0, 30: 0, 40: 0 },
     clearedCellCount: 0,
-    highestSingleScore: 0,
+    highestNormalScore: 0,
     normalScore: 0,
     feverScore: 0,
     feverSuccessCount: 0,
@@ -43,11 +43,11 @@ export function createStats() {
 }
 
 // 成功確定時にresult（calculateScoreの戻り値）から記録を更新する。
+// 最高得点は通常タイムとフィーバータイムを別々に記録する（結果画面で内訳表示するため）。
 export function applySuccess(stats, result) {
   stats.successCount += 1;
   stats.sumCounts[result.sum] += 1;
   stats.clearedCellCount += result.pathLength;
-  if (result.points > stats.highestSingleScore) stats.highestSingleScore = result.points;
 
   if (result.isFever) {
     stats.feverScore += result.points;
@@ -55,6 +55,7 @@ export function applySuccess(stats, result) {
     if (result.points > stats.highestFeverScore) stats.highestFeverScore = result.points;
   } else {
     stats.normalScore += result.points;
+    if (result.points > stats.highestNormalScore) stats.highestNormalScore = result.points;
   }
 }
 

@@ -1,7 +1,10 @@
-// Web Audio APIによる合成音（仕様書 13章）。外部音声ファイルに依存しない。
+// Web Audio APIによる合成SEと、HTMLAudioElementによるBGM再生（仕様書 13章）。
+import { BGM_TRACKS, BGM_BASE_PATH } from './config.js';
+
 let ctx = null;
 let masterGain = null;
-let enabled = true;
+let seEnabled = true;
+let bgmEnabled = true;
 
 export function init() {
   if (ctx) return;
@@ -18,12 +21,11 @@ export function resume() {
   if (ctx && ctx.state === 'suspended') ctx.resume();
 }
 
-export function setEnabled(value) {
-  enabled = Boolean(value);
-}
-
-export function isEnabled() {
-  return enabled;
+// mode: 'bgm'（BGM+効果音）| 'seOnly'（効果音のみ）| 'off'（音なし）
+export function setSoundMode(mode) {
+  seEnabled = mode !== 'off';
+  bgmEnabled = mode === 'bgm';
+  if (!bgmEnabled) stopBgm();
 }
 
 function now() {
@@ -31,7 +33,7 @@ function now() {
 }
 
 function tone({ freq, duration = 0.15, type = 'sine', delay = 0, volume = 0.6, freqEnd = null }) {
-  if (!ctx || !enabled) return;
+  if (!ctx || !seEnabled) return;
   const t0 = now() + delay;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -48,7 +50,7 @@ function tone({ freq, duration = 0.15, type = 'sine', delay = 0, volume = 0.6, f
 }
 
 function noiseBurst({ duration = 0.08, delay = 0, volume = 0.3 }) {
-  if (!ctx || !enabled) return;
+  if (!ctx || !seEnabled) return;
   const t0 = now() + delay;
   const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -153,4 +155,62 @@ export function playResult() {
   [523.25, 659.25, 783.99, 1046.5].forEach((freq) => {
     tone({ freq, duration: 0.5, type: 'triangle', delay: chordDelay, volume: 0.4 });
   });
+}
+
+// --- BGM（実音源ファイル） -----------------------------------------------
+// 5曲はいずれも長さが微妙に異なるため、曲ごとに開始タイミングをずらして
+// カウントダウン〜ゲーム序盤の進行と自然に噛み合うようにする。
+// 曲の選択自体は毎回行うが、実際の再生はtriggerBgmStart()で該当タイミングが
+// 来たときにだけ開始する。
+
+let bgmAudioEl = null;
+let currentTrackId = null;
+let firedTriggers = new Set();
+
+function getBgmAudioElement() {
+  if (!bgmAudioEl) {
+    bgmAudioEl = new Audio();
+    bgmAudioEl.preload = 'auto';
+    bgmAudioEl.volume = 0.55;
+  }
+  return bgmAudioEl;
+}
+
+// 新しいプレイ開始時に1曲だけランダムに選ぶ。まだ再生はしない。
+export function chooseRandomBgmTrack(rng = Math.random) {
+  const idx = Math.min(Math.floor(rng() * BGM_TRACKS.length), BGM_TRACKS.length - 1);
+  const track = BGM_TRACKS[idx];
+  currentTrackId = track.id;
+  firedTriggers = new Set();
+
+  if (bgmEnabled) {
+    const el = getBgmAudioElement();
+    el.pause();
+    el.currentTime = 0;
+    el.src = encodeURI(BGM_BASE_PATH + track.file);
+    el.load();
+  }
+  return currentTrackId;
+}
+
+// カウントダウンの各ラベルやゲーム開始からの経過時間に応じて呼ばれる。
+// 選ばれている曲の開始タイミング（startTrigger）と一致したときだけ再生を始める。
+export function triggerBgmStart(trigger) {
+  if (!bgmEnabled || !currentTrackId) return;
+  if (firedTriggers.has(trigger)) return;
+  const track = BGM_TRACKS.find((t) => t.id === currentTrackId);
+  if (!track || track.startTrigger !== trigger) return;
+
+  firedTriggers.add(trigger);
+  const el = getBgmAudioElement();
+  el.currentTime = 0;
+  el.play().catch(() => {
+    // 自動再生が拒否された場合も、SEやゲーム進行は継続する。
+  });
+}
+
+export function stopBgm() {
+  if (!bgmAudioEl) return;
+  bgmAudioEl.pause();
+  bgmAudioEl.currentTime = 0;
 }
