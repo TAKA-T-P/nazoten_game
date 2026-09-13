@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ナゾテン！ ～なぞって・たして・10の倍数～</title>
+<meta name="description" content="5×5の数字を素早くなぞり、合計10・20・30・40を作って30秒で高得点を目指す算数アクションパズル">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+<div id="app">
+
+  <section id="screen-title" class="screen" data-screen="title">
+    <div class="title-inner">
+      <h1 class="logo">ナゾテン！</h1>
+      <p class="subtitle">なぞって・たして・10の倍数</p>
+      <p class="catchcopy">30秒の頭脳と指先の超高速バトル！</p>
+      <div class="title-buttons">
+        <button id="btn-start" class="btn btn-primary" type="button">スコアアタック</button>
+        <button id="btn-howto" class="btn btn-secondary" type="button">遊び方</button>
+      </div>
+      <p class="best-score">ベストスコア：<span id="title-best-score">0</span></p>
+      <button id="btn-sound-title" class="btn-icon" type="button" aria-label="サウンドのオンとオフを切り替える">🔊</button>
+      <p class="version">Phase 1 - v1.0.0</p>
+    </div>
+  </section>
+
+  <section id="screen-howto" class="screen" data-screen="howto" hidden>
+    <div class="howto-inner">
+      <h2>あそびかた</h2>
+      <ol class="howto-steps">
+        <li>上下左右の数字を2〜5個なぞる。</li>
+        <li>合計10・20・30・40で数字が消える。</li>
+        <li>30秒でハイスコアを目指す。40は得点2倍。</li>
+      </ol>
+      <div class="howto-example" aria-hidden="true">
+        <div class="example-cells">
+          <span class="example-cell">3</span>
+          <span class="example-arrow">→</span>
+          <span class="example-cell">7</span>
+        </div>
+        <p class="example-result">＝10／20点</p>
+      </div>
+      <button id="btn-howto-start" class="btn btn-primary" type="button">スタート</button>
+      <button id="btn-howto-back" class="btn btn-secondary" type="button">タイトルへ</button>
+    </div>
+  </section>
+
+  <section id="screen-game" class="screen" data-screen="game" hidden>
+    <header class="game-hud">
+      <div class="hud-row hud-time">
+        <span class="hud-label">のこり</span>
+        <span id="hud-time" class="hud-time-value">30</span>
+      </div>
+      <div class="hud-row hud-score">
+        <span class="hud-score-current">SCORE <strong id="hud-score">0</strong></span>
+        <span class="hud-score-best">BEST <strong id="hud-best">0</strong></span>
+      </div>
+      <div class="hud-row hud-formula">
+        <span id="hud-formula" class="hud-formula-text">&nbsp;</span>
+      </div>
+    </header>
+
+    <div class="board-wrap">
+      <div id="board" class="board" role="grid" aria-label="数字盤面"></div>
+      <div id="floating-layer" class="floating-layer" aria-hidden="true"></div>
+
+      <div id="countdown-overlay" class="countdown-overlay" hidden>
+        <span id="countdown-label" class="countdown-label"></span>
+      </div>
+
+      <div id="timeup-overlay" class="timeup-overlay" hidden>
+        <span class="timeup-label">TIME UP!</span>
+      </div>
+    </div>
+
+    <footer class="game-footer">
+      <button id="btn-sound-game" class="btn-icon" type="button" aria-label="サウンドのオンとオフを切り替える">🔊</button>
+    </footer>
+  </section>
+
+  <section id="screen-result" class="screen" data-screen="result" hidden>
+    <div class="result-inner">
+      <p id="result-newbest" class="result-newbest" hidden>NEW BEST!</p>
+      <h2 class="result-score-label">SCORE</h2>
+      <p id="result-score" class="result-score">0</p>
+      <p id="result-title" class="result-title"></p>
+      <table class="result-stats">
+        <tbody>
+          <tr><td>成功回数</td><td id="stat-success">0</td></tr>
+          <tr><td>10を作った回数</td><td id="stat-10">0</td></tr>
+          <tr><td>20を作った回数</td><td id="stat-20">0</td></tr>
+          <tr><td>30を作った回数</td><td id="stat-30">0</td></tr>
+          <tr><td>40を作った回数</td><td id="stat-40">0</td></tr>
+          <tr><td>消した数字</td><td id="stat-cleared">0</td></tr>
+          <tr><td>最大得点</td><td id="stat-highest">0</td></tr>
+        </tbody>
+      </table>
+      <div class="result-buttons">
+        <button id="btn-retry" class="btn btn-primary" type="button">もう一度</button>
+        <button id="btn-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

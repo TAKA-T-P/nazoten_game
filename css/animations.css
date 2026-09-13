@@ -1,0 +1,99 @@
+@keyframes pop-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.cell.popping {
+  animation: pop-in 0.25s ease-out;
+}
+
+@keyframes cell-clear {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+}
+
+.cell.clearing .cell-value {
+  animation: cell-clear 0.2s ease-in forwards;
+}
+
+@keyframes fail-shake {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  25% {
+    transform: translateX(-4px) rotate(-3deg);
+  }
+  50% {
+    transform: translateX(4px) rotate(3deg);
+  }
+  75% {
+    transform: translateX(-3px) rotate(-2deg);
+  }
+}
+
+.cell.fail-shake {
+  animation: fail-shake 0.28s ease-in-out;
+  border-color: var(--color-fail);
+}
+
+@keyframes float-up {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -46px);
+    opacity: 0;
+  }
+}
+
+@keyframes countdown-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.countdown-label.countdown-pop {
+  animation: countdown-pop 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell.popping,
+  .cell.clearing .cell-value,
+  .cell.fail-shake,
+  .floating-score,
+  .countdown-label.countdown-pop {
+    animation: none !important;
+  }
+  .cell.selected {
+    transform: none;
+  }
+}

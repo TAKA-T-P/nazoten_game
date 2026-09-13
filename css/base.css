@@ -1,0 +1,116 @@
+:root {
+  color-scheme: light;
+  --color-bg: #fff3e0;
+  --color-bg-deep: #ffe0b2;
+  --color-surface: #ffffff;
+  --color-primary: #ff6b6b;
+  --color-primary-dark: #e05555;
+  --color-secondary: #2bb8ae;
+  --color-accent: #ffd93d;
+  --color-text: #1f2933;
+  --color-text-muted: #6b7684;
+  --color-cell-bg: #ffffff;
+  --color-cell-border: #e4d9c4;
+  --color-success: #1f9d5c;
+  --color-forty: #e08e00;
+  --color-fail: #d8393a;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --font-main: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-deep) 100%);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+#app {
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.screen[hidden] {
+  display: none;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 28px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--color-primary-dark);
+}
+
+.btn-primary:active {
+  box-shadow: 0 1px 0 var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--color-cell-border);
+}
+
+.btn-icon {
+  background: var(--color-surface);
+  border: 2px solid var(--color-cell-border);
+  border-radius: 999px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+}

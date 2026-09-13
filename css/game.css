@@ -1,0 +1,372 @@
+/* タイトル画面 */
+.title-inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  font-size: 2.6rem;
+  margin: 0;
+  color: var(--color-primary);
+  text-shadow: 3px 3px 0 var(--color-accent);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text-muted);
+}
+
+.catchcopy {
+  margin: 4px 0 20px;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.title-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.best-score {
+  margin-top: 16px;
+  font-weight: 700;
+}
+
+.version {
+  margin-top: 28px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* 遊び方画面 */
+.howto-inner {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.howto-steps {
+  text-align: left;
+  padding-left: 1.4em;
+  line-height: 1.7;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.howto-example {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  width: 100%;
+}
+
+.example-cells {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.example-cell {
+  background: var(--color-cell-bg);
+  border: 2px solid var(--color-secondary);
+  border-radius: var(--radius-sm);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.example-result {
+  margin: 8px 0 0;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* ゲーム画面 */
+#screen-game {
+  justify-content: flex-start;
+  padding-top: 16px;
+}
+
+.game-hud {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.hud-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.hud-time {
+  justify-content: center;
+  gap: 8px;
+}
+
+.hud-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.hud-time-value {
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-time-value.time-low {
+  color: var(--color-fail);
+}
+
+.hud-score {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.hud-score-best {
+  color: var(--color-text-muted);
+}
+
+.hud-formula {
+  justify-content: center;
+  min-height: 1.6em;
+}
+
+.hud-formula-text {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-formula-text.formula-valid {
+  color: var(--color-success);
+}
+
+.board-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 1 / 1;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cell {
+  position: relative;
+  background: var(--color-cell-bg);
+  border: 2px solid var(--color-cell-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.2rem, 6vw, 1.8rem);
+  font-weight: 800;
+  color: var(--color-text);
+  touch-action: none;
+  user-select: none;
+}
+
+.cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  transform: scale(1.06);
+  z-index: 1;
+}
+
+.cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+.cell.empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.cell.empty .cell-value {
+  opacity: 0;
+}
+
+.order-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--color-secondary);
+  color: #fff;
+  font-size: 0.65rem;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.floating-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.floating-score {
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  white-space: nowrap;
+  animation: float-up 0.9s ease-out forwards;
+}
+
+.floating-forty {
+  color: var(--color-forty);
+  font-size: 1.3rem;
+}
+
+.floating-forty-label {
+  font-size: 0.9rem;
+}
+
+.game-footer {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.countdown-overlay,
+.timeup-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-md);
+  z-index: 5;
+}
+
+.countdown-overlay[hidden],
+.timeup-overlay[hidden] {
+  display: none;
+}
+
+.countdown-label {
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+.timeup-label {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--color-fail);
+  background: var(--color-surface);
+  padding: 14px 28px;
+  border-radius: var(--radius-md);
+}
+
+/* 結果画面 */
+.result-inner {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.result-newbest {
+  color: var(--color-forty);
+  font-weight: 900;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.result-score-label {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.result-score {
+  font-size: 3rem;
+  font-weight: 900;
+  margin: 0;
+  color: var(--color-primary);
+}
+
+.result-title {
+  font-weight: 700;
+  color: var(--color-secondary);
+  margin: 0 0 8px;
+}
+
+.result-stats {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.result-stats td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--color-cell-border);
+  font-size: 0.9rem;
+}
+
+.result-stats tr:last-child td {
+  border-bottom: none;
+}
+
+.result-stats td:last-child {
+  text-align: right;
+  font-weight: 700;
+}
+
+.result-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.result-buttons .btn {
+  flex: 1;
+}
