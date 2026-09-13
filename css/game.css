@@ -200,13 +200,18 @@
   font-variant-numeric: tabular-nums;
 }
 
-.hud-fever {
-  justify-content: center;
-  min-height: 0;
+.hud-score {
+  position: relative;
 }
 
+.hud-fever {
+  justify-content: center;
+}
+
+/* visibilityで切り替える（displayではなく）ことで、フィーバー開始時にも
+   この行の高さが変わらず、盤面(board-wrap)がずれないようにする。 */
 .fever-badge {
-  display: none;
+  visibility: hidden;
   font-size: 0.85rem;
   font-weight: 900;
   color: #8a5a00;
@@ -216,16 +221,24 @@
   padding: 2px 14px;
 }
 
-/* 残り10秒の開始演出。スコア表示の直下に表示し、盤面の数字とは重ならない。 */
+/* 残り10秒の開始演出。スコア表示のすぐ下に浮かせて表示する。
+   position:absoluteでレイアウトの流れから外すことで、表示/非表示が
+   切り替わってもHUDの高さが変わらず、盤面(board-wrap)の位置がずれない。 */
 .fever-start-banner {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  align-self: center;
   gap: 2px;
   padding: 6px 14px;
   border-radius: var(--radius-md);
   background: radial-gradient(circle, rgba(255, 223, 125, 0.95) 0%, rgba(255, 213, 77, 0.75) 100%);
+  white-space: nowrap;
+  z-index: 15;
 }
 
 .fever-start-banner[hidden] {
@@ -233,7 +246,7 @@
 }
 
 #screen-game.fever .fever-badge {
-  display: inline-block;
+  visibility: visible;
 }
 
 #screen-game.fever .hud-time-value {

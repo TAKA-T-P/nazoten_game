@@ -171,7 +171,7 @@ function getBgmAudioElement() {
   if (!bgmAudioEl) {
     bgmAudioEl = new Audio();
     bgmAudioEl.preload = 'auto';
-    bgmAudioEl.volume = 0.55;
+    bgmAudioEl.volume = 0.33; // 従来値0.55の60%。効果音の音量は変更しない。
   }
   return bgmAudioEl;
 }

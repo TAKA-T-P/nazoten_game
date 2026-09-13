@@ -277,7 +277,6 @@ export class NazotenGame extends EventTarget {
     this.remainingMs = 0;
     this.dispatchEvent(new CustomEvent('timeupdate', { detail: { remainingMs: 0, phase: this.phase } }));
     this.dispatchEvent(new CustomEvent('timeup', {}));
-    audio.stopBgm();
     audio.playTimeUp();
 
     const id = setTimeout(() => this._showResult(), 900);
@@ -286,6 +285,7 @@ export class NazotenGame extends EventTarget {
 
   _showResult() {
     this._setStatus(STATUS.RESULT);
+    audio.stopBgm();
     audio.playResult();
     this.dispatchEvent(new CustomEvent('result', {
       detail: { score: this.score, stats: this.stats }

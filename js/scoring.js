@@ -72,7 +72,14 @@ export function calcSuccessRate(stats) {
   return (stats.successCount / attempts) * 100;
 }
 
+// LV = floor(sqrt(score / 10))。1〜20の範囲にクランプする（4000点以上でLV.20）。
+export function getTitleLevel(score) {
+  const raw = Math.floor(Math.sqrt(Math.max(score, 0) / 10));
+  return Math.min(Math.max(raw, 1), 20);
+}
+
 export function getTitleForScore(score) {
-  const found = CONFIG.titles.find((t) => score >= t.min && score <= t.max);
-  return found ? found.name : CONFIG.titles[0].name;
+  const level = getTitleLevel(score);
+  const name = CONFIG.titleLevels[level - 1];
+  return `LV.${level}　${name}`;
 }
