@@ -26,8 +26,15 @@ function main() {
   game.addEventListener('statechange', (e) => {
     if (e.detail.status === STATUS.PLAYING) ui.hideTimeUp();
   });
-  game.addEventListener('boardinit', (e) => ui.renderBoard(e.detail.board));
+  game.addEventListener('boardinit', (e) => {
+    ui.setFeverActive(false);
+    ui.renderBoard(e.detail.board);
+  });
   game.addEventListener('countdown', (e) => ui.showCountdown(e.detail.label));
+  game.addEventListener('feverstart', () => {
+    ui.setFeverActive(true);
+    ui.showFeverStart();
+  });
   game.addEventListener('timeupdate', (e) => ui.updateTimer(e.detail.remainingMs));
   game.addEventListener('scoreupdate', (e) => ui.updateScore(e.detail.score));
   game.addEventListener('selectionupdate', (e) => ui.updateSelection(e.detail));
@@ -49,7 +56,7 @@ function main() {
   }
 
   document.getElementById('btn-start').addEventListener('click', () => {
-    if (storage.hasTutorialSeen()) {
+    if (storage.hasSeenCurrentTutorial()) {
       startCountdownAndPlay();
     } else {
       ui.showScreen('howto');
@@ -61,7 +68,7 @@ function main() {
   });
 
   document.getElementById('btn-howto-start').addEventListener('click', () => {
-    storage.setTutorialSeen(true);
+    storage.markTutorialSeen();
     startCountdownAndPlay();
   });
 

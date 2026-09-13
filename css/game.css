@@ -26,6 +26,13 @@
   color: var(--color-secondary);
 }
 
+.fever-hint {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-forty);
+}
+
 .title-buttons {
   display: flex;
   flex-direction: column;
@@ -97,6 +104,20 @@
   color: var(--color-success);
 }
 
+.howto-fever-note {
+  width: 100%;
+  background: linear-gradient(135deg, #fff4cf 0%, #ffdf8a 100%);
+  border: 2px solid var(--color-forty);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+}
+
+.howto-fever-note p {
+  margin: 0;
+  font-weight: 700;
+  color: #8a5a00;
+}
+
 /* ゲーム画面 */
 #screen-game {
   justify-content: flex-start;
@@ -134,8 +155,29 @@
   font-variant-numeric: tabular-nums;
 }
 
-.hud-time-value.time-low {
-  color: var(--color-fail);
+.hud-fever {
+  justify-content: center;
+  min-height: 0;
+}
+
+.fever-badge {
+  display: none;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #8a5a00;
+  background: linear-gradient(135deg, #fff2c0 0%, #ffcf4d 100%);
+  border: 1px solid var(--color-forty);
+  border-radius: 999px;
+  padding: 2px 14px;
+}
+
+#screen-game.fever .fever-badge {
+  display: inline-block;
+}
+
+#screen-game.fever .hud-time-value {
+  color: var(--color-forty);
+  animation: fever-timer-pulse 1s ease-in-out infinite;
 }
 
 .hud-score {
@@ -167,6 +209,12 @@
   width: 100%;
   max-width: 420px;
   aspect-ratio: 1 / 1;
+  border-radius: var(--radius-lg);
+  transition: box-shadow 0.3s ease;
+}
+
+#screen-game.fever .board-wrap {
+  box-shadow: 0 0 0 4px #ffd54d, 0 0 24px 6px rgba(255, 213, 77, 0.55);
 }
 
 .board {
@@ -218,6 +266,27 @@
   opacity: 0;
 }
 
+/* ミリオン・フィーバー中は盤面全体を金色配色にする。
+   親要素(#screen-game)のクラス切り替えだけで、消去後に補充されたマスにも
+   自動的に適用される（仕様書 Phase2実装指示書 6.2章）。 */
+#screen-game.fever .cell {
+  background: linear-gradient(160deg, #fff6d9 0%, #ffdf7d 100%);
+  border-color: #e6a800;
+  color: #5b3d00;
+}
+
+#screen-game.fever .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-game.fever .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
 .order-badge {
   position: absolute;
   top: -6px;
@@ -259,8 +328,14 @@
   font-size: 1.3rem;
 }
 
-.floating-forty-label {
-  font-size: 0.9rem;
+.floating-fever {
+  color: #c2410c;
+  font-size: 1.2rem;
+}
+
+.floating-label {
+  font-size: 0.85rem;
+  font-weight: 800;
 }
 
 .game-footer {
@@ -270,7 +345,8 @@
 }
 
 .countdown-overlay,
-.timeup-overlay {
+.timeup-overlay,
+.fever-start-overlay {
   position: absolute;
   inset: 0;
   display: flex;
@@ -282,7 +358,8 @@
 }
 
 .countdown-overlay[hidden],
-.timeup-overlay[hidden] {
+.timeup-overlay[hidden],
+.fever-start-overlay[hidden] {
   display: none;
 }
 
@@ -299,6 +376,29 @@
   background: var(--color-surface);
   padding: 14px 28px;
   border-radius: var(--radius-md);
+}
+
+.fever-start-overlay {
+  flex-direction: column;
+  gap: 6px;
+  background: radial-gradient(circle, rgba(255, 223, 125, 0.85) 0%, rgba(255, 213, 77, 0.55) 70%);
+}
+
+.fever-start-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #8a5a00;
+  text-shadow: 2px 2px 0 #fff2c0;
+  text-align: center;
+}
+
+.fever-start-sub {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  padding: 4px 18px;
+  border-radius: 999px;
 }
 
 /* 結果画面 */
@@ -335,6 +435,32 @@
   font-weight: 700;
   color: var(--color-secondary);
   margin: 0 0 8px;
+}
+
+.result-breakdown {
+  width: 100%;
+  border-collapse: collapse;
+  background: linear-gradient(135deg, #fff8e6 0%, #ffedb8 100%);
+  border: 1px solid var(--color-forty);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.result-breakdown td {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  color: #6b4e00;
+}
+
+.result-breakdown td:last-child {
+  text-align: right;
+  font-weight: 700;
+}
+
+.result-breakdown .breakdown-total td {
+  border-top: 1px solid var(--color-forty);
+  font-weight: 900;
+  color: #8a5a00;
 }
 
 .result-stats {

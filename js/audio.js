@@ -102,8 +102,45 @@ export function playCountdownStart() {
   tone({ freq: 880, duration: 0.3, type: 'triangle', volume: 0.6 });
 }
 
-export function playLowTimeTick() {
-  tone({ freq: 1000, duration: 0.08, type: 'square', volume: 0.4 });
+// ミリオン・フィーバー開始：上昇アルペジオ+和音+きらめきの豪華なファンファーレ。
+export function playFeverStart() {
+  const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+  notes.forEach((freq, i) => {
+    tone({ freq, duration: 0.16, type: 'triangle', delay: i * 0.06, volume: 0.5 });
+  });
+  const chordDelay = notes.length * 0.06 + 0.05;
+  [523.25, 659.25, 783.99, 1046.5].forEach((freq) => {
+    tone({ freq, duration: 0.5, type: 'sawtooth', delay: chordDelay, volume: 0.32 });
+  });
+  tone({ freq: 1200, freqEnd: 2400, duration: 0.4, type: 'sine', delay: chordDelay, volume: 0.4 });
+}
+
+// フィーバー中のラスト10秒カウント音。残り3秒以下は音を強めて終了間際を伝える。
+export function playFeverTick(seconds) {
+  if (seconds <= 3) {
+    tone({ freq: 1300, duration: 0.1, type: 'square', volume: 0.55 });
+  } else {
+    tone({ freq: 1000, duration: 0.08, type: 'square', volume: 0.4 });
+  }
+}
+
+// フィーバー中の成功音：通常成功音よりさらに高く華やかに。40成功時は専用の1音列にまとめる。
+export function playFeverSuccess(count, isForty) {
+  const n = Math.min(count, SCALE.length);
+  for (let i = 0; i < n; i++) {
+    tone({ freq: SCALE[i] * 3, duration: 0.12, type: 'triangle', delay: i * 0.045, volume: 0.55 });
+  }
+  const chordDelay = n * 0.045 + 0.05;
+  const chordFreqs = isForty
+    ? [523.25 * 3, 659.25 * 3, 783.99 * 3, 1046.5 * 3]
+    : [523.25 * 3, 659.25 * 3, 783.99 * 3];
+  chordFreqs.forEach((freq) => {
+    tone({ freq, duration: 0.4, type: 'triangle', delay: chordDelay, volume: 0.4 });
+  });
+  tone({ freq: 1600, freqEnd: 2600, duration: 0.35, type: 'sine', delay: chordDelay + 0.05, volume: 0.4 });
+  if (isForty) {
+    tone({ freq: 2000, freqEnd: 3200, duration: 0.3, type: 'sine', delay: chordDelay + 0.15, volume: 0.35 });
+  }
 }
 
 export function playTimeUp() {

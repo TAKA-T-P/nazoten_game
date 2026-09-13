@@ -85,12 +85,43 @@
   animation: countdown-pop 0.3s ease-out;
 }
 
+@keyframes fever-timer-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes fever-start-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.fever-start-overlay:not([hidden]) {
+  animation: fever-start-pop 0.35s ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cell.popping,
   .cell.clearing .cell-value,
   .cell.fail-shake,
   .floating-score,
-  .countdown-label.countdown-pop {
+  .countdown-label.countdown-pop,
+  .fever-start-overlay:not([hidden]),
+  #screen-game.fever .hud-time-value {
     animation: none !important;
   }
   .cell.selected {

@@ -1,6 +1,6 @@
-// 画面切替、表示更新、演出呼出（仕様書 8章・12章）。
+// 画面切替、表示更新、演出呼出（仕様書 8章・12章、Phase2実装指示書 6・8章）。
 import * as storage from './storage.js';
-import { getTitleForScore } from './scoring.js';
+import { getTitleForScore, calcSuccessRate } from './scoring.js';
 
 const el = {};
 let cellEls = [];
@@ -10,6 +10,7 @@ function cacheDom() {
   el.screens = document.querySelectorAll('.screen');
   el.titleBest = document.getElementById('title-best-score');
   el.btnSoundTitle = document.getElementById('btn-sound-title');
+  el.screenGame = document.getElementById('screen-game');
   el.board = document.getElementById('board');
   el.hudTime = document.getElementById('hud-time');
   el.hudScore = document.getElementById('hud-score');
@@ -18,18 +19,26 @@ function cacheDom() {
   el.btnSoundGame = document.getElementById('btn-sound-game');
   el.countdownOverlay = document.getElementById('countdown-overlay');
   el.countdownLabel = document.getElementById('countdown-label');
+  el.feverStartOverlay = document.getElementById('fever-start-overlay');
   el.timeupOverlay = document.getElementById('timeup-overlay');
   el.floatingLayer = document.getElementById('floating-layer');
   el.resultNewBest = document.getElementById('result-newbest');
   el.resultScore = document.getElementById('result-score');
   el.resultTitle = document.getElementById('result-title');
+  el.breakdownNormal = document.getElementById('breakdown-normal');
+  el.breakdownFever = document.getElementById('breakdown-fever');
+  el.breakdownTotal = document.getElementById('breakdown-total');
   el.statSuccess = document.getElementById('stat-success');
+  el.statFailure = document.getElementById('stat-failure');
+  el.statRate = document.getElementById('stat-rate');
   el.stat10 = document.getElementById('stat-10');
   el.stat20 = document.getElementById('stat-20');
   el.stat30 = document.getElementById('stat-30');
   el.stat40 = document.getElementById('stat-40');
+  el.statFeverSuccess = document.getElementById('stat-fever-success');
   el.statCleared = document.getElementById('stat-cleared');
   el.statHighest = document.getElementById('stat-highest');
+  el.statFeverHighest = document.getElementById('stat-fever-highest');
 }
 
 export function init() {
@@ -99,7 +108,7 @@ export function updateSelection(detail) {
 function updateHudFormula(indices, values, sum, isValid) {
   el.hudFormula.classList.toggle('formula-valid', isValid && indices.length >= 2);
   if (indices.length === 0) {
-    el.hudFormula.textContent = ' ';
+    el.hudFormula.textContent = ' ';
     return;
   }
   el.hudFormula.textContent = `${values.join(' + ')} = ${sum}`;
@@ -127,19 +136,31 @@ export function playSuccessEffect(detail) {
   showFloatingScore(detail);
 }
 
+// detail は scoring.calculateScore() の戻り値 + indices を持つ success イベント detail。
+function buildFloatingLabel(detail) {
+  if (detail.isForty && detail.isFever) return 'FORTY! ×2 × FEVER ×3';
+  if (detail.isForty) return 'FORTY! ×2';
+  if (detail.isFever) return 'FEVER ×3';
+  return null;
+}
+
 function showFloatingScore(detail) {
   const lastIndex = detail.indices[detail.indices.length - 1];
   const cellEl = cellEls[lastIndex];
   const boardRect = el.board.getBoundingClientRect();
   const cellRect = cellEl.getBoundingClientRect();
 
+  const label = buildFloatingLabel(detail);
+  const multiplierSuffix = detail.totalMultiplier > 1 ? ` ×${detail.totalMultiplier}` : '';
+
   const floatEl = document.createElement('div');
-  floatEl.className = detail.isForty ? 'floating-score floating-forty' : 'floating-score';
+  const classes = ['floating-score'];
+  if (detail.isForty) classes.push('floating-forty');
+  if (detail.isFever) classes.push('floating-fever');
+  floatEl.className = classes.join(' ');
   floatEl.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
   floatEl.style.top = `${cellRect.top - boardRect.top}px`;
-  floatEl.innerHTML = detail.isForty
-    ? `<span class="floating-forty-label">FORTY! ×2</span><span>+${detail.points}</span>`
-    : `<span>+${detail.points}</span>`;
+  floatEl.innerHTML = `${label ? `<span class="floating-label">${label}</span>` : ''}<span>+${detail.points}${multiplierSuffix}</span>`;
 
   el.floatingLayer.appendChild(floatEl);
   const remove = () => floatEl.remove();
@@ -172,7 +193,6 @@ export function refillCells(cells) {
 export function updateTimer(remainingMs) {
   const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
   el.hudTime.textContent = String(seconds);
-  el.hudTime.classList.toggle('time-low', seconds <= 5 && remainingMs > 0);
 }
 
 export function updateScore(score) {
@@ -192,23 +212,52 @@ export function showCountdown(label) {
   }
 }
 
+// ミリオン・フィーバーの盤面配色・常時バッジを切り替える。
+export function setFeverActive(active) {
+  el.screenGame.classList.toggle('fever', active);
+}
+
+// 残り10秒になった瞬間の開始演出。0.8〜1.2秒程度で自動的に消える。
+export function showFeverStart() {
+  el.feverStartOverlay.hidden = false;
+  setTimeout(() => {
+    el.feverStartOverlay.hidden = true;
+  }, 1000);
+}
+
 export function showTimeUp() {
   el.timeupOverlay.hidden = false;
 }
 
 export function hideTimeUp() {
   el.timeupOverlay.hidden = true;
+  el.feverStartOverlay.hidden = true;
+  setFeverActive(false);
+}
+
+function formatRate(rate) {
+  if (rate === null) return '—';
+  return `${Math.round(rate)}%`;
 }
 
 export function renderResult({ score, stats, isNewBest }) {
   el.resultScore.textContent = String(score);
   el.resultNewBest.hidden = !isNewBest;
   el.resultTitle.textContent = getTitleForScore(score);
+
+  el.breakdownNormal.textContent = String(stats.normalScore);
+  el.breakdownFever.textContent = String(stats.feverScore);
+  el.breakdownTotal.textContent = String(stats.normalScore + stats.feverScore);
+
   el.statSuccess.textContent = String(stats.successCount);
+  el.statFailure.textContent = String(stats.failureCount);
+  el.statRate.textContent = formatRate(calcSuccessRate(stats));
   el.stat10.textContent = String(stats.sumCounts[10]);
   el.stat20.textContent = String(stats.sumCounts[20]);
   el.stat30.textContent = String(stats.sumCounts[30]);
   el.stat40.textContent = String(stats.sumCounts[40]);
+  el.statFeverSuccess.textContent = String(stats.feverSuccessCount);
   el.statCleared.textContent = String(stats.clearedCellCount);
   el.statHighest.textContent = String(stats.highestSingleScore);
+  el.statFeverHighest.textContent = String(stats.highestFeverScore);
 }

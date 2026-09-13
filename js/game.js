@@ -1,9 +1,9 @@
-// ゲーム開始・終了、タイマー、状態遷移（仕様書 7章・14.1章・17章）。
+// ゲーム開始・終了、タイマー、状態遷移（仕様書 7章・14.1章・17章、Phase2実装指示書 3〜5章）。
 // DOMは直接操作せず、CustomEventでUI層に通知する。
 import { CONFIG } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
-import { calcSum, isValidSum, calcPoints, createStats, applySuccess } from './scoring.js';
+import { calcSum, isValidSum, calculateScore, createStats, applySuccess, recordFailure } from './scoring.js';
 import * as audio from './audio.js';
 
 export const STATUS = {
@@ -14,12 +14,21 @@ export const STATUS = {
   RESULT: 'result'
 };
 
+// 対戦モードへの流用を見据え、status: 'playing' はそのままに phase で
+// 通常タイム／ミリオン・フィーバーを切り替える（Phase2実装指示書 3.3章）。
+export const PHASE = {
+  NORMAL: 'normal',
+  FEVER: 'fever'
+};
+
 export class NazotenGame extends EventTarget {
   constructor(boardEl, rng = Math.random) {
     super();
     this.boardEl = boardEl;
     this.rng = rng;
     this.status = STATUS.IDLE;
+    this.phase = PHASE.NORMAL;
+    this.feverStarted = false;
     this.board = null;
     this.score = 0;
     this.stats = createStats();
@@ -28,7 +37,7 @@ export class NazotenGame extends EventTarget {
     this.rafId = null;
     this.refillTimers = new Set();
     this.countdownTimers = [];
-    this.lastLowSecond = null;
+    this.lastFeverTickSecond = null;
     this.selectionController = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
@@ -64,8 +73,10 @@ export class NazotenGame extends EventTarget {
     this.board = new Board(this.rng);
     this.score = 0;
     this.stats = createStats();
+    this.phase = PHASE.NORMAL;
+    this.feverStarted = false;
     this.remainingMs = CONFIG.gameDurationMs;
-    this.lastLowSecond = null;
+    this.lastFeverTickSecond = null;
 
     this.selectionController = new SelectionController(this.boardEl, {
       isSelectable: (i) => this.status === STATUS.PLAYING && this.board.isSelectable(i),
@@ -96,6 +107,8 @@ export class NazotenGame extends EventTarget {
       this.selectionController.destroy();
       this.selectionController = null;
     }
+    this.phase = PHASE.NORMAL;
+    this.feverStarted = false;
     this._setStatus(STATUS.IDLE);
   }
 
@@ -135,31 +148,55 @@ export class NazotenGame extends EventTarget {
     this._loop();
   }
 
-  // performance.now()基準の単調増加時刻で残り時間を管理する（仕様書 7.2章）。
-  _loop() {
+  // performance.now()基準の単調増加時刻で残り時間・フェーズを判定する。
+  // requestAnimationFrameのループとタブ復帰時の即時チェックの両方から呼ばれる
+  // 共通処理にすることで、フィーバー開始やタイムアップの多重発火を防ぐ。
+  _evaluateTime() {
+    if (this.status !== STATUS.PLAYING) return;
+
     const now = performance.now();
     this.remainingMs = Math.max(0, this.endsAt - now);
-    this.dispatchEvent(new CustomEvent('timeupdate', { detail: { remainingMs: this.remainingMs } }));
-
-    const remainingSeconds = Math.ceil(this.remainingMs / 1000);
-    if (this.remainingMs > 0 && remainingSeconds <= CONFIG.lowTimeThresholdSec && remainingSeconds !== this.lastLowSecond) {
-      this.lastLowSecond = remainingSeconds;
-      audio.playLowTimeTick();
-    }
+    this.dispatchEvent(new CustomEvent('timeupdate', {
+      detail: { remainingMs: this.remainingMs, phase: this.phase }
+    }));
 
     if (this.remainingMs <= 0) {
       this._timeUp();
       return;
     }
-    this.rafId = requestAnimationFrame(() => this._loop());
+
+    if (this.phase === PHASE.NORMAL && !this.feverStarted && this.remainingMs <= CONFIG.feverDurationMs) {
+      this._startFever();
+    }
+
+    if (this.phase === PHASE.FEVER) {
+      const seconds = Math.ceil(this.remainingMs / 1000);
+      if (seconds >= 1 && seconds <= 10 && seconds !== this.lastFeverTickSecond) {
+        this.lastFeverTickSecond = seconds;
+        audio.playFeverTick(seconds);
+      }
+    }
   }
 
-  // バックグラウンド復帰時に実時間を元に残り時間を再計算する（仕様書 18章）。
+  _loop() {
+    this._evaluateTime();
+    if (this.status === STATUS.PLAYING) {
+      this.rafId = requestAnimationFrame(() => this._loop());
+    }
+  }
+
+  // 残り10秒以下になった最初のフレームで一度だけ発動する（仕様書 4.3・5.1章）。
+  _startFever() {
+    this.phase = PHASE.FEVER;
+    this.feverStarted = true;
+    this.dispatchEvent(new CustomEvent('feverstart', {}));
+    audio.playFeverStart();
+  }
+
+  // バックグラウンド復帰時に実時間を元に残り時間・フェーズを再計算する（仕様書 18章、Phase2 4.2章）。
   _onVisibilityChange() {
-    if (document.visibilityState === 'visible' && this.status === STATUS.PLAYING) {
-      const now = performance.now();
-      this.remainingMs = Math.max(0, this.endsAt - now);
-      if (this.remainingMs <= 0) this._timeUp();
+    if (document.visibilityState === 'visible') {
+      this._evaluateTime();
     }
   }
 
@@ -175,14 +212,18 @@ export class NazotenGame extends EventTarget {
     const sum = calcSum(values);
 
     if (isValidSum(sum)) {
-      const points = calcPoints(sum, indices.length);
-      const isForty = sum === 40;
-      this.score += points;
-      applySuccess(this.stats, sum, indices.length, points);
+      // 倍率は、指を離して成功が確定した瞬間のフェーズで決める（仕様書 5.3章）。
+      const isFever = this.phase === PHASE.FEVER;
+      const result = calculateScore({ sum, pathLength: indices.length, isFever });
+      this.score += result.points;
+      applySuccess(this.stats, result);
 
-      this.dispatchEvent(new CustomEvent('success', { detail: { indices, sum, points, isForty } }));
+      this.dispatchEvent(new CustomEvent('success', { detail: { indices, ...result } }));
       this.dispatchEvent(new CustomEvent('scoreupdate', { detail: { score: this.score } }));
-      if (isForty) {
+
+      if (isFever) {
+        audio.playFeverSuccess(indices.length, result.isForty);
+      } else if (result.isForty) {
         audio.playForty(indices.length);
       } else {
         audio.playSuccess(indices.length);
@@ -194,10 +235,11 @@ export class NazotenGame extends EventTarget {
       const timerId = setTimeout(() => {
         this.refillTimers.delete(timerId);
         const applied = refills.map(({ index }) => ({ index, value: this.board.refill(index) }));
-        this.dispatchEvent(new CustomEvent('cellsrefill', { detail: { cells: applied } }));
+        this.dispatchEvent(new CustomEvent('cellsrefill', { detail: { cells: applied, phase: this.phase } }));
       }, CONFIG.refillDelayMs);
       this.refillTimers.add(timerId);
     } else {
+      recordFailure(this.stats);
       this.dispatchEvent(new CustomEvent('fail', { detail: { indices } }));
       audio.playFail();
     }
@@ -216,7 +258,7 @@ export class NazotenGame extends EventTarget {
     this.refillTimers.clear();
 
     this.remainingMs = 0;
-    this.dispatchEvent(new CustomEvent('timeupdate', { detail: { remainingMs: 0 } }));
+    this.dispatchEvent(new CustomEvent('timeupdate', { detail: { remainingMs: 0, phase: this.phase } }));
     this.dispatchEvent(new CustomEvent('timeup', {}));
     audio.playTimeUp();
 
