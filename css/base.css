@@ -37,6 +37,9 @@ body {
   font-family: var(--font-main);
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: contain;
+  /* 盤面外（HUDや余白）での連続タップでもダブルタップズームやピンチズームが
+     発生しないようにする。縦スクロールだけは小さい画面のために許可する。 */
+  touch-action: pan-y;
 }
 
 #app {
