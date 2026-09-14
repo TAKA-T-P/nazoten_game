@@ -1,6 +1,6 @@
 // ゲーム全体の設定値。数値はここで一元管理する。
 export const CONFIG = {
-  boardRows: 5,
+  boardRows: 4,
   boardCols: 5,
   numberMin: 1,
   numberMax: 9,
@@ -19,6 +19,8 @@ export const CONFIG = {
   resultTransitionDelayMs: 2_000,
   // 同じマスをこの時間以内に連続タップすると「破壊」（得点なしで消去）になる。
   doubleTapThresholdMs: 350,
+  // 1マスをこの時間以上押し続けると長押しとみなし、入れかえ選択を解除する。
+  longPressThresholdMs: 500,
   // チュートリアルのバージョン。保存値がこれ未満なら再表示する。
   tutorialVersion: 2,
   // CPUバトル専用チュートリアルのバージョン。

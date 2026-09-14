@@ -59,6 +59,8 @@ export class BattleController extends EventTarget {
     this.bgmDelayTriggered = false;
     this.selectionController = null;
     this.cpuController = null;
+    // 数字入れかえで1つ目に選んだプレイヤー盤面のマス（未選択はnull）。
+    this.swapSelection = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -107,6 +109,7 @@ export class BattleController extends EventTarget {
     this.remainingMs = CONFIG.gameDurationMs;
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
+    this.swapSelection = null;
     audio.chooseRandomBgmTrack(this.rng);
 
     this.selectionController = new SelectionController(this.playerBoardEl, {
@@ -114,18 +117,22 @@ export class BattleController extends EventTarget {
       areAdjacent: (a, b) => Board.areAdjacent(a, b),
       maxLength: CONFIG.maxPathLength,
       doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
+      longPressThresholdMs: CONFIG.longPressThresholdMs,
       onSelectionStart: (i, sel) => {
         audio.playTraceNote(0);
         this._emitPlayerSelection(sel);
       },
       onCellAdded: (i, sel) => {
+        this._clearSwapSelection();
         audio.playTraceNote(sel.length - 1);
         this._emitPlayerSelection(sel);
       },
       onCellRemoved: (sel) => this._emitPlayerSelection(sel),
       onSelectionEnd: (sel) => this._finishPlayerSelection(sel),
       onSelectionCancel: () => this._emitPlayerSelection([]),
-      onDoubleTap: (index) => this._destroyPlayerCell(index)
+      onDoubleTap: (index) => this._destroyPlayerCell(index),
+      onTap: (index) => this._handleTap(index),
+      onLongPress: () => this._clearSwapSelection()
     });
 
     this.cpuController = new CpuController({
@@ -161,6 +168,7 @@ export class BattleController extends EventTarget {
     }
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
+    this.swapSelection = null;
     this._setStatus(STATUS.IDLE);
   }
 
@@ -307,6 +315,7 @@ export class BattleController extends EventTarget {
     if (!this.playerBoard.isSelectable(index)) return;
 
     this._emitPlayerSelection([]);
+    if (this.swapSelection === index) this._clearSwapSelection();
     recordDestroy(this.playerStats);
     this.dispatchEvent(new CustomEvent('playerdestroy', { detail: { index } }));
     audio.playDestroy();
@@ -314,6 +323,50 @@ export class BattleController extends EventTarget {
     const refills = this.playerBoard.clear([index]);
     this.dispatchEvent(new CustomEvent('playercellsclear', { detail: { indices: [index] } }));
     this._scheduleRefill(this.playerBoard, refills, 'playercellsrefill');
+  }
+
+  // 数字入れかえ（プレイヤー盤面のみ）：1つ目のタップで選択、2つ目の異なるマスへの
+  // タップで入れ替える。同じマスの再タップ・なぞり動作の開始・長押しで選択解除。
+  _handleTap(index) {
+    if (this.status !== STATUS.PLAYING) return;
+    if (!this.playerBoard.isSelectable(index)) return;
+
+    // タップ確定時は、なぞり選択の見た目（枠・拡大・順番バッジ・合計表示）を消す。
+    this._emitPlayerSelection([]);
+
+    if (this.swapSelection === null) {
+      this.swapSelection = index;
+      this._emitSwapSelection();
+      audio.playSwapSelect();
+      return;
+    }
+
+    if (this.swapSelection === index) {
+      this._clearSwapSelection();
+      return;
+    }
+
+    this._performSwap(this.swapSelection, index);
+  }
+
+  _performSwap(indexA, indexB) {
+    this._clearSwapSelection();
+    if (!this.playerBoard.isSelectable(indexA) || !this.playerBoard.isSelectable(indexB)) return;
+
+    this.playerBoard.swapValues(indexA, indexB);
+    const values = [this.playerBoard.getValue(indexA), this.playerBoard.getValue(indexB)];
+    this.dispatchEvent(new CustomEvent('playerswap', { detail: { indices: [indexA, indexB], values } }));
+    audio.playSwap();
+  }
+
+  _clearSwapSelection() {
+    if (this.swapSelection === null) return;
+    this.swapSelection = null;
+    this._emitSwapSelection();
+  }
+
+  _emitSwapSelection() {
+    this.dispatchEvent(new CustomEvent('playerswapselectionupdate', { detail: { index: this.swapSelection } }));
   }
 
   _scheduleRefill(board, refills, eventName) {
@@ -368,6 +421,7 @@ export class BattleController extends EventTarget {
     }
     if (this.selectionController) this.selectionController.forceCancel();
     if (this.cpuController) this.cpuController.stop();
+    this._clearSwapSelection();
     for (const id of this.refillTimers) clearTimeout(id);
     this.refillTimers.clear();
 

@@ -96,7 +96,8 @@
 .battle-cpu-board-wrap {
   width: clamp(72px, 24vw, 150px);
   max-width: clamp(72px, 24vw, 150px);
-  aspect-ratio: 1 / 1;
+  /* 横5マス×縦4マス。.board-wrapと同じ比率でセルを正方形に保つ。 */
+  aspect-ratio: 5 / 4;
 }
 
 .battle-cpu-board {
@@ -232,6 +233,11 @@
   border-color: var(--color-success);
   background: #e4fbee;
   color: var(--color-success);
+}
+
+#screen-battle.fever .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
 }
 
 #screen-battle.fever .board-wrap {

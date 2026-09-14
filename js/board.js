@@ -32,8 +32,8 @@ export class Board {
     }
   }
 
-  // 初期盤面の25個の数字を生成する（仕様書10.1章）。盤面インスタンスを作らずに
-  // 値配列だけが欲しい場合（例：CPUバトルで両者の初期配置を揃えるとき）に使う。
+  // 初期盤面の数字（boardRows×boardCols個）を生成する（仕様書10.1章）。盤面インスタンスを
+  // 作らずに値配列だけが欲しい場合（例：CPUバトルで両者の初期配置を揃えるとき）に使う。
   static createInitialValues(rng = Math.random) {
     const size = CONFIG.boardRows * CONFIG.boardCols;
     const counts = {};
@@ -84,6 +84,14 @@ export class Board {
 
   isSelectable(index) {
     return this.states[index] === CELL_STATE.NORMAL && this.values[index] !== 0;
+  }
+
+  // 2マスの数字を入れ替える（数字入れかえ機能）。同じ数字の出現数や補充予約には
+  // 影響しないため、counts等は変更しない。
+  swapValues(a, b) {
+    const temp = this.values[a];
+    this.values[a] = this.values[b];
+    this.values[b] = temp;
   }
 
   // 消去を確定し、その時点で補充数字を予約する（同一数字5個制限を守るため）。

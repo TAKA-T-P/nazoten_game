@@ -242,6 +242,23 @@ export function refillCells(cells) {
   });
 }
 
+// 数字入れかえ：1つ目に選んだマスだけをハイライトする（indexがnullなら全解除）。
+export function updateSwapSelection(index) {
+  cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('swap-selected', i === index);
+  });
+}
+
+export function applySwap(indices, values) {
+  indices.forEach((index, i) => {
+    const cellEl = cellEls[index];
+    cellEl.classList.remove('swap-selected');
+    cellEl.querySelector('.cell-value').textContent = String(values[i]);
+    cellEl.classList.add('swapping');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('swapping'), { once: true });
+  });
+}
+
 export function updateTimer(remainingMs) {
   const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
   el.hudTime.textContent = String(seconds);
@@ -440,6 +457,23 @@ export function refillBattleCells(which, cells) {
     cellEl.querySelector('.cell-value').textContent = String(value);
     cellEl.classList.add('popping');
     cellEl.addEventListener('animationend', () => cellEl.classList.remove('popping'), { once: true });
+  });
+}
+
+// 数字入れかえ（プレイヤー盤面のみ対応）。
+export function updatePlayerSwapSelection(index) {
+  battleBoards.player.cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('swap-selected', i === index);
+  });
+}
+
+export function applyPlayerSwap(indices, values) {
+  indices.forEach((index, i) => {
+    const cellEl = battleBoards.player.cellEls[index];
+    cellEl.classList.remove('swap-selected');
+    cellEl.querySelector('.cell-value').textContent = String(values[i]);
+    cellEl.classList.add('swapping');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('swapping'), { once: true });
   });
 }
 

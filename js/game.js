@@ -40,6 +40,8 @@ export class NazotenGame extends EventTarget {
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
     this.selectionController = null;
+    // 数字入れかえで1つ目に選んだマスのインデックス（未選択はnull）。
+    this.swapSelection = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -79,6 +81,7 @@ export class NazotenGame extends EventTarget {
     this.remainingMs = CONFIG.gameDurationMs;
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
+    this.swapSelection = null;
     audio.chooseRandomBgmTrack(this.rng);
 
     this.selectionController = new SelectionController(this.boardEl, {
@@ -86,18 +89,23 @@ export class NazotenGame extends EventTarget {
       areAdjacent: (a, b) => Board.areAdjacent(a, b),
       maxLength: CONFIG.maxPathLength,
       doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
+      longPressThresholdMs: CONFIG.longPressThresholdMs,
       onSelectionStart: (i, sel) => {
         audio.playTraceNote(0);
         this._emitSelectionUpdate(sel);
       },
       onCellAdded: (i, sel) => {
+        // なぞり動作が確定した時点で、入れかえ選択中のマスがあれば解除する。
+        this._clearSwapSelection();
         audio.playTraceNote(sel.length - 1);
         this._emitSelectionUpdate(sel);
       },
       onCellRemoved: (sel) => this._emitSelectionUpdate(sel),
       onSelectionEnd: (sel) => this._finishSelection(sel),
       onSelectionCancel: () => this._emitSelectionUpdate([]),
-      onDoubleTap: (index) => this._destroyCell(index)
+      onDoubleTap: (index) => this._destroyCell(index),
+      onTap: (index) => this._handleTap(index),
+      onLongPress: () => this._clearSwapSelection()
     });
 
     this._setStatus(STATUS.IDLE);
@@ -115,6 +123,7 @@ export class NazotenGame extends EventTarget {
     }
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
+    this.swapSelection = null;
     this._setStatus(STATUS.IDLE);
   }
 
@@ -277,6 +286,7 @@ export class NazotenGame extends EventTarget {
     if (!this.board.isSelectable(index)) return;
 
     this._emitSelectionUpdate([]);
+    if (this.swapSelection === index) this._clearSwapSelection();
     recordDestroy(this.stats);
     this.dispatchEvent(new CustomEvent('destroy', { detail: { index } }));
     audio.playDestroy();
@@ -286,6 +296,53 @@ export class NazotenGame extends EventTarget {
     this._scheduleRefill(refills);
   }
 
+  // 数字入れかえ：1つ目のタップで選択、2つ目の異なるマスへのタップで入れ替える。
+  // 同じマスを再タップした場合は選択を解除する。なぞり動作の開始や長押しでも
+  // 選択は解除される（_clearSwapSelectionの呼び出し元を参照）。
+  _handleTap(index) {
+    if (this.status !== STATUS.PLAYING) return;
+    if (!this.board.isSelectable(index)) return;
+
+    // タップ確定時は、なぞり選択の見た目（枠・拡大・順番バッジ・合計表示）を消す。
+    // これをしないと、単発タップ後もなぞり用のハイライトが残ってしまう。
+    this._emitSelectionUpdate([]);
+
+    if (this.swapSelection === null) {
+      this.swapSelection = index;
+      this._emitSwapSelection();
+      audio.playSwapSelect();
+      return;
+    }
+
+    if (this.swapSelection === index) {
+      this._clearSwapSelection();
+      return;
+    }
+
+    this._performSwap(this.swapSelection, index);
+  }
+
+  _performSwap(indexA, indexB) {
+    this._clearSwapSelection();
+    // 選択後に片方が破壊・補充待ちなどで無効になっていた場合は静かに取りやめる。
+    if (!this.board.isSelectable(indexA) || !this.board.isSelectable(indexB)) return;
+
+    this.board.swapValues(indexA, indexB);
+    const values = [this.board.getValue(indexA), this.board.getValue(indexB)];
+    this.dispatchEvent(new CustomEvent('swap', { detail: { indices: [indexA, indexB], values } }));
+    audio.playSwap();
+  }
+
+  _clearSwapSelection() {
+    if (this.swapSelection === null) return;
+    this.swapSelection = null;
+    this._emitSwapSelection();
+  }
+
+  _emitSwapSelection() {
+    this.dispatchEvent(new CustomEvent('swapselectionupdate', { detail: { index: this.swapSelection } }));
+  }
+
   _timeUp() {
     this._setStatus(STATUS.ENDING);
     if (this.rafId !== null) {
@@ -293,6 +350,7 @@ export class NazotenGame extends EventTarget {
       this.rafId = null;
     }
     if (this.selectionController) this.selectionController.forceCancel();
+    this._clearSwapSelection();
     for (const id of this.refillTimers) clearTimeout(id);
     this.refillTimers.clear();
 

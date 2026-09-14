@@ -287,7 +287,8 @@
   position: relative;
   width: 100%;
   max-width: 420px;
-  aspect-ratio: 1 / 1;
+  /* 横5マス×縦4マスなので、セルが正方形になるよう列数÷行数の比率にする。 */
+  aspect-ratio: 5 / 4;
   border-radius: var(--radius-lg);
   transition: box-shadow 0.3s ease;
 }
@@ -299,7 +300,7 @@
 .board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
   gap: 6px;
   width: 100%;
   height: 100%;
@@ -345,6 +346,12 @@
   opacity: 0;
 }
 
+/* 数字入れかえ：1つ目に選んだマスを、なぞり選択（青緑）とは違う紫で示す。 */
+.cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
 /* ミリオン・フィーバー中は盤面全体を金色配色にする。
    親要素(#screen-game)のクラス切り替えだけで、消去後に補充されたマスにも
    自動的に適用される（仕様書 Phase2実装指示書 6.2章）。 */
@@ -364,6 +371,11 @@
   border-color: var(--color-success);
   background: #e4fbee;
   color: var(--color-success);
+}
+
+#screen-game.fever .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
 }
 
 .order-badge {

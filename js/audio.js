@@ -104,6 +104,17 @@ export function playDestroy() {
   tone({ freq: 4600, duration: 0.03, type: 'triangle', delay: 0.025, volume: 0.3 });
 }
 
+// 数字入れかえ：1つ目の数字を選んだときの短い「ピッ」という音。
+export function playSwapSelect() {
+  tone({ freq: 700, duration: 0.08, type: 'sine', volume: 0.4 });
+}
+
+// 数字入れかえ：2つの数字を入れ替えた瞬間の短い「ピポッ」という音。
+export function playSwap() {
+  tone({ freq: 600, duration: 0.06, type: 'triangle', volume: 0.45 });
+  tone({ freq: 900, duration: 0.07, type: 'triangle', delay: 0.05, volume: 0.4 });
+}
+
 export function playCountdownTick() {
   tone({ freq: 440, duration: 0.15, type: 'square', volume: 0.5 });
 }

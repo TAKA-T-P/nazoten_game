@@ -48,6 +48,8 @@ function main() {
   game.addEventListener('fail', (e) => ui.playFailEffect(e.detail.indices));
   game.addEventListener('cellsclear', (e) => ui.clearCells(e.detail.indices));
   game.addEventListener('cellsrefill', (e) => ui.refillCells(e.detail.cells));
+  game.addEventListener('swapselectionupdate', (e) => ui.updateSwapSelection(e.detail.index));
+  game.addEventListener('swap', (e) => ui.applySwap(e.detail.indices, e.detail.values));
   game.addEventListener('timeup', () => ui.showTimeUp());
   game.addEventListener('result', (e) => {
     const isNewBest = storage.submitScore(e.detail.score);
@@ -129,6 +131,8 @@ function main() {
   battle.addEventListener('playerfail', (e) => ui.playBattleFailEffect('player', e.detail.indices));
   battle.addEventListener('playercellsclear', (e) => ui.clearBattleCells('player', e.detail.indices));
   battle.addEventListener('playercellsrefill', (e) => ui.refillBattleCells('player', e.detail.cells));
+  battle.addEventListener('playerswapselectionupdate', (e) => ui.updatePlayerSwapSelection(e.detail.index));
+  battle.addEventListener('playerswap', (e) => ui.applyPlayerSwap(e.detail.indices, e.detail.values));
   battle.addEventListener('cpuselectionupdate', (e) => ui.updateCpuSelection(e.detail.indices));
   battle.addEventListener('cpufail', (e) => ui.playBattleFailEffect('cpu', e.detail.indices));
   battle.addEventListener('cpucellsclear', (e) => ui.clearBattleCells('cpu', e.detail.indices));

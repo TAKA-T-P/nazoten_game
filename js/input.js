@@ -1,4 +1,4 @@
-// Pointer Eventsによる、なぞり判定（仕様書 5.2章・11章）。
+// Pointer Eventsによる、なぞり判定（仕様書 5.2章・11章、入れかえ機能）。
 // DOM操作は行わず、盤面要素からのイベントを解釈して選択状態の変化をコールバックで通知する。
 export class SelectionController {
   /**
@@ -8,12 +8,15 @@ export class SelectionController {
    *   areAdjacent: (a:number, b:number) => boolean,
    *   maxLength: number,
    *   doubleTapThresholdMs: number,
+   *   longPressThresholdMs: number,
    *   onSelectionStart: (index:number, selection:number[]) => void,
    *   onCellAdded: (index:number, selection:number[]) => void,
    *   onCellRemoved: (selection:number[]) => void,
    *   onSelectionEnd: (selection:number[]) => void,
    *   onSelectionCancel: (selection:number[]) => void,
-   *   onDoubleTap: (index:number) => void
+   *   onDoubleTap: (index:number) => void,
+   *   onTap: (index:number) => void,
+   *   onLongPress: (index:number) => void
    * }} handlers
    */
   constructor(boardEl, handlers) {
@@ -24,6 +27,9 @@ export class SelectionController {
     // 同じマスへの連続タップ（破壊操作）を検出するための直近タップ記録。
     this.lastTapIndex = null;
     this.lastTapTime = 0;
+    // 1マスに触れたまま動かさずにいる時間を計る長押し検出用タイマー。
+    this.longPressTimer = null;
+    this.longPressFired = false;
 
     this._onPointerDown = this._onPointerDown.bind(this);
     this._onPointerMove = this._onPointerMove.bind(this);
@@ -37,6 +43,7 @@ export class SelectionController {
   }
 
   destroy() {
+    this._clearLongPressTimer();
     this.boardEl.removeEventListener('pointerdown', this._onPointerDown);
     this.boardEl.removeEventListener('pointermove', this._onPointerMove);
     this.boardEl.removeEventListener('pointerup', this._onPointerUp);
@@ -51,6 +58,27 @@ export class SelectionController {
     return Number(cellEl.dataset.cellIndex);
   }
 
+  _clearLongPressTimer() {
+    if (this.longPressTimer !== null) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+  }
+
+  // 1マスに触れたまま動かさず一定時間経過したら長押しとみなす。
+  // 長押しは入れかえ選択を解除するための操作であり、タップ／ダブルタップとは別扱いにする。
+  _startLongPressTimer(index) {
+    this._clearLongPressTimer();
+    this.longPressTimer = setTimeout(() => {
+      this.longPressTimer = null;
+      if (this.pointerId === null) return;
+      if (this.selection.length !== 1 || this.selection[0] !== index) return;
+      this.longPressFired = true;
+      this.lastTapIndex = null; // 長押しはダブルタップ連鎖を断ち切る
+      this.handlers.onLongPress(index);
+    }, this.handlers.longPressThresholdMs);
+  }
+
   _onPointerDown(e) {
     if (this.pointerId !== null) return;
     const index = this._cellIndexFromEvent(e);
@@ -63,6 +91,8 @@ export class SelectionController {
       // キャプチャ非対応環境でも継続可能
     }
     this.selection = [index];
+    this.longPressFired = false;
+    this._startLongPressTimer(index);
     this.handlers.onSelectionStart(index, this.selection.slice());
   }
 
@@ -86,15 +116,20 @@ export class SelectionController {
     if (!this.handlers.isSelectable(index)) return;
     if (!this.handlers.areAdjacent(last, index)) return;
 
+    // 2マス目へ広がった時点でなぞり動作が確定するため、長押し判定は打ち切る。
+    this._clearLongPressTimer();
     this.selection.push(index);
     this.handlers.onCellAdded(index, this.selection.slice());
   }
 
   _finish(cancelled) {
     if (this.pointerId === null) return;
+    this._clearLongPressTimer();
     const indices = this.selection.slice();
+    const wasLongPress = this.longPressFired;
     this.pointerId = null;
     this.selection = [];
+    this.longPressFired = false;
 
     if (cancelled) {
       this.lastTapIndex = null;
@@ -102,11 +137,16 @@ export class SelectionController {
       return;
     }
 
-    // 1マスだけのタップが、直前のタップと同じマスへ閾値時間内に行われたら
-    // 「破壊」操作として扱う（仕様: 1つの数字を連続でダブルタップすると消去できる）。
+    if (wasLongPress) {
+      // 長押しの効果はonLongPress側で既に処理済み。ここでは見た目のハイライトだけ解除する。
+      this.handlers.onSelectionCancel(indices);
+      return;
+    }
+
     if (indices.length === 1) {
       const index = indices[0];
       const now = performance.now();
+      // 同じマスへの連続タップ（破壊操作）の判定。
       const isDoubleTap = index === this.lastTapIndex
         && now - this.lastTapTime <= this.handlers.doubleTapThresholdMs;
       if (isDoubleTap) {
@@ -116,10 +156,12 @@ export class SelectionController {
       }
       this.lastTapIndex = index;
       this.lastTapTime = now;
-    } else {
-      this.lastTapIndex = null;
+      // ダブルタップでない単発タップは、数字入れかえの選択／実行に使う。
+      this.handlers.onTap(index);
+      return;
     }
 
+    this.lastTapIndex = null;
     this.handlers.onSelectionEnd(indices);
   }
 
