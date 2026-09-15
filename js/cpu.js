@@ -40,17 +40,18 @@ export class CpuController {
     this.onCellsRefill = onCellsRefill;
 
     this.running = false;
-    this.getPhase = () => 'normal';
+    this.getScoringContext = () => ({ isFever: false, multiplier: 1 });
     this.timers = new Set();
     this.currentSelection = [];
     this.stuckSince = null;
   }
 
-  // sessionのgetPhase()は、成功確定時点の最新フェーズを取得するために毎回呼び出す
-  // （なぞっている途中でフィーバーへ入る可能性があるため。仕様書10.4章）。
-  start({ getPhase }) {
+  // getScoringContext()は { isFever, multiplier } を返す。成功確定時点の最新の
+  // 倍率状況を取得するため毎回呼び出す（なぞっている途中でフィーバーへ入る
+  // 可能性があるため。仕様書10.4章）。
+  start({ getScoringContext }) {
     this.running = true;
-    this.getPhase = getPhase;
+    this.getScoringContext = getScoringContext;
     this.stuckSince = null;
     this._scheduleThink();
   }
@@ -137,10 +138,10 @@ export class CpuController {
   // それ以外は探索できた候補からランダムに1つ選ぶ（仕様書10.4・11.3章）。
   choosePath(paths) {
     if (paths.length === 0) return null;
-    const phase = this.getPhase();
+    const { isFever, multiplier } = this.getScoringContext();
     const scored = paths.map((candidate) => ({
       ...candidate,
-      points: calculateScore({ sum: candidate.sum, pathLength: candidate.path.length, isFever: phase === 'fever' }).points
+      points: calculateScore({ sum: candidate.sum, pathLength: candidate.path.length, multiplier, isFever }).points
     }));
     if (this.rng() < this.levelConfig.bestMoveRate) {
       scored.sort((a, b) => {
@@ -242,8 +243,8 @@ export class CpuController {
 
     const sum = this._sumOf(path);
     if (!isMistake && isValidSum(sum)) {
-      const isFever = this.getPhase() === 'fever';
-      const result = calculateScore({ sum, pathLength: path.length, isFever });
+      const { isFever, multiplier } = this.getScoringContext();
+      const result = calculateScore({ sum, pathLength: path.length, multiplier, isFever });
       this.onSuccess({ indices: path, ...result });
       const refills = this.board.clear(path);
       this.onCellsClear(path);

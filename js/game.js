@@ -3,7 +3,16 @@
 import { CONFIG, BGM_DELAY_TRIGGER_MS } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
-import { calcSum, isValidSum, calculateScore, createStats, applySuccess, recordFailure, recordDestroy } from './scoring.js';
+import {
+  calcSum,
+  isValidSum,
+  calculateScore,
+  isSilverFeverTrigger,
+  createStats,
+  applySuccess,
+  recordFailure,
+  recordDestroy
+} from './scoring.js';
 import * as audio from './audio.js';
 
 export const STATUS = {
@@ -42,6 +51,9 @@ export class NazotenGame extends EventTarget {
     this.selectionController = null;
     // 数字入れかえで1つ目に選んだマスのインデックス（未選択はnull）。
     this.swapSelection = null;
+    // シルバー・フィーバー（5マスで合計10）の状態。ミリオン・フィーバーとは独立に管理する。
+    this.silverFeverActive = false;
+    this.silverFeverEndsAt = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -82,6 +94,8 @@ export class NazotenGame extends EventTarget {
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
     this.swapSelection = null;
+    this.silverFeverActive = false;
+    this.silverFeverEndsAt = null;
     audio.chooseRandomBgmTrack(this.rng);
 
     this.selectionController = new SelectionController(this.boardEl, {
@@ -124,6 +138,7 @@ export class NazotenGame extends EventTarget {
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
     this.swapSelection = null;
+    this._clearSilverFever();
     this._setStatus(STATUS.IDLE);
   }
 
@@ -204,6 +219,10 @@ export class NazotenGame extends EventTarget {
         audio.playFeverTick(seconds);
       }
     }
+
+    if (this.silverFeverActive && now >= this.silverFeverEndsAt) {
+      this._clearSilverFever();
+    }
   }
 
   _loop() {
@@ -219,6 +238,22 @@ export class NazotenGame extends EventTarget {
     this.feverStarted = true;
     this.dispatchEvent(new CustomEvent('feverstart', {}));
     audio.playFeverStart();
+  }
+
+  // シルバー・フィーバー：5マスで合計10を作ると10秒間発動し、得点が2倍になる。
+  // 発動中にもう一度条件を満たした場合は残り時間を延長する。
+  _startSilverFever() {
+    this.silverFeverActive = true;
+    this.silverFeverEndsAt = performance.now() + CONFIG.silverFeverDurationMs;
+    this.dispatchEvent(new CustomEvent('silverfeverstart', {}));
+    audio.playSilverFeverStart();
+  }
+
+  _clearSilverFever() {
+    if (!this.silverFeverActive) return;
+    this.silverFeverActive = false;
+    this.silverFeverEndsAt = null;
+    this.dispatchEvent(new CustomEvent('silverfeverend', {}));
   }
 
   // バックグラウンド復帰時に実時間を元に残り時間・フェーズを再計算する（仕様書 18章、Phase2 4.2章）。
@@ -241,8 +276,11 @@ export class NazotenGame extends EventTarget {
 
     if (isValidSum(sum)) {
       // 倍率は、指を離して成功が確定した瞬間のフェーズで決める（仕様書 5.3章）。
+      // ミリオン・フィーバーがシルバー・フィーバーより優先される（両方には重複しない）。
       const isFever = this.phase === PHASE.FEVER;
-      const result = calculateScore({ sum, pathLength: indices.length, isFever });
+      const silverActive = !isFever && this.silverFeverActive;
+      const multiplier = isFever ? CONFIG.feverMultiplier : (silverActive ? CONFIG.silverFeverMultiplier : 1);
+      const result = calculateScore({ sum, pathLength: indices.length, multiplier, isFever });
       this.score += result.points;
       applySuccess(this.stats, result);
 
@@ -251,10 +289,16 @@ export class NazotenGame extends EventTarget {
 
       if (isFever) {
         audio.playFeverSuccess(indices.length, result.isForty);
+      } else if (silverActive) {
+        audio.playSilverFeverSuccess(indices.length, result.isForty);
       } else if (result.isForty) {
         audio.playForty(indices.length);
       } else {
         audio.playSuccess(indices.length);
+      }
+
+      if (isSilverFeverTrigger(indices.length, sum, isFever)) {
+        this._startSilverFever();
       }
 
       const refills = this.board.clear(indices);
@@ -351,6 +395,7 @@ export class NazotenGame extends EventTarget {
     }
     if (this.selectionController) this.selectionController.forceCancel();
     this._clearSwapSelection();
+    this._clearSilverFever();
     for (const id of this.refillTimers) clearTimeout(id);
     this.refillTimers.clear();
 

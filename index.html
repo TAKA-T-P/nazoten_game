@@ -37,8 +37,9 @@
       <ol class="howto-steps">
         <li>上下左右につながる数字を2〜5個なぞる。</li>
         <li>合計10・20・30・40で数字が消える。</li>
-        <li>40を作るとフォーティボーナスで得点2倍。</li>
+        <li>40を作るとフォーティボーナスで+100点（フィーバー中でも変わらず+100点）。</li>
         <li>制限時間は60秒。ラスト10秒はミリオン・フィーバーで得点3倍。</li>
+        <li>5マスで合計10を作るとシルバー・フィーバーが発動し、10秒間得点2倍。</li>
         <li>ジャマな数字は素早くダブルタップをすると破壊できる。</li>
         <li>数字を短くタップして選び、別の数字をタップすると位置を入れかえられる。</li>
       </ol>
@@ -51,7 +52,7 @@
         <p class="example-result">数の和×枚数＝10×2＝20点</p>
       </div>
       <div class="howto-fever-note">
-        <p>フィーバー中に<strong>40</strong>を作ると<strong>1200点</strong>！</p>
+        <p>フィーバー中に<strong>40</strong>を作ると<strong>700点</strong>！</p>
       </div>
       <button id="btn-howto-start" class="btn btn-primary" type="button">スタート</button>
       <button id="btn-howto-back" class="btn btn-secondary" type="button">タイトルへ</button>
@@ -76,6 +77,7 @@
       </div>
       <div class="hud-row hud-fever">
         <span id="hud-fever-badge" class="fever-badge">FEVER ×3</span>
+        <span id="hud-silver-badge" class="silver-badge">SILVER ×2</span>
       </div>
       <div class="hud-row hud-formula">
         <span id="hud-formula" class="hud-formula-text">&nbsp;</span>
@@ -142,6 +144,7 @@
         <li>開始後の消去・補充は、プレイヤーとCPUでそれぞれ独立している。</li>
         <li>プレイ中は正確な点数を表示しない。中央のゲージで優勢を確認する。</li>
         <li>ラスト10秒は両者とも得点3倍。ゲージが消えるため最後まで勝敗は分からない。</li>
+        <li>5マスで合計10を作るとシルバー・フィーバーが発動し、発動した側だけ10秒間得点2倍。</li>
         <li>60秒後に両者の得点と勝敗を発表する。</li>
       </ol>
       <button id="btn-cpu-howto-start" class="btn btn-primary" type="button">スタート</button>
@@ -191,7 +194,9 @@
     <button id="btn-battle-retry" class="btn-small btn-top-right" type="button">リトライ</button>
 
     <div class="battle-side battle-side-cpu">
-      <p class="battle-name">CPU（<span id="battle-cpu-level-label">強さ1</span>）</p>
+      <p class="battle-name">CPU（<span id="battle-cpu-level-label">強さ1</span>）
+        <span id="battle-cpu-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
+      </p>
       <div class="board-wrap battle-cpu-board-wrap">
         <div id="cpu-board" class="board battle-cpu-board" aria-hidden="true"></div>
       </div>
@@ -220,7 +225,7 @@
       <div class="hud-row hud-formula">
         <span id="battle-hud-formula" class="hud-formula-text">&nbsp;</span>
       </div>
-      <div class="board-wrap">
+      <div class="board-wrap battle-player-board-wrap">
         <div id="player-board" class="board" role="grid" aria-label="自分の盤面"></div>
         <div id="battle-floating-layer" class="floating-layer" aria-hidden="true"></div>
 
@@ -232,7 +237,9 @@
           <span class="timeup-label">TIME UP!</span>
         </div>
       </div>
-      <p class="battle-you-label">YOU</p>
+      <p class="battle-you-label">YOU
+        <span id="battle-player-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
+      </p>
     </div>
   </section>
 

@@ -211,6 +211,7 @@
 
 .hud-fever {
   justify-content: center;
+  gap: 8px;
 }
 
 /* visibilityで切り替える（displayではなく）ことで、フィーバー開始時にも
@@ -224,6 +225,25 @@
   border: 1px solid var(--color-forty);
   border-radius: 999px;
   padding: 2px 14px;
+}
+
+/* シルバー・フィーバー（5マスで合計10）用バッジ。fever-badgeと同じ仕組みで
+   常に領域を確保し、表示/非表示だけを切り替える。 */
+.silver-badge {
+  visibility: hidden;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #475569;
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  border: 1px solid #94a3b8;
+  border-radius: 999px;
+  padding: 2px 14px;
+}
+
+.silver-badge-small {
+  font-size: 0.6rem;
+  padding: 1px 8px;
+  margin-left: 4px;
 }
 
 /* 残り10秒の開始演出。スコア表示のすぐ下に浮かせて表示する。
@@ -257,6 +277,16 @@
 #screen-game.fever .hud-time-value {
   color: var(--color-forty);
   animation: fever-timer-pulse 1s ease-in-out infinite;
+}
+
+/* :not(.fever)により、ミリオン・フィーバーと同時に成立した場合は
+   ミリオン・フィーバー側の金色表示を優先する（重複しない）。 */
+#screen-game.silver-fever:not(.fever) .silver-badge {
+  visibility: visible;
+}
+
+#screen-game.silver-fever:not(.fever) .hud-time-value {
+  color: #475569;
 }
 
 .hud-score {
@@ -378,6 +408,35 @@
   box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
 }
 
+/* シルバー・フィーバー中は盤面を銀色配色にする。:not(.fever)により
+   ミリオン・フィーバーと同時成立時はこちらを表示しない（重複しない）。 */
+#screen-game.silver-fever:not(.fever) .cell {
+  background: linear-gradient(160deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+#screen-game.silver-fever:not(.fever) .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-game.silver-fever:not(.fever) .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-game.silver-fever:not(.fever) .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-game.silver-fever:not(.fever) .board-wrap {
+  box-shadow: 0 0 0 4px #94a3b8, 0 0 24px 6px rgba(148, 163, 184, 0.55);
+}
+
 .order-badge {
   position: absolute;
   top: -6px;
@@ -421,6 +480,11 @@
 
 .floating-fever {
   color: #c2410c;
+  font-size: 1.2rem;
+}
+
+.floating-silver {
+  color: #475569;
   font-size: 1.2rem;
 }
 

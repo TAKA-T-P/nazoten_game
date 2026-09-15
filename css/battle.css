@@ -249,6 +249,48 @@
   color: var(--color-forty);
 }
 
+/* シルバー・フィーバーはプレイヤー・CPUそれぞれ独立して発動するため、盤面ごとに
+   別クラス（.player-silver-fever / .cpu-silver-fever）で色を切り替える。
+   :not(.fever)により、ミリオン・フィーバーと同時成立時はこちらを表示しない
+   （重複しない・ミリオン・フィーバー優先）。 */
+#screen-battle.player-silver-fever:not(.fever) #battle-player-silver-badge,
+#screen-battle.cpu-silver-fever:not(.fever) #battle-cpu-silver-badge {
+  visibility: visible;
+}
+
+#screen-battle.player-silver-fever:not(.fever) #player-board .cell,
+#screen-battle.cpu-silver-fever:not(.fever) #cpu-board .cell {
+  background: linear-gradient(160deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+#screen-battle.player-silver-fever:not(.fever) #player-board .cell.selected,
+#screen-battle.cpu-silver-fever:not(.fever) #cpu-board .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-battle.player-silver-fever:not(.fever) #player-board .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-battle.player-silver-fever:not(.fever) #player-board .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-battle.player-silver-fever:not(.fever) .battle-player-board-wrap {
+  box-shadow: 0 0 0 3px #94a3b8, 0 0 16px 4px rgba(148, 163, 184, 0.55);
+}
+
+#screen-battle.cpu-silver-fever:not(.fever) .battle-cpu-board-wrap {
+  box-shadow: 0 0 0 3px #94a3b8, 0 0 16px 4px rgba(148, 163, 184, 0.55);
+}
+
 /* バトル結果画面 */
 .battle-outcome {
   font-size: 1.8rem;

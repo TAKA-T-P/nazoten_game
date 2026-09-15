@@ -9,23 +9,33 @@ export function isValidSum(sum) {
   return CONFIG.validSums.includes(sum);
 }
 
-// 得点 = 合計 × マス数 × フォーティ倍率（合計40のみ2倍） × フィーバー倍率（フィーバー中のみ3倍）。
-// 倍率は加算ではなく乗算する。
-export function calculateScore({ sum, pathLength, isFever }) {
-  const fortyMultiplier = sum === 40 ? CONFIG.fortyMultiplier : 1;
-  const feverMultiplier = isFever ? CONFIG.feverMultiplier : 1;
-  const points = sum * pathLength * fortyMultiplier * feverMultiplier;
+// 得点 = 合計 × マス数 × 倍率 + フォーティボーナス。
+// フォーティボーナス（合計40のときだけ加算する定額100点）には倍率がかからない。
+// 倍率（multiplier）はミリオン・フィーバー中は3、シルバー・フィーバー中は2、
+// どちらでもなければ1を呼び出し側で決めて渡す。
+// isFeverはミリオン・フィーバー中かどうかのフラグで、記録の内訳集計にのみ使う。
+export function calculateScore({ sum, pathLength, multiplier = 1, isFever = false }) {
+  const isForty = sum === 40;
+  const fortyBonus = isForty ? CONFIG.fortyBonus : 0;
+  const points = sum * pathLength * multiplier + fortyBonus;
 
   return {
     points,
     sum,
     pathLength,
-    isForty: sum === 40,
+    isForty,
     isFever: Boolean(isFever),
-    fortyMultiplier,
-    feverMultiplier,
-    totalMultiplier: fortyMultiplier * feverMultiplier
+    multiplier,
+    fortyBonus
   };
+}
+
+// シルバー・フィーバー発動条件：ちょうどsilverFeverPathLengthマスで合計が
+// silverFeverSumになる成功（例：5マスで合計10）。ミリオン・フィーバー中は
+// 発動しない（呼び出し側でisMillionFeverを渡して判定する）。
+export function isSilverFeverTrigger(pathLength, sum, isMillionFever) {
+  if (isMillionFever) return false;
+  return pathLength === CONFIG.silverFeverPathLength && sum === CONFIG.silverFeverSum;
 }
 
 export function createStats() {

@@ -41,6 +41,8 @@ function main() {
     ui.setFeverActive(true);
     ui.showFeverStart();
   });
+  game.addEventListener('silverfeverstart', () => ui.setSilverFeverActive(true));
+  game.addEventListener('silverfeverend', () => ui.setSilverFeverActive(false));
   game.addEventListener('timeupdate', (e) => ui.updateTimer(e.detail.remainingMs));
   game.addEventListener('scoreupdate', (e) => ui.updateScore(e.detail.score));
   game.addEventListener('selectionupdate', (e) => ui.updateSelection(e.detail));
@@ -125,6 +127,10 @@ function main() {
   });
   battle.addEventListener('countdown', (e) => ui.showBattleCountdown(e.detail.label));
   battle.addEventListener('feverstart', () => ui.setBattleFeverActive(true));
+  battle.addEventListener('playersilverfeverstart', () => ui.setBattlePlayerSilverFeverActive(true));
+  battle.addEventListener('playersilverfeverend', () => ui.setBattlePlayerSilverFeverActive(false));
+  battle.addEventListener('cpusilverfeverstart', () => ui.setBattleCpuSilverFeverActive(true));
+  battle.addEventListener('cpusilverfeverend', () => ui.setBattleCpuSilverFeverActive(false));
   battle.addEventListener('timeupdate', (e) => ui.updateBattleTimer(e.detail.remainingMs));
   battle.addEventListener('playerselectionupdate', (e) => ui.updatePlayerBattleSelection(e.detail));
   battle.addEventListener('playersuccess', (e) => ui.clearSuccessSelectionMarks('player', e.detail.indices));

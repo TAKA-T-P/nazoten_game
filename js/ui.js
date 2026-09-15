@@ -189,10 +189,13 @@ export function playSuccessEffect(detail) {
 }
 
 // detail は scoring.calculateScore() の戻り値 + indices を持つ success イベント detail。
+// シルバー・フィーバーはisFever===falseかつmultiplier>1で判定する
+// （ミリオン・フィーバーとシルバー・フィーバーは重複しないため）。
 function buildFloatingLabel(detail) {
-  if (detail.isForty && detail.isFever) return 'FORTY! ×2 × FEVER ×3';
-  if (detail.isForty) return 'FORTY! ×2';
-  if (detail.isFever) return 'FEVER ×3';
+  const isSilver = !detail.isFever && detail.multiplier > 1;
+  if (detail.isFever) return detail.isForty ? 'FORTY! + FEVER ×3' : 'FEVER ×3';
+  if (isSilver) return detail.isForty ? 'FORTY! + SILVER ×2' : 'SILVER ×2';
+  if (detail.isForty) return 'FORTY!';
   return null;
 }
 
@@ -202,17 +205,18 @@ function showFloatingScore(detail) {
   const boardRect = el.board.getBoundingClientRect();
   const cellRect = cellEl.getBoundingClientRect();
 
+  const isSilver = !detail.isFever && detail.multiplier > 1;
   const label = buildFloatingLabel(detail);
-  const multiplierSuffix = detail.totalMultiplier > 1 ? ` ×${detail.totalMultiplier}` : '';
 
   const floatEl = document.createElement('div');
   const classes = ['floating-score'];
   if (detail.isForty) classes.push('floating-forty');
   if (detail.isFever) classes.push('floating-fever');
+  if (isSilver) classes.push('floating-silver');
   floatEl.className = classes.join(' ');
   floatEl.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
   floatEl.style.top = `${cellRect.top - boardRect.top}px`;
-  floatEl.innerHTML = `${label ? `<span class="floating-label">${label}</span>` : ''}<span>+${detail.points}${multiplierSuffix}</span>`;
+  floatEl.innerHTML = `${label ? `<span class="floating-label">${label}</span>` : ''}<span>+${detail.points}</span>`;
 
   el.floatingLayer.appendChild(floatEl);
   const remove = () => floatEl.remove();
@@ -295,6 +299,13 @@ export function showFeverStart() {
   }, 1000);
 }
 
+// シルバー・フィーバー（5マスで合計10）の盤面配色を切り替える。
+// ミリオン・フィーバーとの優先関係はCSS側の:not(.fever)ガードで解決するため、
+// ここでは発動状態をそのままクラスに反映するだけでよい。
+export function setSilverFeverActive(active) {
+  el.screenGame.classList.toggle('silver-fever', active);
+}
+
 export function showTimeUp() {
   el.timeupOverlay.hidden = false;
 }
@@ -303,6 +314,7 @@ export function hideTimeUp() {
   el.timeupOverlay.hidden = true;
   el.feverStartBanner.hidden = true;
   setFeverActive(false);
+  setSilverFeverActive(false);
 }
 
 function formatRate(rate) {
@@ -499,6 +511,16 @@ export function setBattleFeverActive(active) {
   el.screenBattle.classList.toggle('fever', active);
 }
 
+// シルバー・フィーバーはプレイヤー・CPUで独立して発動するため、盤面ごとに
+// 別クラスを切り替える（css/battle.cssの.player-silver-fever/.cpu-silver-fever）。
+export function setBattlePlayerSilverFeverActive(active) {
+  el.screenBattle.classList.toggle('player-silver-fever', active);
+}
+
+export function setBattleCpuSilverFeverActive(active) {
+  el.screenBattle.classList.toggle('cpu-silver-fever', active);
+}
+
 export function showBattleTimeUp() {
   el.battleTimeupOverlay.hidden = false;
 }
@@ -506,6 +528,8 @@ export function showBattleTimeUp() {
 export function hideBattleTimeUp() {
   el.battleTimeupOverlay.hidden = true;
   setBattleFeverActive(false);
+  setBattlePlayerSilverFeverActive(false);
+  setBattleCpuSilverFeverActive(false);
 }
 
 // 点差ベースのゲージ表示を更新する。非表示（フィーバー中）はCSS側の.feverクラスで

@@ -7,6 +7,7 @@ import {
   calcSum,
   isValidSum,
   calculateScore,
+  isSilverFeverTrigger,
   createStats,
   applySuccess,
   recordFailure,
@@ -61,6 +62,9 @@ export class BattleController extends EventTarget {
     this.cpuController = null;
     // 数字入れかえで1つ目に選んだプレイヤー盤面のマス（未選択はnull）。
     this.swapSelection = null;
+    // シルバー・フィーバー（5マスで合計10）はプレイヤー・CPUそれぞれ独立に管理する。
+    this.playerSilverFever = { active: false, endsAt: null };
+    this.cpuSilverFever = { active: false, endsAt: null };
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -110,6 +114,8 @@ export class BattleController extends EventTarget {
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
     this.swapSelection = null;
+    this.playerSilverFever = { active: false, endsAt: null };
+    this.cpuSilverFever = { active: false, endsAt: null };
     audio.chooseRandomBgmTrack(this.rng);
 
     this.selectionController = new SelectionController(this.playerBoardEl, {
@@ -169,6 +175,8 @@ export class BattleController extends EventTarget {
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
     this.swapSelection = null;
+    this._clearSilverFever(this.playerSilverFever, 'playersilverfeverend');
+    this._clearSilverFever(this.cpuSilverFever, 'cpusilverfeverend');
     this._setStatus(STATUS.IDLE);
   }
 
@@ -212,7 +220,7 @@ export class BattleController extends EventTarget {
     this.startedAt = performance.now();
     this.endsAt = this.startedAt + CONFIG.gameDurationMs;
     this._setStatus(STATUS.PLAYING);
-    this.cpuController.start({ getPhase: () => this.phase });
+    this.cpuController.start({ getScoringContext: () => this._getScoringContext(this.cpuSilverFever) });
     this._loop();
   }
 
@@ -246,6 +254,13 @@ export class BattleController extends EventTarget {
         audio.playFeverTick(seconds);
       }
     }
+
+    if (this.playerSilverFever.active && now >= this.playerSilverFever.endsAt) {
+      this._clearSilverFever(this.playerSilverFever, 'playersilverfeverend');
+    }
+    if (this.cpuSilverFever.active && now >= this.cpuSilverFever.endsAt) {
+      this._clearSilverFever(this.cpuSilverFever, 'cpusilverfeverend');
+    }
   }
 
   _loop() {
@@ -262,6 +277,29 @@ export class BattleController extends EventTarget {
     this.dispatchEvent(new CustomEvent('feverstart', {}));
     audio.playFeverStart();
     this._emitGaugeUpdate();
+  }
+
+  // ミリオン・フィーバー中かどうかと、その側のシルバー・フィーバー状態から
+  // 現在有効な得点倍率を決める。ミリオン・フィーバーが優先され、重複しない。
+  _getScoringContext(sideState) {
+    const isFever = this.phase === PHASE.FEVER;
+    const silverActive = !isFever && sideState.active;
+    const multiplier = isFever ? CONFIG.feverMultiplier : (silverActive ? CONFIG.silverFeverMultiplier : 1);
+    return { isFever, multiplier, silverActive };
+  }
+
+  _startSilverFever(sideState, eventName) {
+    sideState.active = true;
+    sideState.endsAt = performance.now() + CONFIG.silverFeverDurationMs;
+    this.dispatchEvent(new CustomEvent(eventName, {}));
+    audio.playSilverFeverStart();
+  }
+
+  _clearSilverFever(sideState, eventName) {
+    if (!sideState.active) return;
+    sideState.active = false;
+    sideState.endsAt = null;
+    this.dispatchEvent(new CustomEvent(eventName, {}));
   }
 
   _onVisibilityChange() {
@@ -282,8 +320,8 @@ export class BattleController extends EventTarget {
     const sum = calcSum(values);
 
     if (isValidSum(sum)) {
-      const isFever = this.phase === PHASE.FEVER;
-      const result = calculateScore({ sum, pathLength: indices.length, isFever });
+      const { isFever, multiplier, silverActive } = this._getScoringContext(this.playerSilverFever);
+      const result = calculateScore({ sum, pathLength: indices.length, multiplier, isFever });
       this.playerScore += result.points;
       applySuccess(this.playerStats, result);
 
@@ -291,10 +329,16 @@ export class BattleController extends EventTarget {
 
       if (isFever) {
         audio.playFeverSuccess(indices.length, result.isForty);
+      } else if (silverActive) {
+        audio.playSilverFeverSuccess(indices.length, result.isForty);
       } else if (result.isForty) {
         audio.playForty(indices.length);
       } else {
         audio.playSuccess(indices.length);
+      }
+
+      if (isSilverFeverTrigger(indices.length, sum, isFever)) {
+        this._startSilverFever(this.playerSilverFever, 'playersilverfeverstart');
       }
 
       const refills = this.playerBoard.clear(indices);
@@ -384,6 +428,9 @@ export class BattleController extends EventTarget {
     this.cpuStats.successCount += 1;
     this.dispatchEvent(new CustomEvent('cpusuccess', { detail: result }));
     audio.playCpuSuccess(result.pathLength, result.isForty);
+    if (isSilverFeverTrigger(result.pathLength, result.sum, result.isFever)) {
+      this._startSilverFever(this.cpuSilverFever, 'cpusilverfeverstart');
+    }
     this._emitGaugeUpdate();
   }
 
@@ -422,6 +469,8 @@ export class BattleController extends EventTarget {
     if (this.selectionController) this.selectionController.forceCancel();
     if (this.cpuController) this.cpuController.stop();
     this._clearSwapSelection();
+    this._clearSilverFever(this.playerSilverFever, 'playersilverfeverend');
+    this._clearSilverFever(this.cpuSilverFever, 'cpusilverfeverend');
     for (const id of this.refillTimers) clearTimeout(id);
     this.refillTimers.clear();
 

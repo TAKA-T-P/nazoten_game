@@ -13,7 +13,14 @@ export const CONFIG = {
   feverDurationMs: 10_000,
   feverMultiplier: 3,
   refillDelayMs: 1_000,
-  fortyMultiplier: 2,
+  // 得点式: 合計×マス数×倍率 + フォーティボーナス（合計40のときだけ加算、倍率の影響を受けない）。
+  fortyBonus: 100,
+  // シルバー・フィーバー：5マスで合計10を作ると発動。10秒間、盤面が銀色になり得点2倍。
+  // ミリオン・フィーバー中は発動しない。両方の条件を満たす場合はミリオン・フィーバーを優先する。
+  silverFeverDurationMs: 10_000,
+  silverFeverMultiplier: 2,
+  silverFeverPathLength: 5,
+  silverFeverSum: 10,
   countdownStepMs: 700,
   // 「TIME UP!」表示から結果画面へ遷移するまでの待ち時間。
   resultTransitionDelayMs: 2_000,

@@ -164,6 +164,24 @@ export function playFeverSuccess(count, isForty) {
   }
 }
 
+// シルバー・フィーバー開始：ミリオン・フィーバーより控えめな、金属的な2音のチャイム。
+export function playSilverFeverStart() {
+  tone({ freq: 1046.5, duration: 0.14, type: 'triangle', volume: 0.45 });
+  tone({ freq: 1568, duration: 0.22, type: 'sine', delay: 0.08, volume: 0.4 });
+}
+
+// シルバー・フィーバー中の成功音：通常成功音よりやや高く、銀色らしい澄んだ響き。
+export function playSilverFeverSuccess(count, isForty) {
+  const n = Math.min(count, SCALE.length);
+  for (let i = 0; i < n; i++) {
+    tone({ freq: SCALE[i] * 2.2, duration: 0.12, type: 'sine', delay: i * 0.045, volume: 0.5 });
+  }
+  if (isForty) {
+    const chordDelay = n * 0.045 + 0.05;
+    tone({ freq: 1568, freqEnd: 2093, duration: 0.3, type: 'sine', delay: chordDelay, volume: 0.35 });
+  }
+}
+
 // --- CPUバトル専用SE ------------------------------------------------------
 // プレイヤーと同じ音階を使いながら音量を抑え、プレイヤーの判断を妨げないようにする
 // （Phase3実装指示書 12.3章）。1マスごとのなぞり音は省略し、成功・失敗・破壊音のみ。
