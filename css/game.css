@@ -26,13 +26,6 @@
   color: var(--color-secondary);
 }
 
-.fever-hint {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-forty);
-}
-
 .title-buttons {
   display: flex;
   flex-direction: column;
@@ -42,7 +35,7 @@
 }
 
 .best-score {
-  margin-top: 16px;
+  margin: 6px 0;
   font-weight: 700;
 }
 

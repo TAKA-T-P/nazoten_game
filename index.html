@@ -26,7 +26,6 @@
         <button id="btn-two-player" class="btn btn-primary" type="button">2人バトル</button>
         <button id="btn-howto" class="btn btn-secondary" type="button">遊び方</button>
       </div>
-      <p class="fever-hint">60秒／ラスト10秒は得点3倍！</p>
       <p class="best-score">ベストスコア：<span id="title-best-score">0</span></p>
       <div class="sound-mode-control" role="group" aria-label="サウンドモード">
         <button id="btn-sound-prev" class="sound-mode-arrow" type="button" aria-label="前のサウンドモードへ">◀</button>
@@ -296,84 +295,68 @@
     </div>
   </section>
 
-  <section id="screen-two-player-howto" class="screen" data-screen="two-player-howto" hidden>
-    <div class="howto-inner">
-      <h2>2人バトルのルール</h2>
-      <ol class="howto-steps">
-        <li>端末を2人の間に縦向きに置く。画面下が青の1P、画面上が赤の2P。</li>
-        <li>2人は同じ数字の並びから同時にスタートする。</li>
-        <li>開始後の盤面は、それぞれ別に変化する。</li>
-        <li>2人同時になぞり・入れかえ・破壊ができる。</li>
-        <li>プレイ中は点数を隠し、中央ゲージで優勢を確認する。</li>
-        <li>シルバー・フィーバーは、それぞれのプレイヤーが独立して発動する。</li>
-        <li>ラスト10秒はゲージが消え、両者とも得点3倍になる。</li>
-        <li>60秒後に両者の得点と勝敗を発表する。</li>
-      </ol>
-      <button id="btn-two-player-howto-back" class="btn btn-secondary" type="button">タイトルへ</button>
-    </div>
-  </section>
-
   <section id="screen-two-player" class="screen screen-two-player" data-screen="two-player" hidden>
-    <button id="btn-tp-back" class="btn-small btn-top-left" type="button">もどる</button>
-    <button id="btn-tp-retry" class="btn-small btn-top-right" type="button">リトライ</button>
-
     <div class="tp-zone tp-zone-p2">
       <div class="tp-zone-inner">
-        <div class="tp-hud-row">
-          <span class="tp-player-label tp-player-label-p2">2P</span>
-          <span id="tp-hud-time-p2" class="hud-time-value">60</span>
-          <span id="tp-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
+        <div class="tp-play-row">
+          <div class="tp-side-panel">
+            <button id="btn-tp-back-p2" class="btn-small tp-back-btn" type="button">もどる</button>
+            <span id="tp-hud-time-p2" class="hud-time-value">60</span>
+            <span id="tp-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
+          </div>
+          <div class="board-wrap tp-board-wrap">
+            <div id="tp-board-p2" class="board" role="grid" aria-label="2Pの盤面"></div>
+            <div id="tp-floating-layer-p2" class="floating-layer" aria-hidden="true"></div>
+            <div id="tp-countdown-overlay-p2" class="countdown-overlay" hidden>
+              <span id="tp-countdown-label-p2" class="countdown-label"></span>
+            </div>
+            <div id="tp-timeup-overlay-p2" class="timeup-overlay" hidden>
+              <span class="timeup-label">TIME UP!</span>
+            </div>
+          </div>
         </div>
         <div class="tp-hud-row hud-formula">
           <span id="tp-hud-formula-p2" class="hud-formula-text">&nbsp;</span>
-        </div>
-        <div class="board-wrap tp-board-wrap">
-          <div id="tp-board-p2" class="board" role="grid" aria-label="2Pの盤面"></div>
-          <div id="tp-floating-layer-p2" class="floating-layer" aria-hidden="true"></div>
-          <div id="tp-countdown-overlay-p2" class="countdown-overlay" hidden>
-            <span id="tp-countdown-label-p2" class="countdown-label"></span>
-          </div>
-          <div id="tp-timeup-overlay-p2" class="timeup-overlay" hidden>
-            <span class="timeup-label">TIME UP!</span>
-          </div>
         </div>
       </div>
     </div>
 
     <div class="tp-center">
-      <div class="tp-gauge-slot">
-        <div id="tp-gauge" class="tp-gauge">
-          <div id="tp-gauge-p1" class="tp-gauge-p1"></div>
-          <div id="tp-gauge-p2" class="tp-gauge-p2"></div>
-          <div class="tp-gauge-marker"></div>
-        </div>
-        <div id="tp-fever-label" class="battle-fever-label">MILLION FEVER!<br>SCORE ×3</div>
-      </div>
-      <div class="tp-gauge-labels">
+      <div class="tp-gauge-row">
         <span class="tp-gauge-label-p1">1P</span>
+        <div class="tp-gauge-slot">
+          <div id="tp-gauge" class="tp-gauge">
+            <div id="tp-gauge-p1" class="tp-gauge-p1"></div>
+            <div id="tp-gauge-p2" class="tp-gauge-p2"></div>
+            <div class="tp-gauge-marker"></div>
+          </div>
+          <div id="tp-fever-label" class="battle-fever-label">MILLION FEVER!<br>SCORE ×3</div>
+        </div>
         <span class="tp-gauge-label-p2">2P</span>
       </div>
     </div>
 
     <div class="tp-zone tp-zone-p1">
       <div class="tp-zone-inner">
-        <div class="board-wrap tp-board-wrap">
-          <div id="tp-board-p1" class="board" role="grid" aria-label="1Pの盤面"></div>
-          <div id="tp-floating-layer-p1" class="floating-layer" aria-hidden="true"></div>
-          <div id="tp-countdown-overlay-p1" class="countdown-overlay" hidden>
-            <span id="tp-countdown-label-p1" class="countdown-label"></span>
+        <div class="tp-play-row">
+          <div class="tp-side-panel">
+            <button id="btn-tp-back-p1" class="btn-small tp-back-btn" type="button">もどる</button>
+            <span id="tp-hud-time-p1" class="hud-time-value">60</span>
+            <span id="tp-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
           </div>
-          <div id="tp-timeup-overlay-p1" class="timeup-overlay" hidden>
-            <span class="timeup-label">TIME UP!</span>
+          <div class="board-wrap tp-board-wrap">
+            <div id="tp-board-p1" class="board" role="grid" aria-label="1Pの盤面"></div>
+            <div id="tp-floating-layer-p1" class="floating-layer" aria-hidden="true"></div>
+            <div id="tp-countdown-overlay-p1" class="countdown-overlay" hidden>
+              <span id="tp-countdown-label-p1" class="countdown-label"></span>
+            </div>
+            <div id="tp-timeup-overlay-p1" class="timeup-overlay" hidden>
+              <span class="timeup-label">TIME UP!</span>
+            </div>
           </div>
         </div>
         <div class="tp-hud-row hud-formula">
           <span id="tp-hud-formula-p1" class="hud-formula-text">&nbsp;</span>
-        </div>
-        <div class="tp-hud-row">
-          <span id="tp-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
-          <span id="tp-hud-time-p1" class="hud-time-value">60</span>
-          <span class="tp-player-label tp-player-label-p1">1P</span>
         </div>
       </div>
     </div>
@@ -382,35 +365,38 @@
   <section id="screen-two-player-result" class="screen screen-two-player" data-screen="two-player-result" hidden>
     <div class="tp-result-zone tp-result-zone-p2">
       <div class="tp-result-zone-inner">
-        <p id="tp-outcome-p2" class="battle-outcome">P2 WIN!</p>
-        <p id="tp-score-p2" class="tp-result-score">0</p>
+        <p class="tp-result-line">
+          <span id="tp-outcome-p2" class="battle-outcome">LOSE...</span>
+          <span id="tp-score-p2" class="tp-result-score">0</span>
+        </p>
         <p id="tp-title-p2" class="result-title"></p>
       </div>
     </div>
 
     <div class="tp-result-center">
-      <p id="tp-result-newbest" class="result-newbest" hidden>NEW BEST!</p>
-      <table class="battle-stats-compare tp-stats-compare">
-        <thead>
-          <tr><th></th><th>1P</th><th>2P</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>最終スコア</td><td id="tp-stat-score-p1">0</td><td id="tp-stat-score-p2">0</td></tr>
-          <tr><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td><td id="tp-stat-normal-p2">0</td></tr>
-          <tr><td>シルバー・フィーバースコア</td><td id="tp-stat-silverscore-p1">0</td><td id="tp-stat-silverscore-p2">0</td></tr>
-          <tr><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td><td id="tp-stat-feverscore-p2">0</td></tr>
-          <tr><td>成功率</td><td id="tp-stat-rate-p1">—</td><td id="tp-stat-rate-p2">—</td></tr>
-          <tr><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td><td id="tp-stat-success-p2">0</td></tr>
-          <tr><td>10を作った回数</td><td id="tp-stat-10-p1">0</td><td id="tp-stat-10-p2">0</td></tr>
-          <tr><td>20を作った回数</td><td id="tp-stat-20-p1">0</td><td id="tp-stat-20-p2">0</td></tr>
-          <tr><td>30を作った回数</td><td id="tp-stat-30-p1">0</td><td id="tp-stat-30-p2">0</td></tr>
-          <tr><td>40を作った回数</td><td id="tp-stat-40-p1">0</td><td id="tp-stat-40-p2">0</td></tr>
-          <tr><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td><td id="tp-stat-silver-p2">0</td></tr>
-          <tr><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td><td id="tp-stat-swapdestroy-p2">0</td></tr>
-          <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
-          <tr><td>1手の最高得点</td><td id="tp-stat-highest-p1">0</td><td id="tp-stat-highest-p2">0</td></tr>
-        </tbody>
-      </table>
+      <div class="tp-stats-scroll">
+        <table class="battle-stats-compare tp-stats-compare">
+          <thead>
+            <tr><th></th><th>1P</th><th>2P</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>最終スコア</td><td id="tp-stat-score-p1">0</td><td id="tp-stat-score-p2">0</td></tr>
+            <tr><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td><td id="tp-stat-normal-p2">0</td></tr>
+            <tr><td>シルバー・フィーバースコア</td><td id="tp-stat-silverscore-p1">0</td><td id="tp-stat-silverscore-p2">0</td></tr>
+            <tr><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td><td id="tp-stat-feverscore-p2">0</td></tr>
+            <tr><td>成功率</td><td id="tp-stat-rate-p1">—</td><td id="tp-stat-rate-p2">—</td></tr>
+            <tr><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td><td id="tp-stat-success-p2">0</td></tr>
+            <tr><td>10を作った回数</td><td id="tp-stat-10-p1">0</td><td id="tp-stat-10-p2">0</td></tr>
+            <tr><td>20を作った回数</td><td id="tp-stat-20-p1">0</td><td id="tp-stat-20-p2">0</td></tr>
+            <tr><td>30を作った回数</td><td id="tp-stat-30-p1">0</td><td id="tp-stat-30-p2">0</td></tr>
+            <tr><td>40を作った回数</td><td id="tp-stat-40-p1">0</td><td id="tp-stat-40-p2">0</td></tr>
+            <tr><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td><td id="tp-stat-silver-p2">0</td></tr>
+            <tr><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td><td id="tp-stat-swapdestroy-p2">0</td></tr>
+            <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
+            <tr><td>1手の最高得点</td><td id="tp-stat-highest-p1">0</td><td id="tp-stat-highest-p2">0</td></tr>
+          </tbody>
+        </table>
+      </div>
       <div class="result-buttons">
         <button id="btn-tp-rematch" class="btn btn-primary" type="button">もう一度</button>
         <button id="btn-tp-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
@@ -419,8 +405,10 @@
 
     <div class="tp-result-zone tp-result-zone-p1">
       <div class="tp-result-zone-inner">
-        <p id="tp-outcome-p1" class="battle-outcome">P1 WIN!</p>
-        <p id="tp-score-p1" class="tp-result-score">0</p>
+        <p class="tp-result-line">
+          <span id="tp-outcome-p1" class="battle-outcome">WIN!</span>
+          <span id="tp-score-p1" class="tp-result-score">0</span>
+        </p>
         <p id="tp-title-p1" class="result-title"></p>
       </div>
     </div>

@@ -105,7 +105,6 @@ function cacheDom() {
   el.tpOutcome = { p1: document.getElementById('tp-outcome-p1'), p2: document.getElementById('tp-outcome-p2') };
   el.tpResultScore = { p1: document.getElementById('tp-score-p1'), p2: document.getElementById('tp-score-p2') };
   el.tpResultTitle = { p1: document.getElementById('tp-title-p1'), p2: document.getElementById('tp-title-p2') };
-  el.tpResultNewBest = document.getElementById('tp-result-newbest');
   el.tpStatScore = { p1: document.getElementById('tp-stat-score-p1'), p2: document.getElementById('tp-stat-score-p2') };
   el.tpStatNormal = { p1: document.getElementById('tp-stat-normal-p1'), p2: document.getElementById('tp-stat-normal-p2') };
   el.tpStatSilverScore = { p1: document.getElementById('tp-stat-silverscore-p1'), p2: document.getElementById('tp-stat-silverscore-p2') };
@@ -799,7 +798,7 @@ const TWO_PLAYER_OUTCOME_LABELS = {
   draw: { p1: 'DRAW!', p2: 'DRAW!' }
 };
 
-export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, isNewP1Best, isNewP2Best }) {
+export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2Stats }) {
   const labels = TWO_PLAYER_OUTCOME_LABELS[outcome] || { p1: '', p2: '' };
   el.tpOutcome.p1.textContent = labels.p1;
   el.tpOutcome.p2.textContent = labels.p2;
@@ -815,7 +814,6 @@ export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2St
   el.tpResultScore.p2.textContent = String(p2Score);
   el.tpResultTitle.p1.textContent = getTitleForScore(p1Score);
   el.tpResultTitle.p2.textContent = getTitleForScore(p2Score);
-  el.tpResultNewBest.hidden = !(isNewP1Best || isNewP2Best);
 
   const setStat = (pair, p1Value, p2Value) => {
     pair.p1.textContent = String(p1Value);

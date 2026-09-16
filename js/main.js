@@ -69,14 +69,7 @@ function main() {
   }
 
   document.getElementById('btn-start').addEventListener('click', () => {
-    if (storage.hasSeenCurrentTutorial()) {
-      startCountdownAndPlay();
-    } else {
-      // あそびかた画面にスタートボタンはないため、表示した時点で既読にする。
-      // 次に「スコアアタック」を押したときはそのままゲームが始まる。
-      storage.markTutorialSeen();
-      ui.showScreen('howto');
-    }
+    startCountdownAndPlay();
   });
 
   document.getElementById('btn-howto').addEventListener('click', () => {
@@ -173,15 +166,10 @@ function main() {
   }
 
   document.getElementById('btn-cpu-battle').addEventListener('click', () => {
-    if (storage.hasSeenCpuBattleTutorial()) {
-      showCpuSelectScreen();
-    } else {
-      ui.showScreen('cpu-howto');
-    }
+    showCpuSelectScreen();
   });
 
   document.getElementById('btn-cpu-howto-start').addEventListener('click', () => {
-    storage.markCpuBattleTutorialSeen();
     showCpuSelectScreen();
   });
 
@@ -270,8 +258,8 @@ function main() {
   twoPlayer.addEventListener('timeup', () => ui.showTwoPlayerTimeUp());
   twoPlayer.addEventListener('result', (e) => {
     const { outcome, p1Score, p2Score, p1Stats, p2Stats } = e.detail;
-    const { isNewP1Best, isNewP2Best } = storage.submitTwoPlayerBattleResult({ outcome, p1Score, p2Score });
-    ui.renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, isNewP1Best, isNewP2Best });
+    storage.submitTwoPlayerBattleResult({ outcome, p1Score, p2Score });
+    ui.renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2Stats });
     ui.showScreen('two-player-result');
   });
 
@@ -281,28 +269,16 @@ function main() {
   }
 
   document.getElementById('btn-two-player').addEventListener('click', () => {
-    if (storage.hasSeenTwoPlayerTutorial()) {
-      startTwoPlayerCountdown();
-    } else {
-      // 2人バトルのあそびかた画面にもスタートボタンは置かず、表示した時点で既読にする。
-      // 次に「2人バトル」を押したときはそのままバトルが始まる。
-      storage.markTwoPlayerTutorialSeen();
-      ui.showScreen('two-player-howto');
-    }
-  });
-
-  document.getElementById('btn-two-player-howto-back').addEventListener('click', () => {
-    ui.showScreen('title');
-  });
-
-  document.getElementById('btn-tp-back').addEventListener('click', () => {
-    twoPlayer.backToTitle();
-    ui.showScreen('title');
-  });
-
-  document.getElementById('btn-tp-retry').addEventListener('click', () => {
     startTwoPlayerCountdown();
   });
+
+  function backToTitleFromTwoPlayer() {
+    twoPlayer.backToTitle();
+    ui.showScreen('title');
+  }
+
+  document.getElementById('btn-tp-back-p1').addEventListener('click', backToTitleFromTwoPlayer);
+  document.getElementById('btn-tp-back-p2').addEventListener('click', backToTitleFromTwoPlayer);
 
   document.getElementById('btn-tp-rematch').addEventListener('click', () => {
     startTwoPlayerCountdown();

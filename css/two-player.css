@@ -1,12 +1,20 @@
 /* 1台2人バトル（Phase4実装指示書）。P2側は内側ラッパーをCSSで180度回転させるだけで、
    盤面のセル順序やロジックはP1・P2で完全に共通のまま扱う（仕様書7.2章）。 */
 
-/* ゲーム中は縦スクロールを発生させないよう、画面いっぱいの固定高さにして
-   はみ出しを防ぐ（仕様書7.3章）。100vhではなくモバイルのUI変動に強い100dvhを使う。 */
-#screen-two-player {
-  position: relative;
+/* .screenはflex:1（flex-basis:0%）を持つため、heightを指定してもflex-basisが
+   優先されてしまい、#appの高さがauto（min-heightのみ）である限りheight指定が
+   効かず、内容が多いとその分だけ#appごと伸びてページ全体がスクロールしてしまう。
+   2人バトル関連の画面が表示されているときだけ#app自体を100dvhに固定し、
+   flex-shrinkが正しく働く土台を作る（仕様書7.3章：ゲーム中は縦スクロール禁止）。 */
+#app:has(> #screen-two-player:not([hidden])),
+#app:has(> #screen-two-player-result:not([hidden])) {
   height: 100vh;
   height: 100dvh;
+  overflow: hidden;
+}
+
+#screen-two-player {
+  position: relative;
   min-height: 0;
   overflow: hidden;
   padding: 6px 10px;
@@ -32,10 +40,42 @@
   gap: 4px;
 }
 
-/* P2側だけを180度回転させる。文字・盤面・演出のすべてがP2の向きから正しく読める。 */
+/* P2側だけを180度回転させる。文字・盤面・演出のすべてがP2の向きから正しく読める。
+   もどるボタン・残り時間・バッジの並びも自動的に左右反転して表示される。 */
 .tp-zone-p2 .tp-zone-inner {
   transform: rotate(180deg);
   transform-origin: center;
+}
+
+/* 残り時間・SILVERバッジ・もどるボタンをまとめた固定幅の縦並びパネルを盤面の
+   左側に配置する。幅を固定することで、バッジの表示/非表示や時間の桁数が
+   変わっても盤面の位置がずれないようにする。 */
+.tp-play-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tp-side-panel {
+  flex: 0 0 auto;
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tp-back-btn {
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.tp-side-panel .hud-time-value {
+  font-size: 1.1rem;
+  font-weight: 900;
 }
 
 .tp-hud-row {
@@ -51,30 +91,11 @@
   min-height: 1.2em;
 }
 
-.tp-player-label {
-  font-weight: 900;
-  font-size: 0.85rem;
-  flex: 0 0 auto;
-}
-
-.tp-player-label-p1 {
-  color: #2563eb;
-}
-
-.tp-player-label-p2 {
-  color: var(--color-fail);
-}
-
-.tp-hud-row .hud-time-value {
-  font-size: 1.1rem;
-  font-weight: 900;
-  flex: 0 0 auto;
-}
-
-/* 盤面は幅・高さの両方から制約し、どんな画面比率でもゾーン内に収まる正方形にする。 */
+/* 盤面は幅・高さの両方から制約し、どんな画面比率でもゾーン内に収まる正方形にする。
+   横方向は左の固定パネル分を差し引いた分だけ使う。 */
 .tp-board-wrap {
-  width: min(78vw, 34vh);
-  max-width: 320px;
+  width: min(66vw, 34vh);
+  max-width: 280px;
   aspect-ratio: 1 / 1;
 }
 
@@ -95,13 +116,39 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
   padding: 4px 0;
+}
+
+/* 「1P（バー）2P」を1行に収める。2Pの文字だけ180度回転させ、P2から見て
+   正しい向きで読めるようにする（中央ゾーン自体は回転させないため）。 */
+.tp-gauge-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tp-gauge-label-p1,
+.tp-gauge-label-p2 {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: inline-block;
+}
+
+.tp-gauge-label-p1 {
+  color: #2563eb;
+}
+
+.tp-gauge-label-p2 {
+  color: var(--color-fail);
+  transform: rotate(180deg);
 }
 
 .tp-gauge-slot {
   position: relative;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 22px;
   display: flex;
   align-items: center;
@@ -145,22 +192,6 @@
 
 #screen-two-player.fever .battle-fever-label {
   visibility: visible;
-}
-
-.tp-gauge-labels {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.tp-gauge-label-p1 {
-  color: #2563eb;
-}
-
-.tp-gauge-label-p2 {
-  color: var(--color-fail);
 }
 
 /* ミリオン・フィーバー中は両盤面を金色配色にする（仕様書15.1・15.4章）。 */
@@ -239,12 +270,18 @@
 
 /* --- 2人バトル結果画面 ----------------------------------------------------- */
 
+/* 結果画面もスマホ縦画面の1画面に収める。中央の記録一覧表だけを内部スクロール
+   させ、両プレイヤーの結果カードとボタンは常に見える位置に固定する。 */
 #screen-two-player-result {
+  min-height: 0;
+  overflow: hidden;
   gap: 8px;
-  padding: 16px 16px;
+  padding: 12px 16px;
+  justify-content: stretch;
 }
 
 .tp-result-zone {
+  flex: 0 0 auto;
   width: 100%;
   max-width: 360px;
   display: flex;
@@ -262,20 +299,43 @@
   transform: rotate(180deg);
 }
 
+/* 「WIN! 2500」のように結果と得点を同じ行にまとめる。 */
+.tp-result-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.tp-result-line .battle-outcome {
+  font-size: 1.4rem;
+}
+
 .tp-result-score {
-  font-size: 2.2rem;
+  font-size: 1.7rem;
   font-weight: 900;
   margin: 0;
   color: var(--color-text);
 }
 
 .tp-result-center {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   max-width: 360px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.tp-stats-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tp-stats-compare td,
