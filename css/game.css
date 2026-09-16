@@ -317,8 +317,8 @@
   position: relative;
   width: 100%;
   max-width: 420px;
-  /* 横5マス×縦4マスなので、セルが正方形になるよう列数÷行数の比率にする。 */
-  aspect-ratio: 5 / 4;
+  /* 横4マス×縦4マスなので、セルが正方形になるよう列数÷行数の比率にする。 */
+  aspect-ratio: 4 / 4;
   border-radius: var(--radius-lg);
   transition: box-shadow 0.3s ease;
 }
@@ -329,7 +329,7 @@
 
 .board {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
   gap: 6px;
   width: 100%;
