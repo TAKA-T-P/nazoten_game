@@ -111,18 +111,6 @@ export const CPU_LEVELS = {
     label: '強さ1',
     name: 'のんびり',
     description: 'のんびりプレイする最弱CPU',
-    thinkMinMs: 3600,
-    thinkMaxMs: 5200,
-    maxPathLength: 2,
-    bestMoveRate: 0.05,
-    mistakeRate: 0.20,
-    traceStepMs: 400,
-    noMoveDestroyMs: 4000
-  },
-  2: {
-    label: '強さ2',
-    name: 'ゆっくり',
-    description: 'はじめてのCPUバトルにおすすめ',
     thinkMinMs: 3000,
     thinkMaxMs: 4400,
     maxPathLength: 3,
@@ -131,10 +119,22 @@ export const CPU_LEVELS = {
     traceStepMs: 360,
     noMoveDestroyMs: 3500
   },
-  3: {
-    label: '強さ3',
+  2: {
+    label: '強さ2',
     name: 'やさしい',
     description: '少しずつ得点してくる相手',
+    thinkMinMs: 2700,
+    thinkMaxMs: 4000,
+    maxPathLength: 4,
+    bestMoveRate: 0.18,
+    mistakeRate: 0.13,
+    traceStepMs: 340,
+    noMoveDestroyMs: 3250
+  },
+  3: {
+    label: '強さ3',
+    name: 'ふつう',
+    description: 'バランスの取れた標準レベル',
     thinkMinMs: 2400,
     thinkMaxMs: 3600,
     maxPathLength: 4,
@@ -145,8 +145,8 @@ export const CPU_LEVELS = {
   },
   4: {
     label: '強さ4',
-    name: 'ふつう',
-    description: 'バランスの取れた標準レベル',
+    name: 'つよい',
+    description: 'わりと高得点の組み合わせを探す',
     thinkMinMs: 1800,
     thinkMaxMs: 2800,
     maxPathLength: 5,
@@ -157,8 +157,8 @@ export const CPU_LEVELS = {
   },
   5: {
     label: '強さ5',
-    name: 'つよい',
-    description: '高得点の組み合わせをよく見つける',
+    name: 'めちゃつよ',
+    description: 'かなり速いスピードでパネルを消す',
     thinkMinMs: 1300,
     thinkMaxMs: 2000,
     maxPathLength: 5,

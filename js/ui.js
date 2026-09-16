@@ -151,9 +151,6 @@ function cacheDom() {
   el.mbStatSilver = { p1: document.getElementById('mb-stat-silver-p1'), p2: document.getElementById('mb-stat-silver-p2') };
   el.mbStatSwapDestroy = { p1: document.getElementById('mb-stat-swapdestroy-p1'), p2: document.getElementById('mb-stat-swapdestroy-p2') };
   el.mbStatCleared = { p1: document.getElementById('mb-stat-cleared-p1'), p2: document.getElementById('mb-stat-cleared-p2') };
-  el.mbStatStolen = { p1: document.getElementById('mb-stat-stolen-p1'), p2: document.getElementById('mb-stat-stolen-p2') };
-  el.mbStatOjamaUsed = { p1: document.getElementById('mb-stat-ojama-used-p1'), p2: document.getElementById('mb-stat-ojama-used-p2') };
-  el.mbStatOjamaReceived = { p1: document.getElementById('mb-stat-ojama-received-p1'), p2: document.getElementById('mb-stat-ojama-received-p2') };
 
   // オジャマボタン・ヒドゥン用オーバーレイ（スコアバトル=tp・ごちゃまぜ=mbの
   // 両方に用意する。仕様書15章）
@@ -1164,7 +1161,7 @@ export function updateMixedGauge(detail) {
   el.mbGaugeP1.style.width = `${pct}%`;
 }
 
-export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, ojamaUsed, ojamaReceived }) {
+export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2Stats }) {
   const labels = TWO_PLAYER_OUTCOME_LABELS[outcome] || { p1: '', p2: '' };
   el.mbOutcome.p1.textContent = labels.p1;
   el.mbOutcome.p2.textContent = labels.p2;
@@ -1200,9 +1197,6 @@ export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2
     p2Stats.swapCount + p2Stats.destroyCount
   );
   setStat(el.mbStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
-  setStat(el.mbStatStolen, p1Stats.stolenCancelCount || 0, p2Stats.stolenCancelCount || 0);
-  setStat(el.mbStatOjamaUsed, ojamaUsed.p1, ojamaUsed.p2);
-  setStat(el.mbStatOjamaReceived, ojamaReceived.p1, ojamaReceived.p2);
 }
 
 // --- オジャマ（Phase5実装指示書16〜20章） -------------------------------------

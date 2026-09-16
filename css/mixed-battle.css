@@ -103,3 +103,84 @@
 .floating-stolen .floating-label {
   font-size: 0.8rem;
 }
+
+/* --- ミリオン・フィーバー/シルバー・フィーバーの盤面演出 --------------------- */
+/* two-player.cssの同名ルールをそのまま踏襲するが、ごちゃまぜバトルの画面IDは
+   #screen-two-playerではなく#screen-mixed-battle、盤面IDはtp-board-*ではなく
+   mb-board-*・mb-silver-badge-*になるため、専用のセレクタとして用意する。 */
+#screen-mixed-battle.fever .tp-gauge {
+  visibility: hidden;
+}
+
+#screen-mixed-battle.fever .battle-fever-label {
+  visibility: visible;
+}
+
+#screen-mixed-battle.fever #mb-board-p1 .cell,
+#screen-mixed-battle.fever #mb-board-p2 .cell {
+  background: linear-gradient(160deg, #fff6d9 0%, #ffdf7d 100%);
+  border-color: #e6a800;
+  color: #5b3d00;
+}
+
+#screen-mixed-battle.fever .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-mixed-battle.fever .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-mixed-battle.fever .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-mixed-battle.fever .tp-board-wrap {
+  box-shadow: 0 0 0 3px #ffd54d, 0 0 16px 4px rgba(255, 213, 77, 0.55);
+}
+
+#screen-mixed-battle.fever .hud-time-value {
+  color: var(--color-forty);
+}
+
+#screen-mixed-battle.p1-silver-fever:not(.fever) #mb-silver-badge-p1,
+#screen-mixed-battle.p2-silver-fever:not(.fever) #mb-silver-badge-p2 {
+  visibility: visible;
+}
+
+#screen-mixed-battle.p1-silver-fever:not(.fever) #mb-board-p1 .cell,
+#screen-mixed-battle.p2-silver-fever:not(.fever) #mb-board-p2 .cell {
+  background: linear-gradient(160deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+#screen-mixed-battle.p1-silver-fever:not(.fever) #mb-board-p1 .cell.selected,
+#screen-mixed-battle.p2-silver-fever:not(.fever) #mb-board-p2 .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-mixed-battle.p1-silver-fever:not(.fever) #mb-board-p1 .cell.selected-valid,
+#screen-mixed-battle.p2-silver-fever:not(.fever) #mb-board-p2 .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-mixed-battle.p1-silver-fever:not(.fever) #mb-board-p1 .cell.swap-selected,
+#screen-mixed-battle.p2-silver-fever:not(.fever) #mb-board-p2 .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-mixed-battle.p1-silver-fever:not(.fever) .tp-zone-p1 .tp-board-wrap,
+#screen-mixed-battle.p2-silver-fever:not(.fever) .tp-zone-p2 .tp-board-wrap {
+  box-shadow: 0 0 0 3px #94a3b8, 0 0 16px 4px rgba(148, 163, 184, 0.55);
+}

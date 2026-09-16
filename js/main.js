@@ -381,9 +381,9 @@ function main() {
   mixedBattle.addEventListener('gaugeupdate', (e) => ui.updateMixedGauge(e.detail));
   mixedBattle.addEventListener('timeup', () => ui.showMixedTimeUp());
   mixedBattle.addEventListener('result', (e) => {
-    const { outcome, p1Score, p2Score, p1Stats, p2Stats, ojamaUsed, ojamaReceived, ojamaTotalUses } = e.detail;
+    const { outcome, p1Score, p2Score, p1Stats, p2Stats, ojamaTotalUses } = e.detail;
     storage.submitMixedBattleResult({ outcome, p1Score, p2Score, ojamaUseCount: ojamaTotalUses });
-    ui.renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, ojamaUsed, ojamaReceived });
+    ui.renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2Stats });
     ui.showScreen('mixed-battle-result');
   });
 
