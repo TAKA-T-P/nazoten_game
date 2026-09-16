@@ -5,6 +5,7 @@ import * as audio from './audio.js';
 import * as ui from './ui.js';
 import { NazotenGame, STATUS } from './game.js';
 import { BattleController, STATUS as BATTLE_STATUS } from './battle.js';
+import { TwoPlayerController, STATUS as TP_STATUS } from './two-player.js';
 
 function initAudioOnce() {
   audio.init();
@@ -229,6 +230,86 @@ function main() {
 
   document.getElementById('btn-battle-result-title').addEventListener('click', () => {
     battle.backToTitle();
+    ui.showScreen('title');
+  });
+
+  // --- 2人バトル（Phase4実装指示書） ---------------------------------------
+  const tpBoardEls = ui.getTwoPlayerBoardElements();
+  const twoPlayer = new TwoPlayerController(tpBoardEls.p1, tpBoardEls.p2);
+
+  twoPlayer.addEventListener('statechange', (e) => {
+    if (e.detail.status === TP_STATUS.PLAYING) ui.hideTwoPlayerTimeUp();
+  });
+  twoPlayer.addEventListener('boardinit', (e) => {
+    ui.hideTwoPlayerTimeUp();
+    ui.updateTwoPlayerTimer(CONFIG.gameDurationMs);
+    ui.renderTwoPlayerBoards(e.detail.p1Board, e.detail.p2Board);
+  });
+  twoPlayer.addEventListener('countdown', (e) => ui.showTwoPlayerCountdown(e.detail.label));
+  twoPlayer.addEventListener('feverstart', () => ui.setTwoPlayerFeverActive(true));
+  twoPlayer.addEventListener('p1silverfeverstart', () => ui.setTwoPlayerSilverFeverActive('p1', true));
+  twoPlayer.addEventListener('p1silverfeverend', () => ui.setTwoPlayerSilverFeverActive('p1', false));
+  twoPlayer.addEventListener('p2silverfeverstart', () => ui.setTwoPlayerSilverFeverActive('p2', true));
+  twoPlayer.addEventListener('p2silverfeverend', () => ui.setTwoPlayerSilverFeverActive('p2', false));
+  twoPlayer.addEventListener('timeupdate', (e) => ui.updateTwoPlayerTimer(e.detail.remainingMs));
+  twoPlayer.addEventListener('p1selectionupdate', (e) => ui.updateTwoPlayerSelection('p1', e.detail));
+  twoPlayer.addEventListener('p2selectionupdate', (e) => ui.updateTwoPlayerSelection('p2', e.detail));
+  twoPlayer.addEventListener('p1success', (e) => ui.playTwoPlayerSuccessEffect('p1', e.detail));
+  twoPlayer.addEventListener('p2success', (e) => ui.playTwoPlayerSuccessEffect('p2', e.detail));
+  twoPlayer.addEventListener('p1fail', (e) => ui.playTwoPlayerFailEffect('p1', e.detail.indices));
+  twoPlayer.addEventListener('p2fail', (e) => ui.playTwoPlayerFailEffect('p2', e.detail.indices));
+  twoPlayer.addEventListener('p1cellsclear', (e) => ui.clearTwoPlayerCells('p1', e.detail.indices));
+  twoPlayer.addEventListener('p2cellsclear', (e) => ui.clearTwoPlayerCells('p2', e.detail.indices));
+  twoPlayer.addEventListener('p1cellsrefill', (e) => ui.refillTwoPlayerCells('p1', e.detail.cells));
+  twoPlayer.addEventListener('p2cellsrefill', (e) => ui.refillTwoPlayerCells('p2', e.detail.cells));
+  twoPlayer.addEventListener('p1swapselectionupdate', (e) => ui.updateTwoPlayerSwapSelection('p1', e.detail.index));
+  twoPlayer.addEventListener('p2swapselectionupdate', (e) => ui.updateTwoPlayerSwapSelection('p2', e.detail.index));
+  twoPlayer.addEventListener('p1swap', (e) => ui.applyTwoPlayerSwap('p1', e.detail.indices, e.detail.values));
+  twoPlayer.addEventListener('p2swap', (e) => ui.applyTwoPlayerSwap('p2', e.detail.indices, e.detail.values));
+  twoPlayer.addEventListener('gaugeupdate', (e) => ui.updateTwoPlayerGauge(e.detail));
+  twoPlayer.addEventListener('timeup', () => ui.showTwoPlayerTimeUp());
+  twoPlayer.addEventListener('result', (e) => {
+    const { outcome, p1Score, p2Score, p1Stats, p2Stats } = e.detail;
+    const { isNewP1Best, isNewP2Best } = storage.submitTwoPlayerBattleResult({ outcome, p1Score, p2Score });
+    ui.renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, isNewP1Best, isNewP2Best });
+    ui.showScreen('two-player-result');
+  });
+
+  function startTwoPlayerCountdown() {
+    ui.showScreen('two-player');
+    twoPlayer.start();
+  }
+
+  document.getElementById('btn-two-player').addEventListener('click', () => {
+    if (storage.hasSeenTwoPlayerTutorial()) {
+      startTwoPlayerCountdown();
+    } else {
+      // 2人バトルのあそびかた画面にもスタートボタンは置かず、表示した時点で既読にする。
+      // 次に「2人バトル」を押したときはそのままバトルが始まる。
+      storage.markTwoPlayerTutorialSeen();
+      ui.showScreen('two-player-howto');
+    }
+  });
+
+  document.getElementById('btn-two-player-howto-back').addEventListener('click', () => {
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-tp-back').addEventListener('click', () => {
+    twoPlayer.backToTitle();
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-tp-retry').addEventListener('click', () => {
+    startTwoPlayerCountdown();
+  });
+
+  document.getElementById('btn-tp-rematch').addEventListener('click', () => {
+    startTwoPlayerCountdown();
+  });
+
+  document.getElementById('btn-tp-result-title').addEventListener('click', () => {
+    twoPlayer.backToTitle();
     ui.showScreen('title');
   });
 

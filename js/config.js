@@ -32,7 +32,10 @@ export const CONFIG = {
   tutorialVersion: 2,
   // CPUバトル専用チュートリアルのバージョン。
   cpuBattleTutorialVersion: 1,
-  storageKey: 'nazoten-save-v3',
+  // 2人バトル専用チュートリアルのバージョン（Phase4実装指示書23章）。
+  twoPlayerTutorialVersion: 1,
+  storageKey: 'nazoten-save-v4',
+  legacyStorageKeyV3: 'nazoten-save-v3',
   legacyStorageKeyV2: 'nazoten-save-v2',
   legacyStorageKeyV1: 'nazoten-save-v1',
   // バトルゲージの計算に使う点差の基準値（Phase3実装指示書 9.3章）。

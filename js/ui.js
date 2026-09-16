@@ -13,6 +13,12 @@ const battleBoards = {
   cpu: { boardEl: null, cellEls: [] }
 };
 
+// 2人バトルの2盤面（p1/p2）。CPUバトルのbattleBoardsとは別に管理する。
+const twoPlayerBoards = {
+  p1: { boardEl: null, cellEls: [] },
+  p2: { boardEl: null, cellEls: [] }
+};
+
 function cacheDom() {
   el.screens = document.querySelectorAll('.screen');
   el.titleBest = document.getElementById('title-best-score');
@@ -82,6 +88,38 @@ function cacheDom() {
   el.battleStatSwapDestroy = { player: document.getElementById('battle-stat-swapdestroy-player'), cpu: document.getElementById('battle-stat-swapdestroy-cpu') };
   el.battleStatCleared = { player: document.getElementById('battle-stat-cleared-player'), cpu: document.getElementById('battle-stat-cleared-cpu') };
   el.battleRecordSummary = document.getElementById('battle-record-summary');
+
+  // 2人バトル関連
+  el.btnTwoPlayer = document.getElementById('btn-two-player');
+  el.screenTwoPlayer = document.getElementById('screen-two-player');
+  el.tpBoard = { p1: document.getElementById('tp-board-p1'), p2: document.getElementById('tp-board-p2') };
+  el.tpHudTime = { p1: document.getElementById('tp-hud-time-p1'), p2: document.getElementById('tp-hud-time-p2') };
+  el.tpHudFormula = { p1: document.getElementById('tp-hud-formula-p1'), p2: document.getElementById('tp-hud-formula-p2') };
+  el.tpFloatingLayer = { p1: document.getElementById('tp-floating-layer-p1'), p2: document.getElementById('tp-floating-layer-p2') };
+  el.tpCountdownOverlay = { p1: document.getElementById('tp-countdown-overlay-p1'), p2: document.getElementById('tp-countdown-overlay-p2') };
+  el.tpCountdownLabel = { p1: document.getElementById('tp-countdown-label-p1'), p2: document.getElementById('tp-countdown-label-p2') };
+  el.tpTimeupOverlay = { p1: document.getElementById('tp-timeup-overlay-p1'), p2: document.getElementById('tp-timeup-overlay-p2') };
+  el.tpSilverBadge = { p1: document.getElementById('tp-silver-badge-p1'), p2: document.getElementById('tp-silver-badge-p2') };
+  el.tpGaugeP1 = document.getElementById('tp-gauge-p1');
+
+  el.tpOutcome = { p1: document.getElementById('tp-outcome-p1'), p2: document.getElementById('tp-outcome-p2') };
+  el.tpResultScore = { p1: document.getElementById('tp-score-p1'), p2: document.getElementById('tp-score-p2') };
+  el.tpResultTitle = { p1: document.getElementById('tp-title-p1'), p2: document.getElementById('tp-title-p2') };
+  el.tpResultNewBest = document.getElementById('tp-result-newbest');
+  el.tpStatScore = { p1: document.getElementById('tp-stat-score-p1'), p2: document.getElementById('tp-stat-score-p2') };
+  el.tpStatNormal = { p1: document.getElementById('tp-stat-normal-p1'), p2: document.getElementById('tp-stat-normal-p2') };
+  el.tpStatSilverScore = { p1: document.getElementById('tp-stat-silverscore-p1'), p2: document.getElementById('tp-stat-silverscore-p2') };
+  el.tpStatFeverScore = { p1: document.getElementById('tp-stat-feverscore-p1'), p2: document.getElementById('tp-stat-feverscore-p2') };
+  el.tpStatRate = { p1: document.getElementById('tp-stat-rate-p1'), p2: document.getElementById('tp-stat-rate-p2') };
+  el.tpStatSuccess = { p1: document.getElementById('tp-stat-success-p1'), p2: document.getElementById('tp-stat-success-p2') };
+  el.tpStat10 = { p1: document.getElementById('tp-stat-10-p1'), p2: document.getElementById('tp-stat-10-p2') };
+  el.tpStat20 = { p1: document.getElementById('tp-stat-20-p1'), p2: document.getElementById('tp-stat-20-p2') };
+  el.tpStat30 = { p1: document.getElementById('tp-stat-30-p1'), p2: document.getElementById('tp-stat-30-p2') };
+  el.tpStat40 = { p1: document.getElementById('tp-stat-40-p1'), p2: document.getElementById('tp-stat-40-p2') };
+  el.tpStatSilver = { p1: document.getElementById('tp-stat-silver-p1'), p2: document.getElementById('tp-stat-silver-p2') };
+  el.tpStatSwapDestroy = { p1: document.getElementById('tp-stat-swapdestroy-p1'), p2: document.getElementById('tp-stat-swapdestroy-p2') };
+  el.tpStatCleared = { p1: document.getElementById('tp-stat-cleared-p1'), p2: document.getElementById('tp-stat-cleared-p2') };
+  el.tpStatHighest = { p1: document.getElementById('tp-stat-highest-p1'), p2: document.getElementById('tp-stat-highest-p2') };
 }
 
 export function init() {
@@ -574,4 +612,236 @@ export function renderBattleResult({ outcome, level, playerScore, cpuScore, play
   setStat(el.battleStatCleared, playerStats.clearedCellCount, cpuStats.clearedCellCount);
 
   el.battleRecordSummary.textContent = formatRecord(record);
+}
+
+// --- 2人バトル（Phase4実装指示書） -------------------------------------------
+
+const TWO_PLAYER_ACTORS = ['p1', 'p2'];
+
+export function getTwoPlayerBoardElements() {
+  return { p1: el.tpBoard.p1, p2: el.tpBoard.p2 };
+}
+
+function updateTwoPlayerHudFormula(actor, indices, values, sum, isValid) {
+  const target = el.tpHudFormula[actor];
+  target.classList.toggle('formula-valid', isValid && indices.length >= 2);
+  target.textContent = indices.length === 0 ? ' ' : `${values.join(' + ')} = ${sum}`;
+}
+
+export function renderTwoPlayerBoards(p1Board, p2Board) {
+  twoPlayerBoards.p1.boardEl = el.tpBoard.p1;
+  twoPlayerBoards.p2.boardEl = el.tpBoard.p2;
+  renderCellsInto(twoPlayerBoards.p1, p1Board);
+  renderCellsInto(twoPlayerBoards.p2, p2Board);
+  TWO_PLAYER_ACTORS.forEach((actor) => updateTwoPlayerHudFormula(actor, [], [], 0, false));
+}
+
+export function updateTwoPlayerSelection(actor, detail) {
+  const target = twoPlayerBoards[actor];
+  const selected = new Set(detail.indices);
+  const showValid = detail.isValid && detail.indices.length >= 2;
+  target.cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('selected', selected.has(i));
+    cellEl.classList.toggle('selected-valid', selected.has(i) && showValid);
+    const badge = cellEl.querySelector('.order-badge');
+    if (badge) badge.remove();
+  });
+  detail.indices.forEach((cellIndex, order) => {
+    const badge = document.createElement('span');
+    badge.className = 'order-badge';
+    badge.textContent = String(order + 1);
+    target.cellEls[cellIndex].appendChild(badge);
+  });
+  updateTwoPlayerHudFormula(actor, detail.indices, detail.values, detail.sum, detail.isValid);
+}
+
+function clearTwoPlayerSelectionMarks(actor, index) {
+  const cellEl = twoPlayerBoards[actor].cellEls[index];
+  cellEl.classList.remove('selected', 'selected-valid');
+  const badge = cellEl.querySelector('.order-badge');
+  if (badge) badge.remove();
+}
+
+export function playTwoPlayerFailEffect(actor, indices) {
+  indices.forEach((i) => {
+    clearTwoPlayerSelectionMarks(actor, i);
+    if (reduceMotion) return;
+    const cellEl = twoPlayerBoards[actor].cellEls[i];
+    cellEl.classList.add('fail-shake');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('fail-shake'), { once: true });
+  });
+}
+
+function showTwoPlayerFloatingScore(actor, detail) {
+  const target = twoPlayerBoards[actor];
+  const lastIndex = detail.indices[detail.indices.length - 1];
+  const cellEl = target.cellEls[lastIndex];
+  const boardRect = target.boardEl.getBoundingClientRect();
+  const cellRect = cellEl.getBoundingClientRect();
+
+  const isSilver = !detail.isFever && detail.multiplier > 1;
+  const label = buildFloatingLabel(detail);
+
+  const floatEl = document.createElement('div');
+  const classes = ['floating-score'];
+  if (detail.isForty) classes.push('floating-forty');
+  if (detail.isFever) classes.push('floating-fever');
+  if (isSilver) classes.push('floating-silver');
+  floatEl.className = classes.join(' ');
+  floatEl.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
+  floatEl.style.top = `${cellRect.top - boardRect.top}px`;
+  floatEl.innerHTML = `${label ? `<span class="floating-label">${label}</span>` : ''}<span>+${detail.points}</span>`;
+
+  el.tpFloatingLayer[actor].appendChild(floatEl);
+  const remove = () => floatEl.remove();
+  floatEl.addEventListener('animationend', remove, { once: true });
+  setTimeout(remove, 1200);
+}
+
+export function playTwoPlayerSuccessEffect(actor, detail) {
+  detail.indices.forEach((i) => clearTwoPlayerSelectionMarks(actor, i));
+  showTwoPlayerFloatingScore(actor, detail);
+}
+
+export function clearTwoPlayerCells(actor, indices) {
+  const target = twoPlayerBoards[actor];
+  indices.forEach((i) => target.cellEls[i].classList.add('clearing'));
+  setTimeout(() => {
+    indices.forEach((i) => {
+      const cellEl = target.cellEls[i];
+      cellEl.classList.remove('clearing');
+      cellEl.classList.add('empty');
+      cellEl.querySelector('.cell-value').textContent = '';
+    });
+  }, 220);
+}
+
+export function refillTwoPlayerCells(actor, cells) {
+  const target = twoPlayerBoards[actor];
+  cells.forEach(({ index, value }) => {
+    const cellEl = target.cellEls[index];
+    cellEl.classList.remove('empty');
+    cellEl.querySelector('.cell-value').textContent = String(value);
+    cellEl.classList.add('popping');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('popping'), { once: true });
+  });
+}
+
+export function updateTwoPlayerSwapSelection(actor, index) {
+  twoPlayerBoards[actor].cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('swap-selected', i === index);
+  });
+}
+
+export function applyTwoPlayerSwap(actor, indices, values) {
+  indices.forEach((index, i) => {
+    const cellEl = twoPlayerBoards[actor].cellEls[index];
+    cellEl.classList.remove('swap-selected');
+    cellEl.querySelector('.cell-value').textContent = String(values[i]);
+    cellEl.classList.add('swapping');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('swapping'), { once: true });
+  });
+}
+
+// 共通の1つの時計から、P1・P2両方の残り時間表示を同じ値で更新する（仕様書9.2章）。
+export function updateTwoPlayerTimer(remainingMs) {
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  el.tpHudTime.p1.textContent = String(seconds);
+  el.tpHudTime.p2.textContent = String(seconds);
+}
+
+export function showTwoPlayerCountdown(label) {
+  TWO_PLAYER_ACTORS.forEach((actor) => {
+    const overlay = el.tpCountdownOverlay[actor];
+    const labelEl = el.tpCountdownLabel[actor];
+    overlay.hidden = false;
+    labelEl.textContent = label;
+    labelEl.classList.remove('countdown-pop');
+    void labelEl.offsetWidth; // reflow to restart animation
+    labelEl.classList.add('countdown-pop');
+    if (label === 'BATTLE!') {
+      setTimeout(() => { overlay.hidden = true; }, 450);
+    }
+  });
+}
+
+export function setTwoPlayerFeverActive(active) {
+  el.screenTwoPlayer.classList.toggle('fever', active);
+}
+
+// シルバー・フィーバーはP1・P2で独立して発動するため、盤面ごとに別クラスを切り替える
+// （css/two-player.cssの.p1-silver-fever/.p2-silver-fever）。
+export function setTwoPlayerSilverFeverActive(actor, active) {
+  el.screenTwoPlayer.classList.toggle(`${actor}-silver-fever`, active);
+}
+
+export function showTwoPlayerTimeUp() {
+  TWO_PLAYER_ACTORS.forEach((actor) => { el.tpTimeupOverlay[actor].hidden = false; });
+}
+
+export function hideTwoPlayerTimeUp() {
+  TWO_PLAYER_ACTORS.forEach((actor) => { el.tpTimeupOverlay[actor].hidden = true; });
+  setTwoPlayerFeverActive(false);
+  setTwoPlayerSilverFeverActive('p1', false);
+  setTwoPlayerSilverFeverActive('p2', false);
+}
+
+// 点差ベースのゲージ表示を更新する（仕様書16章）。P1側の幅を直接指定し、P2側は
+// flex:1で残りを埋める（css/two-player.css参照）。
+export function updateTwoPlayerGauge(detail) {
+  const pct = Math.max(0, Math.min(100, detail.p1Percent));
+  el.tpGaugeP1.style.width = `${pct}%`;
+}
+
+const TWO_PLAYER_OUTCOME_LABELS = {
+  p1win: { p1: 'WIN!', p2: 'LOSE...' },
+  p2win: { p1: 'LOSE...', p2: 'WIN!' },
+  draw: { p1: 'DRAW!', p2: 'DRAW!' }
+};
+
+export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, isNewP1Best, isNewP2Best }) {
+  const labels = TWO_PLAYER_OUTCOME_LABELS[outcome] || { p1: '', p2: '' };
+  el.tpOutcome.p1.textContent = labels.p1;
+  el.tpOutcome.p2.textContent = labels.p2;
+
+  const p1Class = outcome === 'p1win' ? 'outcome-win' : outcome === 'p2win' ? 'outcome-lose' : 'outcome-draw';
+  const p2Class = outcome === 'p2win' ? 'outcome-win' : outcome === 'p1win' ? 'outcome-lose' : 'outcome-draw';
+  el.tpOutcome.p1.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
+  el.tpOutcome.p1.classList.add(p1Class);
+  el.tpOutcome.p2.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
+  el.tpOutcome.p2.classList.add(p2Class);
+
+  el.tpResultScore.p1.textContent = String(p1Score);
+  el.tpResultScore.p2.textContent = String(p2Score);
+  el.tpResultTitle.p1.textContent = getTitleForScore(p1Score);
+  el.tpResultTitle.p2.textContent = getTitleForScore(p2Score);
+  el.tpResultNewBest.hidden = !(isNewP1Best || isNewP2Best);
+
+  const setStat = (pair, p1Value, p2Value) => {
+    pair.p1.textContent = String(p1Value);
+    pair.p2.textContent = String(p2Value);
+  };
+
+  setStat(el.tpStatScore, p1Score, p2Score);
+  setStat(el.tpStatNormal, p1Stats.normalScore, p2Stats.normalScore);
+  setStat(el.tpStatSilverScore, p1Stats.silverScore || 0, p2Stats.silverScore || 0);
+  setStat(el.tpStatFeverScore, p1Stats.feverScore, p2Stats.feverScore);
+  setStat(el.tpStatRate, formatRate(calcSuccessRate(p1Stats)), formatRate(calcSuccessRate(p2Stats)));
+  setStat(el.tpStatSuccess, p1Stats.successCount, p2Stats.successCount);
+  setStat(el.tpStat10, p1Stats.sumCounts[10], p2Stats.sumCounts[10]);
+  setStat(el.tpStat20, p1Stats.sumCounts[20], p2Stats.sumCounts[20]);
+  setStat(el.tpStat30, p1Stats.sumCounts[30], p2Stats.sumCounts[30]);
+  setStat(el.tpStat40, p1Stats.sumCounts[40], p2Stats.sumCounts[40]);
+  setStat(el.tpStatSilver, p1Stats.silverFeverCount, p2Stats.silverFeverCount);
+  setStat(
+    el.tpStatSwapDestroy,
+    p1Stats.swapCount + p1Stats.destroyCount,
+    p2Stats.swapCount + p2Stats.destroyCount
+  );
+  setStat(el.tpStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
+  setStat(
+    el.tpStatHighest,
+    Math.max(p1Stats.highestNormalScore, p1Stats.highestFeverScore),
+    Math.max(p2Stats.highestNormalScore, p2Stats.highestFeverScore)
+  );
 }

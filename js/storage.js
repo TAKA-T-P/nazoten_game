@@ -31,16 +31,30 @@ function createCpuRecords() {
   return records;
 }
 
+function createTwoPlayerRecord() {
+  return {
+    playCount: 0,
+    p1Wins: 0,
+    p2Wins: 0,
+    draws: 0,
+    bestP1Score: 0,
+    bestP2Score: 0,
+    highestCombinedScore: 0
+  };
+}
+
 function defaultState() {
   return {
-    version: 3,
+    version: 4,
     soundMode: DEFAULT_SOUND_MODE,
     tutorialVersion: 0,
     cpuBattleTutorialVersion: 0,
+    twoPlayerTutorialVersion: 0,
     selectedCpuLevel: DEFAULT_CPU_LEVEL,
     records: {
       [RECORD_KEY]: { bestScore: 0, playCount: 0 },
-      cpuBattle: createCpuRecords()
+      cpuBattle: createCpuRecords(),
+      twoPlayerBattle: createTwoPlayerRecord()
     },
     legacyRecords: {
       [LEGACY_RECORD_KEY]: { bestScore: 0 }
@@ -86,6 +100,20 @@ function sanitizeCpuRecords(rawRecords) {
   return records;
 }
 
+function sanitizeTwoPlayerRecord(raw) {
+  const d = createTwoPlayerRecord();
+  if (!raw || typeof raw !== 'object') return d;
+  return {
+    playCount: asNumber(raw.playCount, 0),
+    p1Wins: asNumber(raw.p1Wins, 0),
+    p2Wins: asNumber(raw.p2Wins, 0),
+    draws: asNumber(raw.draws, 0),
+    bestP1Score: asNumber(raw.bestP1Score, 0),
+    bestP2Score: asNumber(raw.bestP2Score, 0),
+    highestCombinedScore: asNumber(raw.highestCombinedScore, 0)
+  };
+}
+
 // 壊れた/型の不正なデータが来ても、既定値を土台に安全な形へ整える。
 function sanitize(parsed) {
   const d = defaultState();
@@ -95,17 +123,19 @@ function sanitize(parsed) {
   const legacyRecord = parsed.legacyRecords && parsed.legacyRecords[LEGACY_RECORD_KEY];
 
   return {
-    version: 3,
+    version: 4,
     soundMode: normalizeSoundMode(parsed.soundMode, parsed.soundEnabled),
     tutorialVersion: asNumber(parsed.tutorialVersion, d.tutorialVersion),
     cpuBattleTutorialVersion: asNumber(parsed.cpuBattleTutorialVersion, d.cpuBattleTutorialVersion),
+    twoPlayerTutorialVersion: asNumber(parsed.twoPlayerTutorialVersion, d.twoPlayerTutorialVersion),
     selectedCpuLevel: normalizeCpuLevel(parsed.selectedCpuLevel),
     records: {
       [RECORD_KEY]: {
         bestScore: asNumber(record && record.bestScore, 0),
         playCount: asNumber(record && record.playCount, 0)
       },
-      cpuBattle: sanitizeCpuRecords(parsed.records && parsed.records.cpuBattle)
+      cpuBattle: sanitizeCpuRecords(parsed.records && parsed.records.cpuBattle),
+      twoPlayerBattle: sanitizeTwoPlayerRecord(parsed.records && parsed.records.twoPlayerBattle)
     },
     legacyRecords: {
       [LEGACY_RECORD_KEY]: {
@@ -177,14 +207,22 @@ function persistState(s) {
   }
 }
 
+// v3(旧storageKey)は、そのまま新形状(sanitize)に通せば2人バトル分のフィールドが
+// 初期値で補われ、そのままv4として扱える（Phase4実装指示書22.4章）。v3キー自体は削除しない。
+function migrateFromV3() {
+  const parsedV3 = readJson(CONFIG.legacyStorageKeyV3);
+  if (!parsedV3) return null;
+  return sanitize(parsedV3);
+}
+
 function load() {
   try {
-    const rawV3 = localStorage.getItem(CONFIG.storageKey);
-    if (rawV3) {
-      return sanitize(JSON.parse(rawV3));
+    const rawV4 = localStorage.getItem(CONFIG.storageKey);
+    if (rawV4) {
+      return sanitize(JSON.parse(rawV4));
     }
-    // v3データがまだない場合のみ、v2（なければv1）からの一度きりの移行を行う。
-    const migrated = migrateFromV2() || migrateFromV1();
+    // v4データがまだない場合のみ、v3（なければv2、なければv1）からの一度きりの移行を行う。
+    const migrated = migrateFromV3() || migrateFromV2() || migrateFromV1();
     persistState(migrated);
     return migrated;
   } catch (e) {
@@ -247,6 +285,15 @@ export function markCpuBattleTutorialSeen() {
   persist();
 }
 
+export function hasSeenTwoPlayerTutorial() {
+  return state.twoPlayerTutorialVersion >= CONFIG.twoPlayerTutorialVersion;
+}
+
+export function markTwoPlayerTutorialSeen() {
+  state.twoPlayerTutorialVersion = CONFIG.twoPlayerTutorialVersion;
+  persist();
+}
+
 export function getSelectedCpuLevel() {
   return state.selectedCpuLevel;
 }
@@ -292,4 +339,30 @@ export function submitCpuBattleResult({ level, outcome, playerScore, cpuScore })
   if (isNewBest) record.bestPlayerScore = playerScore;
   persist();
   return isNewBest;
+}
+
+export function getTwoPlayerRecord() {
+  return { ...state.records.twoPlayerBattle };
+}
+
+// 2人バトルの結果を通算成績へ反映する。タイムアップまで完了した対戦だけを対象とし、
+// 途中でタイトルへ戻った場合は呼び出さないこと（Phase4実装指示書22.3章）。
+// 戻り値: { isNewP1Best, isNewP2Best } この対戦でP1・P2それぞれの自己ベストを更新したか。
+export function submitTwoPlayerBattleResult({ outcome, p1Score, p2Score }) {
+  const record = state.records.twoPlayerBattle;
+  record.playCount += 1;
+  if (outcome === 'p1win') record.p1Wins += 1;
+  else if (outcome === 'p2win') record.p2Wins += 1;
+  else record.draws += 1;
+
+  const isNewP1Best = p1Score > record.bestP1Score;
+  if (isNewP1Best) record.bestP1Score = p1Score;
+  const isNewP2Best = p2Score > record.bestP2Score;
+  if (isNewP2Best) record.bestP2Score = p2Score;
+
+  const combined = p1Score + p2Score;
+  if (combined > record.highestCombinedScore) record.highestCombinedScore = combined;
+
+  persist();
+  return { isNewP1Best, isNewP2Best };
 }

@@ -1,0 +1,285 @@
+/* 1台2人バトル（Phase4実装指示書）。P2側は内側ラッパーをCSSで180度回転させるだけで、
+   盤面のセル順序やロジックはP1・P2で完全に共通のまま扱う（仕様書7.2章）。 */
+
+/* ゲーム中は縦スクロールを発生させないよう、画面いっぱいの固定高さにして
+   はみ出しを防ぐ（仕様書7.3章）。100vhではなくモバイルのUI変動に強い100dvhを使う。 */
+#screen-two-player {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding: 6px 10px;
+  gap: 0;
+  justify-content: stretch;
+}
+
+.tp-zone {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tp-zone-inner {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* P2側だけを180度回転させる。文字・盤面・演出のすべてがP2の向きから正しく読める。 */
+.tp-zone-p2 .tp-zone-inner {
+  transform: rotate(180deg);
+  transform-origin: center;
+}
+
+.tp-hud-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 1.4em;
+}
+
+.tp-hud-row.hud-formula {
+  min-height: 1.2em;
+}
+
+.tp-player-label {
+  font-weight: 900;
+  font-size: 0.85rem;
+  flex: 0 0 auto;
+}
+
+.tp-player-label-p1 {
+  color: #2563eb;
+}
+
+.tp-player-label-p2 {
+  color: var(--color-fail);
+}
+
+.tp-hud-row .hud-time-value {
+  font-size: 1.1rem;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+/* 盤面は幅・高さの両方から制約し、どんな画面比率でもゾーン内に収まる正方形にする。 */
+.tp-board-wrap {
+  width: min(78vw, 34vh);
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+}
+
+.tp-board-wrap .board {
+  gap: 5px;
+}
+
+.tp-board-wrap .cell {
+  font-size: clamp(1rem, 5.5vw, 1.6rem);
+}
+
+/* 中央のバトルゾーン（優劣ゲージ）。回転させず、常にP1側の向きで表示する。 */
+.tp-center {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.tp-gauge-slot {
+  position: relative;
+  width: 100%;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.tp-gauge {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  background: var(--color-cell-border);
+  position: relative;
+}
+
+.tp-gauge-p1 {
+  background: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+.tp-gauge-p2 {
+  background: var(--color-fail);
+  flex: 1;
+  transition: width 0.3s ease;
+}
+
+.tp-gauge-marker {
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #fff;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+#screen-two-player.fever .tp-gauge {
+  visibility: hidden;
+}
+
+#screen-two-player.fever .battle-fever-label {
+  visibility: visible;
+}
+
+.tp-gauge-labels {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.tp-gauge-label-p1 {
+  color: #2563eb;
+}
+
+.tp-gauge-label-p2 {
+  color: var(--color-fail);
+}
+
+/* ミリオン・フィーバー中は両盤面を金色配色にする（仕様書15.1・15.4章）。 */
+#screen-two-player.fever #tp-board-p1 .cell,
+#screen-two-player.fever #tp-board-p2 .cell {
+  background: linear-gradient(160deg, #fff6d9 0%, #ffdf7d 100%);
+  border-color: #e6a800;
+  color: #5b3d00;
+}
+
+#screen-two-player.fever .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-two-player.fever .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-two-player.fever .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-two-player.fever .tp-board-wrap {
+  box-shadow: 0 0 0 3px #ffd54d, 0 0 16px 4px rgba(255, 213, 77, 0.55);
+}
+
+#screen-two-player.fever .hud-time-value {
+  color: var(--color-forty);
+}
+
+/* シルバー・フィーバーはP1・P2それぞれ独立して発動するため、盤面ごとに
+   別クラス（.p1-silver-fever / .p2-silver-fever）で色を切り替える。
+   :not(.fever)により、ミリオン・フィーバーと同時成立時はこちらを表示しない
+   （仕様書14.5章：ミリオン開始時はシルバーを強制終了するため通常は同時にならない）。 */
+#screen-two-player.p1-silver-fever:not(.fever) #tp-silver-badge-p1,
+#screen-two-player.p2-silver-fever:not(.fever) #tp-silver-badge-p2 {
+  visibility: visible;
+}
+
+#screen-two-player.p1-silver-fever:not(.fever) #tp-board-p1 .cell,
+#screen-two-player.p2-silver-fever:not(.fever) #tp-board-p2 .cell {
+  background: linear-gradient(160deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+#screen-two-player.p1-silver-fever:not(.fever) #tp-board-p1 .cell.selected,
+#screen-two-player.p2-silver-fever:not(.fever) #tp-board-p2 .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-two-player.p1-silver-fever:not(.fever) #tp-board-p1 .cell.selected-valid,
+#screen-two-player.p2-silver-fever:not(.fever) #tp-board-p2 .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-two-player.p1-silver-fever:not(.fever) #tp-board-p1 .cell.swap-selected,
+#screen-two-player.p2-silver-fever:not(.fever) #tp-board-p2 .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-two-player.p1-silver-fever:not(.fever) .tp-zone-p1 .tp-board-wrap,
+#screen-two-player.p2-silver-fever:not(.fever) .tp-zone-p2 .tp-board-wrap {
+  box-shadow: 0 0 0 3px #94a3b8, 0 0 16px 4px rgba(148, 163, 184, 0.55);
+}
+
+/* --- 2人バトル結果画面 ----------------------------------------------------- */
+
+#screen-two-player-result {
+  gap: 8px;
+  padding: 16px 16px;
+}
+
+.tp-result-zone {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  justify-content: center;
+}
+
+.tp-result-zone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tp-result-zone-p2 .tp-result-zone-inner {
+  transform: rotate(180deg);
+}
+
+.tp-result-score {
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.tp-result-center {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.tp-stats-compare td,
+.tp-stats-compare th {
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
