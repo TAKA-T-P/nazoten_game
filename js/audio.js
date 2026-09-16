@@ -121,6 +121,19 @@ export function playSwap() {
   tone({ freq: 900, duration: 0.07, type: 'triangle', delay: 0.05, volume: 0.4 });
 }
 
+// ごちゃまぜバトル：相手選択中のマスへ入れかえ・破壊しようとして不成立になったときの
+// 短い無効音（失敗音ほど強くない、「ブブッ」という控えめな音）。
+export function playBlocked() {
+  tone({ freq: 220, duration: 0.09, type: 'square', volume: 0.3 });
+  tone({ freq: 180, duration: 0.09, type: 'square', delay: 0.09, volume: 0.25 });
+}
+
+// ごちゃまぜバトル：先に相手へ数字を取られて、失敗扱いなしで選択解除されたときの
+// 短い中立音（失敗のブザーとは区別する）。
+export function playStolen() {
+  tone({ freq: 500, freqEnd: 350, duration: 0.15, type: 'sine', volume: 0.35 });
+}
+
 export function playCountdownTick() {
   tone({ freq: 440, duration: 0.15, type: 'square', volume: 0.5 });
 }
@@ -221,6 +234,25 @@ export function playResult() {
   [523.25, 659.25, 783.99, 1046.5].forEach((freq) => {
     tone({ freq, duration: 0.5, type: 'triangle', delay: chordDelay, volume: 0.4 });
   });
+}
+
+// --- オジャマ（Phase5実装指示書20章） --------------------------------------
+// 発動者側：ボタンを押した瞬間の短い発動音。
+export function playOjamaActivate() {
+  tone({ freq: 700, freqEnd: 1000, duration: 0.12, type: 'triangle', volume: 0.45 });
+  tone({ freq: 1000, freqEnd: 1400, duration: 0.12, type: 'triangle', delay: 0.08, volume: 0.4 });
+}
+
+// 対象者側：効果が始まる瞬間の警告音（発動者側の音と二重再生されないよう、
+// 呼び出し側で1回だけ鳴らすこと）。
+export function playOjamaWarning() {
+  noiseBurst({ duration: 0.12, delay: 0, volume: 0.35 });
+  tone({ freq: 220, freqEnd: 140, duration: 0.25, type: 'sawtooth', delay: 0.02, volume: 0.4 });
+}
+
+// 効果終了時の短い解除音。
+export function playOjamaEnd() {
+  tone({ freq: 500, freqEnd: 700, duration: 0.15, type: 'sine', volume: 0.3 });
 }
 
 // --- BGM（実音源ファイル） -----------------------------------------------

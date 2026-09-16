@@ -119,6 +119,52 @@ function cacheDom() {
   el.tpStatSilver = { p1: document.getElementById('tp-stat-silver-p1'), p2: document.getElementById('tp-stat-silver-p2') };
   el.tpStatSwapDestroy = { p1: document.getElementById('tp-stat-swapdestroy-p1'), p2: document.getElementById('tp-stat-swapdestroy-p2') };
   el.tpStatCleared = { p1: document.getElementById('tp-stat-cleared-p1'), p2: document.getElementById('tp-stat-cleared-p2') };
+
+  // 対戦形式選択（Phase5実装指示書4章）
+  el.formatButtons = document.querySelectorAll('.battle-format-btn');
+  el.ojamaToggleBtn = document.getElementById('btn-ojama-toggle');
+
+  // ごちゃまぜバトル関連（Phase5実装指示書）
+  el.mbBoard = { p1: document.getElementById('mb-board-p1'), p2: document.getElementById('mb-board-p2') };
+  el.mbHudTime = { p1: document.getElementById('mb-hud-time-p1'), p2: document.getElementById('mb-hud-time-p2') };
+  el.mbHudFormula = { p1: document.getElementById('mb-hud-formula-p1'), p2: document.getElementById('mb-hud-formula-p2') };
+  el.mbFloatingLayer = { p1: document.getElementById('mb-floating-layer-p1'), p2: document.getElementById('mb-floating-layer-p2') };
+  el.mbCountdownOverlay = { p1: document.getElementById('mb-countdown-overlay-p1'), p2: document.getElementById('mb-countdown-overlay-p2') };
+  el.mbCountdownLabel = { p1: document.getElementById('mb-countdown-label-p1'), p2: document.getElementById('mb-countdown-label-p2') };
+  el.mbTimeupOverlay = { p1: document.getElementById('mb-timeup-overlay-p1'), p2: document.getElementById('mb-timeup-overlay-p2') };
+  el.mbSilverBadge = { p1: document.getElementById('mb-silver-badge-p1'), p2: document.getElementById('mb-silver-badge-p2') };
+  el.mbOjamaOverlay = { p1: document.getElementById('mb-ojama-overlay-p1'), p2: document.getElementById('mb-ojama-overlay-p2') };
+  el.mbGaugeP1 = document.getElementById('mb-gauge-p1');
+  el.screenMixedBattle = document.getElementById('screen-mixed-battle');
+
+  el.mbOutcome = { p1: document.getElementById('mb-outcome-p1'), p2: document.getElementById('mb-outcome-p2') };
+  el.mbResultScore = { p1: document.getElementById('mb-score-p1'), p2: document.getElementById('mb-score-p2') };
+  el.mbStatScore = { p1: document.getElementById('mb-stat-score-p1'), p2: document.getElementById('mb-stat-score-p2') };
+  el.mbStatNormal = { p1: document.getElementById('mb-stat-normal-p1'), p2: document.getElementById('mb-stat-normal-p2') };
+  el.mbStatFeverScore = { p1: document.getElementById('mb-stat-feverscore-p1'), p2: document.getElementById('mb-stat-feverscore-p2') };
+  el.mbStatRate = { p1: document.getElementById('mb-stat-rate-p1'), p2: document.getElementById('mb-stat-rate-p2') };
+  el.mbStatSuccess = { p1: document.getElementById('mb-stat-success-p1'), p2: document.getElementById('mb-stat-success-p2') };
+  el.mbStat10 = { p1: document.getElementById('mb-stat-10-p1'), p2: document.getElementById('mb-stat-10-p2') };
+  el.mbStat20 = { p1: document.getElementById('mb-stat-20-p1'), p2: document.getElementById('mb-stat-20-p2') };
+  el.mbStat30 = { p1: document.getElementById('mb-stat-30-p1'), p2: document.getElementById('mb-stat-30-p2') };
+  el.mbStat40 = { p1: document.getElementById('mb-stat-40-p1'), p2: document.getElementById('mb-stat-40-p2') };
+  el.mbStatSilver = { p1: document.getElementById('mb-stat-silver-p1'), p2: document.getElementById('mb-stat-silver-p2') };
+  el.mbStatSwapDestroy = { p1: document.getElementById('mb-stat-swapdestroy-p1'), p2: document.getElementById('mb-stat-swapdestroy-p2') };
+  el.mbStatCleared = { p1: document.getElementById('mb-stat-cleared-p1'), p2: document.getElementById('mb-stat-cleared-p2') };
+  el.mbStatStolen = { p1: document.getElementById('mb-stat-stolen-p1'), p2: document.getElementById('mb-stat-stolen-p2') };
+  el.mbStatOjamaUsed = { p1: document.getElementById('mb-stat-ojama-used-p1'), p2: document.getElementById('mb-stat-ojama-used-p2') };
+  el.mbStatOjamaReceived = { p1: document.getElementById('mb-stat-ojama-received-p1'), p2: document.getElementById('mb-stat-ojama-received-p2') };
+
+  // オジャマボタン・ヒドゥン用オーバーレイ（スコアバトル=tp・ごちゃまぜ=mbの
+  // 両方に用意する。仕様書15章）
+  el.ojamaButtons = {
+    tp: { p1: document.getElementById('btn-ojama-tp-p1'), p2: document.getElementById('btn-ojama-tp-p2') },
+    mb: { p1: document.getElementById('btn-ojama-p1'), p2: document.getElementById('btn-ojama-p2') }
+  };
+  el.ojamaOverlays = {
+    tp: { p1: document.getElementById('tp-ojama-overlay-p1'), p2: document.getElementById('tp-ojama-overlay-p2') },
+    mb: { p1: document.getElementById('mb-ojama-overlay-p1'), p2: document.getElementById('mb-ojama-overlay-p2') }
+  };
 }
 
 export function init() {
@@ -789,6 +835,10 @@ export function hideTwoPlayerTimeUp() {
   setTwoPlayerFeverActive(false);
   setTwoPlayerSilverFeverActive('p1', false);
   setTwoPlayerSilverFeverActive('p2', false);
+  clearOjamaEffect('tp', 'p1');
+  clearOjamaEffect('tp', 'p2');
+  hideOjamaButton('tp', 'p1');
+  hideOjamaButton('tp', 'p2');
 }
 
 // 点差ベースのゲージ表示を更新する（仕様書16章）。P1側の幅を直接指定し、P2側は
@@ -842,4 +892,400 @@ export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2St
     p2Stats.swapCount + p2Stats.destroyCount
   );
   setStat(el.tpStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
+}
+
+// --- 対戦形式選択・オジャマ設定（Phase5実装指示書4章） -----------------------
+
+export function updateFormatSelection(format) {
+  el.formatButtons.forEach((btn) => {
+    btn.classList.toggle('selected', btn.dataset.format === format);
+  });
+}
+
+export function updateOjamaToggle(enabled) {
+  el.ojamaToggleBtn.textContent = enabled ? 'ON' : 'OFF';
+  el.ojamaToggleBtn.classList.toggle('is-on', enabled);
+  el.ojamaToggleBtn.setAttribute('aria-pressed', String(enabled));
+}
+
+// --- ごちゃまぜバトル（Phase5実装指示書5〜14章） ------------------------------
+// 盤面は1つだけ共有されるが、DOM表示はP1用・P2用の2組を持つ（仕様書6.1章）。
+// 自分の選択は既存の.selected/.selected-validを使い、相手の選択は
+// .opp-selected-p1/.opp-selected-p2という別クラスで、もう一方の盤面にだけ重ねて
+// 表示する（仕様書7.2章）。
+
+const mixedBoards = {
+  p1: { boardEl: null, cellEls: [] },
+  p2: { boardEl: null, cellEls: [] }
+};
+
+const mixedSelection = {
+  p1: { indices: [], values: [], sum: 0, isValid: false },
+  p2: { indices: [], values: [], sum: 0, isValid: false }
+};
+
+export function getMixedBattleBoardElements() {
+  return { p1: el.mbBoard.p1, p2: el.mbBoard.p2 };
+}
+
+export function renderMixedBattleBoards(board) {
+  mixedBoards.p1.boardEl = el.mbBoard.p1;
+  mixedBoards.p2.boardEl = el.mbBoard.p2;
+  renderCellsInto(mixedBoards.p1, board);
+  renderCellsInto(mixedBoards.p2, board);
+  mixedSelection.p1 = { indices: [], values: [], sum: 0, isValid: false };
+  mixedSelection.p2 = { indices: [], values: [], sum: 0, isValid: false };
+  updateMixedHudFormula('p1', [], [], 0, false);
+  updateMixedHudFormula('p2', [], [], 0, false);
+  updateMixedHighlights();
+}
+
+function updateMixedHudFormula(actor, indices, values, sum, isValid) {
+  const target = el.mbHudFormula[actor];
+  target.classList.toggle('formula-valid', isValid && indices.length >= 2);
+  target.textContent = indices.length === 0 ? ' ' : `${values.join(' + ')} = ${sum}`;
+}
+
+// 両方のDOM盤面へ、自分の選択（強い枠）と相手の選択（色つきリング）を反映する。
+// 毎回両方を丸ごと再計算することで、更新順序に依存しない一貫した表示にする。
+function updateMixedHighlights() {
+  const p1 = mixedSelection.p1;
+  const p2 = mixedSelection.p2;
+  const p1Set = new Set(p1.indices);
+  const p2Set = new Set(p2.indices);
+  const p1ShowValid = p1.isValid && p1.indices.length >= 2;
+  const p2ShowValid = p2.isValid && p2.indices.length >= 2;
+
+  const p1Target = mixedBoards.p1;
+  p1Target.cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('selected', p1Set.has(i));
+    cellEl.classList.toggle('selected-valid', p1Set.has(i) && p1ShowValid);
+    cellEl.classList.toggle('opp-selected-p2', p2Set.has(i));
+    const badge = cellEl.querySelector('.order-badge');
+    if (badge) badge.remove();
+  });
+  p1.indices.forEach((cellIndex, order) => {
+    const badge = document.createElement('span');
+    badge.className = 'order-badge';
+    badge.textContent = String(order + 1);
+    p1Target.cellEls[cellIndex].appendChild(badge);
+  });
+
+  const p2Target = mixedBoards.p2;
+  p2Target.cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('selected', p2Set.has(i));
+    cellEl.classList.toggle('selected-valid', p2Set.has(i) && p2ShowValid);
+    cellEl.classList.toggle('opp-selected-p1', p1Set.has(i));
+    const badge = cellEl.querySelector('.order-badge');
+    if (badge) badge.remove();
+  });
+  p2.indices.forEach((cellIndex, order) => {
+    const badge = document.createElement('span');
+    badge.className = 'order-badge';
+    badge.textContent = String(order + 1);
+    p2Target.cellEls[cellIndex].appendChild(badge);
+  });
+}
+
+export function updateMixedSelection(actor, detail) {
+  mixedSelection[actor] = { indices: detail.indices, values: detail.values, sum: detail.sum, isValid: detail.isValid };
+  updateMixedHighlights();
+  updateMixedHudFormula(actor, detail.indices, detail.values, detail.sum, detail.isValid);
+}
+
+function flashMixedCells(actor, indices) {
+  const target = mixedBoards[actor];
+  indices.forEach((i) => {
+    if (reduceMotion) return;
+    const cellEl = target.cellEls[i];
+    cellEl.classList.add('fail-shake');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('fail-shake'), { once: true });
+  });
+}
+
+export function playMixedFailEffect(actor, indices) {
+  flashMixedCells(actor, indices);
+}
+
+// 横取りされて失敗扱いなしで解除されたときの、中立な短いフィードバック
+// （仕様書8.3章：「先に取られた！」）。
+export function playMixedStolenEffect(actor, indices) {
+  const target = mixedBoards[actor];
+  const lastIndex = indices[indices.length - 1];
+  const cellEl = target.cellEls[lastIndex];
+  const boardRect = target.boardEl.getBoundingClientRect();
+  const cellRect = cellEl.getBoundingClientRect();
+
+  const floatEl = document.createElement('div');
+  floatEl.className = 'floating-score floating-stolen';
+  floatEl.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
+  floatEl.style.top = `${cellRect.top - boardRect.top}px`;
+  floatEl.innerHTML = '<span class="floating-label">先に取られた！</span>';
+
+  el.mbFloatingLayer[actor].appendChild(floatEl);
+  const remove = () => floatEl.remove();
+  floatEl.addEventListener('animationend', remove, { once: true });
+  setTimeout(remove, 1200);
+}
+
+export function playMixedBlockedEffect(actor, indices) {
+  flashMixedCells(actor, indices);
+}
+
+function showMixedFloatingScore(actor, detail) {
+  const target = mixedBoards[actor];
+  const lastIndex = detail.indices[detail.indices.length - 1];
+  const cellEl = target.cellEls[lastIndex];
+  const boardRect = target.boardEl.getBoundingClientRect();
+  const cellRect = cellEl.getBoundingClientRect();
+
+  const isSilver = !detail.isFever && detail.multiplier > 1;
+  const label = buildFloatingLabel(detail);
+
+  const floatEl = document.createElement('div');
+  const classes = ['floating-score'];
+  if (detail.isForty) classes.push('floating-forty');
+  if (detail.isFever) classes.push('floating-fever');
+  if (isSilver) classes.push('floating-silver');
+  floatEl.className = classes.join(' ');
+  floatEl.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
+  floatEl.style.top = `${cellRect.top - boardRect.top}px`;
+  floatEl.innerHTML = `${label ? `<span class="floating-label">${label}</span>` : ''}<span>+${detail.points}</span>`;
+
+  el.mbFloatingLayer[actor].appendChild(floatEl);
+  const remove = () => floatEl.remove();
+  floatEl.addEventListener('animationend', remove, { once: true });
+  setTimeout(remove, 1200);
+}
+
+export function playMixedSuccessEffect(actor, detail) {
+  showMixedFloatingScore(actor, detail);
+}
+
+// 共有盤面のため、消去・補充は両方のDOM盤面へ同時に反映する（仕様書12章）。
+export function clearMixedCells(indices) {
+  ['p1', 'p2'].forEach((actor) => {
+    const target = mixedBoards[actor];
+    indices.forEach((i) => target.cellEls[i].classList.add('clearing'));
+  });
+  setTimeout(() => {
+    ['p1', 'p2'].forEach((actor) => {
+      const target = mixedBoards[actor];
+      indices.forEach((i) => {
+        const cellEl = target.cellEls[i];
+        cellEl.classList.remove('clearing');
+        cellEl.classList.add('empty');
+        cellEl.querySelector('.cell-value').textContent = '';
+      });
+    });
+  }, 220);
+}
+
+export function refillMixedCells(cells) {
+  ['p1', 'p2'].forEach((actor) => {
+    const target = mixedBoards[actor];
+    cells.forEach(({ index, value }) => {
+      const cellEl = target.cellEls[index];
+      cellEl.classList.remove('empty');
+      cellEl.querySelector('.cell-value').textContent = String(value);
+      cellEl.classList.add('popping');
+      cellEl.addEventListener('animationend', () => cellEl.classList.remove('popping'), { once: true });
+    });
+  });
+  applyOjamaSmallToRefilledCells('mb', cells);
+}
+
+export function updateMixedSwapSelection(actor, index) {
+  mixedBoards[actor].cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('swap-selected', i === index);
+  });
+}
+
+// 共有盤面のため、入れかえも両方のDOM盤面へ同時に反映する。
+export function applyMixedSwap(indices, values) {
+  ['p1', 'p2'].forEach((actor) => {
+    const target = mixedBoards[actor];
+    indices.forEach((index, i) => {
+      const cellEl = target.cellEls[index];
+      cellEl.classList.remove('swap-selected');
+      cellEl.querySelector('.cell-value').textContent = String(values[i]);
+      cellEl.classList.add('swapping');
+      cellEl.addEventListener('animationend', () => cellEl.classList.remove('swapping'), { once: true });
+    });
+  });
+}
+
+export function updateMixedTimer(remainingMs) {
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  el.mbHudTime.p1.textContent = String(seconds);
+  el.mbHudTime.p2.textContent = String(seconds);
+}
+
+export function showMixedCountdown(label) {
+  ['p1', 'p2'].forEach((actor) => {
+    const overlay = el.mbCountdownOverlay[actor];
+    const labelEl = el.mbCountdownLabel[actor];
+    overlay.hidden = false;
+    labelEl.textContent = label;
+    labelEl.classList.remove('countdown-pop');
+    void labelEl.offsetWidth;
+    labelEl.classList.add('countdown-pop');
+    if (label === 'BATTLE!') {
+      setTimeout(() => { overlay.hidden = true; }, 450);
+    }
+  });
+}
+
+export function setMixedFeverActive(active) {
+  el.screenMixedBattle.classList.toggle('fever', active);
+}
+
+export function setMixedSilverFeverActive(actor, active) {
+  el.screenMixedBattle.classList.toggle(`${actor}-silver-fever`, active);
+}
+
+export function showMixedTimeUp() {
+  ['p1', 'p2'].forEach((actor) => { el.mbTimeupOverlay[actor].hidden = false; });
+}
+
+export function hideMixedTimeUp() {
+  ['p1', 'p2'].forEach((actor) => { el.mbTimeupOverlay[actor].hidden = true; });
+  setMixedFeverActive(false);
+  setMixedSilverFeverActive('p1', false);
+  setMixedSilverFeverActive('p2', false);
+  clearOjamaEffect('mb', 'p1');
+  clearOjamaEffect('mb', 'p2');
+  hideOjamaButton('mb', 'p1');
+  hideOjamaButton('mb', 'p2');
+}
+
+export function updateMixedGauge(detail) {
+  const pct = Math.max(0, Math.min(100, detail.p1Percent));
+  el.mbGaugeP1.style.width = `${pct}%`;
+}
+
+export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, ojamaUsed, ojamaReceived }) {
+  const labels = TWO_PLAYER_OUTCOME_LABELS[outcome] || { p1: '', p2: '' };
+  el.mbOutcome.p1.textContent = labels.p1;
+  el.mbOutcome.p2.textContent = labels.p2;
+
+  const p1Class = outcome === 'p1win' ? 'outcome-win' : outcome === 'p2win' ? 'outcome-lose' : 'outcome-draw';
+  const p2Class = outcome === 'p2win' ? 'outcome-win' : outcome === 'p1win' ? 'outcome-lose' : 'outcome-draw';
+  el.mbOutcome.p1.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
+  el.mbOutcome.p1.classList.add(p1Class);
+  el.mbOutcome.p2.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
+  el.mbOutcome.p2.classList.add(p2Class);
+
+  el.mbResultScore.p1.textContent = String(p1Score);
+  el.mbResultScore.p2.textContent = String(p2Score);
+
+  const setStat = (pair, p1Value, p2Value) => {
+    pair.p1.textContent = String(p1Value);
+    pair.p2.textContent = String(p2Value);
+  };
+
+  setStat(el.mbStatScore, p1Score, p2Score);
+  setStat(el.mbStatNormal, p1Stats.normalScore, p2Stats.normalScore);
+  setStat(el.mbStatFeverScore, p1Stats.feverScore, p2Stats.feverScore);
+  setStat(el.mbStatRate, formatRate(calcSuccessRate(p1Stats)), formatRate(calcSuccessRate(p2Stats)));
+  setStat(el.mbStatSuccess, p1Stats.successCount, p2Stats.successCount);
+  setStat(el.mbStat10, p1Stats.sumCounts[10], p2Stats.sumCounts[10]);
+  setStat(el.mbStat20, p1Stats.sumCounts[20], p2Stats.sumCounts[20]);
+  setStat(el.mbStat30, p1Stats.sumCounts[30], p2Stats.sumCounts[30]);
+  setStat(el.mbStat40, p1Stats.sumCounts[40], p2Stats.sumCounts[40]);
+  setStat(el.mbStatSilver, p1Stats.silverFeverCount, p2Stats.silverFeverCount);
+  setStat(
+    el.mbStatSwapDestroy,
+    p1Stats.swapCount + p1Stats.destroyCount,
+    p2Stats.swapCount + p2Stats.destroyCount
+  );
+  setStat(el.mbStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
+  setStat(el.mbStatStolen, p1Stats.stolenCancelCount || 0, p2Stats.stolenCancelCount || 0);
+  setStat(el.mbStatOjamaUsed, ojamaUsed.p1, ojamaUsed.p2);
+  setStat(el.mbStatOjamaReceived, ojamaReceived.p1, ojamaReceived.p2);
+}
+
+// --- オジャマ（Phase5実装指示書16〜20章） -------------------------------------
+// scope: 'tp'（スコアバトル）または'mb'（ごちゃまぜバトル）。両モードで同じ
+// 見た目・処理を再利用する。
+
+// スモール効果中に新しく補充された数字にも縮小率を割り当てる（仕様書18.3章）。
+const ojamaSmallActive = { tp: { p1: false, p2: false }, mb: { p1: false, p2: false } };
+
+function getBoardTarget(scope, actor) {
+  return scope === 'mb' ? mixedBoards[actor] : twoPlayerBoards[actor];
+}
+
+export function showOjamaButton(scope, actor) {
+  const btn = el.ojamaButtons[scope][actor];
+  if (btn) btn.hidden = false;
+}
+
+export function hideOjamaButton(scope, actor) {
+  const btn = el.ojamaButtons[scope][actor];
+  if (btn) btn.hidden = true;
+}
+
+function randomOjamaScale() {
+  const { smallScaleMin, smallScaleMax } = OJAMA_SCALE_RANGE;
+  return smallScaleMin + Math.random() * (smallScaleMax - smallScaleMin);
+}
+
+// config.jsの値をここで再宣言せず、main.js経由で一度だけ受け取る。
+let OJAMA_SCALE_RANGE = { smallScaleMin: 0.35, smallScaleMax: 0.75 };
+export function setOjamaScaleRange(range) {
+  OJAMA_SCALE_RANGE = range;
+}
+
+function applyOjamaSmallToBoard(scope, actor) {
+  const target = getBoardTarget(scope, actor);
+  target.cellEls.forEach((cellEl) => {
+    cellEl.style.setProperty('--ojama-scale', String(randomOjamaScale()));
+  });
+}
+
+function applyOjamaSmallToRefilledCells(scope, cells) {
+  ['p1', 'p2'].forEach((actor) => {
+    if (!ojamaSmallActive[scope][actor]) return;
+    const target = getBoardTarget(scope, actor);
+    cells.forEach(({ index }) => {
+      target.cellEls[index].style.setProperty('--ojama-scale', String(randomOjamaScale()));
+    });
+  });
+}
+
+function clearOjamaScale(scope, actor) {
+  const target = getBoardTarget(scope, actor);
+  target.cellEls.forEach((cellEl) => cellEl.style.removeProperty('--ojama-scale'));
+}
+
+export function startOjamaEffect(scope, actor, type) {
+  const boardEl = scope === 'mb' ? el.mbBoard[actor] : el.tpBoard[actor];
+  if (type === 'turn') {
+    boardEl.classList.add('ojama-turn');
+  } else if (type === 'small') {
+    ojamaSmallActive[scope][actor] = true;
+    boardEl.classList.add('ojama-small');
+    applyOjamaSmallToBoard(scope, actor);
+  } else if (type === 'hidden') {
+    const overlay = el.ojamaOverlays[scope][actor];
+    if (overlay) {
+      overlay.hidden = false;
+      overlay.classList.remove('ojama-hidden-anim');
+      void overlay.offsetWidth;
+      overlay.classList.add('ojama-hidden-anim');
+    }
+  }
+}
+
+export function clearOjamaEffect(scope, actor) {
+  const boardEl = scope === 'mb' ? el.mbBoard[actor] : el.tpBoard[actor];
+  boardEl.classList.remove('ojama-turn', 'ojama-small');
+  ojamaSmallActive[scope][actor] = false;
+  clearOjamaScale(scope, actor);
+  const overlay = el.ojamaOverlays[scope][actor];
+  if (overlay) {
+    overlay.hidden = true;
+    overlay.classList.remove('ojama-hidden-anim');
+  }
 }

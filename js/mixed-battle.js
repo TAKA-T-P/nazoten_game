@@ -1,7 +1,11 @@
-// 1台2人バトルの進行管理（Phase4実装指示書）。P1・P2は完全に独立した状態
-// （盤面・Pointer入力・得点・シルバー・フィーバー・入れかえ選択）を持つ。
-// P2側の画面をCSSで180度回転させるだけで、盤面のセル順序やロジックは
-// P1・P2で共通のまま扱う（仕様書7.2章）。
+// ごちゃまぜバトルの進行管理（Phase5実装指示書5〜14章）。P1・P2はスコア・入力・
+// シルバー・フィーバー・入れかえ選択は独立させるが、盤面データは1つだけを共有する。
+// 「共有モデルを2ビューへ同期する」ための特別なモデルクラスは設けず、既存の
+// board.js（Board）をそのまま単一インスタンスとして両コントローラーから参照させる
+// ことで実現する（isSelectable/clear/refill/swapValuesは元々この用途に十分）。
+// 競合の勝敗は「JSは単一スレッドである」性質を利用し、確定直前にBoard側の状態を
+// 再検証するだけで解決する（cpu.jsの_resolveSelectionと同じ手法。revision番号は
+// 使わず、状態ベースの再検証で必要十分な整合性を保証する）。
 import { CONFIG, BGM_DELAY_TRIGGER_MS } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
@@ -40,8 +44,9 @@ export const OUTCOME = {
 };
 
 const ACTORS = ['p1', 'p2'];
+const opponentOf = (actor) => (actor === 'p1' ? 'p2' : 'p1');
 
-export class TwoPlayerController extends EventTarget {
+export class MixedBattleController extends EventTarget {
   constructor(p1BoardEl, p2BoardEl, rng = Math.random) {
     super();
     this.boardEls = { p1: p1BoardEl, p2: p2BoardEl };
@@ -49,7 +54,8 @@ export class TwoPlayerController extends EventTarget {
     this.status = STATUS.IDLE;
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
-    this.boards = { p1: null, p2: null };
+    // 共有盤面は1インスタンスだけ持つ（P1・P2それぞれのBoardを複製しない）。
+    this.board = null;
     this.scores = { p1: 0, p2: 0 };
     this.stats = { p1: createStats(), p2: createStats() };
     this.remainingMs = CONFIG.gameDurationMs;
@@ -61,14 +67,14 @@ export class TwoPlayerController extends EventTarget {
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
     this.inputs = { p1: null, p2: null };
-    // 数字入れかえで1つ目に選んだマス（プレイヤーごとに独立、未選択はnull）。
+    // 各プレイヤーが現在なぞっている経路（相手ビューへ相手色で表示し、
+    // 入れかえ・破壊の保護判定にも使う。仕様書7.1・9.1章）。
+    this.activePaths = { p1: [], p2: [] };
     this.swapSelections = { p1: null, p2: null };
-    // シルバー・フィーバー（5マスで合計10）はP1・P2それぞれ独立に管理する。
     this.silverFever = {
       p1: { active: false, endsAt: null },
       p2: { active: false, endsAt: null }
     };
-    // オジャマ（Phase5実装指示書15章）。main.jsはthis.ojamaへ直接イベント登録する。
     this.ojama = new OjamaController(rng);
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
@@ -100,7 +106,6 @@ export class TwoPlayerController extends EventTarget {
     this.refillTimers.clear();
   }
 
-  // 同じ初期配列から始まる、独立した2盤面を作る（仕様書8.1〜8.3章）。
   // ojamaEnabled: この対戦でオジャマを使うかどうか（対戦形式選択画面で設定）。
   start(ojamaEnabled = true) {
     this._clearAllTimers();
@@ -108,17 +113,17 @@ export class TwoPlayerController extends EventTarget {
       if (this.inputs[actor]) this.inputs[actor].destroy();
     });
 
-    const sharedValues = Board.createInitialValues(this.rng);
-    this.boards.p1 = new Board(this.rng, sharedValues);
-    this.boards.p2 = new Board(this.rng, sharedValues);
+    // P1・P2で複製せず、1つのBoardインスタンスを両者が参照する（仕様書6.1章）。
+    this.board = new Board(this.rng, Board.createInitialValues(this.rng));
 
     this.scores = { p1: 0, p2: 0 };
-    this.stats = { p1: createStats(), p2: createStats() };
+    this.stats = { p1: this._createMixedStats(), p2: this._createMixedStats() };
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
     this.remainingMs = CONFIG.gameDurationMs;
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
+    this.activePaths = { p1: [], p2: [] };
     this.swapSelections = { p1: null, p2: null };
     this.silverFever = {
       p1: { active: false, endsAt: null },
@@ -136,33 +141,40 @@ export class TwoPlayerController extends EventTarget {
     });
 
     this._setStatus(STATUS.IDLE);
-    this.dispatchEvent(new CustomEvent('boardinit', {
-      detail: { p1Board: this.boards.p1, p2Board: this.boards.p2 }
-    }));
+    this.dispatchEvent(new CustomEvent('boardinit', { detail: { board: this.board } }));
     this._emitGaugeUpdate();
     this._runCountdown();
   }
 
+  // stolenCancelCount（相手に先に取られて解除された回数）はごちゃまぜ専用の
+  // 追加統計のため、共通のcreateStats()の戻り値へ後付けする（仕様書21章）。
+  _createMixedStats() {
+    const stats = createStats();
+    stats.stolenCancelCount = 0;
+    return stats;
+  }
+
   _createInput(actor) {
-    const board = this.boards[actor];
     return new SelectionController(this.boardEls[actor], {
-      isSelectable: (i) => this.status === STATUS.PLAYING && board.isSelectable(i),
+      // 両者とも同じ共有盤面(this.board)を参照する。相手が選択中というだけの
+      // 理由でisSelectableをfalseにはしない（仕様書9.2章：同じマスを同時になぞれる）。
+      isSelectable: (i) => this.status === STATUS.PLAYING && this.board.isSelectable(i),
       areAdjacent: (a, b) => Board.areAdjacent(a, b),
       maxLength: CONFIG.maxPathLength,
       doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
       longPressThresholdMs: CONFIG.longPressThresholdMs,
       onSelectionStart: (i, sel) => {
         audio.playTraceNote(0);
-        this._emitSelection(actor, sel);
+        this._setActivePath(actor, sel);
       },
       onCellAdded: (i, sel) => {
         this._clearSwapSelection(actor);
         audio.playTraceNote(sel.length - 1);
-        this._emitSelection(actor, sel);
+        this._setActivePath(actor, sel);
       },
-      onCellRemoved: (sel) => this._emitSelection(actor, sel),
+      onCellRemoved: (sel) => this._setActivePath(actor, sel),
       onSelectionEnd: (sel) => this._finishSelection(actor, sel),
-      onSelectionCancel: () => this._emitSelection(actor, []),
+      onSelectionCancel: () => this._setActivePath(actor, []),
       onDoubleTap: (index) => this._destroyCell(actor, index),
       onTap: (index) => this._handleTap(actor, index),
       onLongPress: () => this._clearSwapSelection(actor)
@@ -182,21 +194,23 @@ export class TwoPlayerController extends EventTarget {
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
     this.swapSelections = { p1: null, p2: null };
+    this.activePaths = { p1: [], p2: [] };
     ACTORS.forEach((actor) => this._clearSilverFever(actor));
     this._setStatus(STATUS.IDLE);
   }
 
-  _emitSelection(actor, selection) {
-    const board = this.boards[actor];
+  // 自分の現在経路を更新し、両ビューへ通知する。UI側は自分の盤面には自分色、
+  // 相手の盤面には相手色として同じイベントを描き分ける（仕様書7.2章）。
+  _setActivePath(actor, selection) {
     const sel = selection || [];
-    const values = sel.map((i) => board.getValue(i));
+    this.activePaths[actor] = sel;
+    const values = sel.map((i) => this.board.getValue(i));
     const sum = calcSum(values);
     this.dispatchEvent(new CustomEvent(`${actor}selectionupdate`, {
       detail: { indices: sel, values, sum, isValid: isValidSum(sum) }
     }));
   }
 
-  // 3・2・1・BATTLE!を表示し、BATTLE!と同時に両者の入力を開始する（仕様書9.1章）。
   _runCountdown() {
     this._setStatus(STATUS.COUNTDOWN);
     const steps = [
@@ -229,7 +243,6 @@ export class TwoPlayerController extends EventTarget {
     this._loop();
   }
 
-  // 1つの共通時計（startedAt/endsAt）からP1・P2共通の残り時間を算出する（仕様書9.2章）。
   _evaluateTime() {
     if (this.status !== STATUS.PLAYING) return;
 
@@ -281,8 +294,6 @@ export class TwoPlayerController extends EventTarget {
     }
   }
 
-  // 残り10秒以下になった最初のフレームで両者同時に一度だけ発動する（仕様書15.1章）。
-  // ミリオン開始時はP1・P2のシルバー・フィーバーを即時終了する（仕様書14.5章）。
   _startFever() {
     this.phase = PHASE.FEVER;
     this.feverStarted = true;
@@ -293,8 +304,6 @@ export class TwoPlayerController extends EventTarget {
     this._emitGaugeUpdate();
   }
 
-  // ミリオン・フィーバー中かどうかと、その側のシルバー・フィーバー状態から
-  // 現在有効な得点倍率を決める。ミリオン・フィーバーが優先され、重複しない。
   _getScoringContext(actor) {
     const isFever = this.phase === PHASE.FEVER;
     const silverActive = !isFever && this.silverFever[actor].active;
@@ -302,8 +311,6 @@ export class TwoPlayerController extends EventTarget {
     return { isFever, multiplier, silverActive };
   }
 
-  // 発動中に再び条件を満たした場合は、倍率を重ねず残り時間だけ10秒へ更新する
-  // （仕様書14.3章）。
   _startSilverFever(actor) {
     const side = this.silverFever[actor];
     side.active = true;
@@ -325,17 +332,28 @@ export class TwoPlayerController extends EventTarget {
     if (document.visibilityState === 'visible') this._evaluateTime();
   }
 
+  // 成功確定。共有盤面のため、確定直前に必ず現在の盤面状態と再検証する
+  // （仕様書8.1章）。先に相手が同じセルを消していた場合は「横取りされた」
+  // として、失敗回数へ含めず静かに解除する（仕様書8.3章）。
   _finishSelection(actor, indices) {
     if (this.status !== STATUS.PLAYING) return;
 
     if (indices.length < 2) {
-      this._emitSelection(actor, []);
+      this._setActivePath(actor, []);
       return;
     }
 
-    const board = this.boards[actor];
     const stats = this.stats[actor];
-    const values = indices.map((i) => board.getValue(i));
+    const stillAllSelectable = indices.every((i) => this.board.isSelectable(i));
+    if (!stillAllSelectable) {
+      stats.stolenCancelCount += 1;
+      this.dispatchEvent(new CustomEvent(`${actor}stolen`, { detail: { indices } }));
+      audio.playStolen();
+      this._setActivePath(actor, []);
+      return;
+    }
+
+    const values = indices.map((i) => this.board.getValue(i));
     const sum = calcSum(values);
 
     if (isValidSum(sum)) {
@@ -360,9 +378,10 @@ export class TwoPlayerController extends EventTarget {
         this._startSilverFever(actor);
       }
 
-      const refills = board.clear(indices);
-      this.dispatchEvent(new CustomEvent(`${actor}cellsclear`, { detail: { indices } }));
-      this._scheduleRefill(actor, refills);
+      const refills = this.board.clear(indices);
+      // 共有盤面のため、消去は「どちら発」ではなく両ビュー共通の1イベントで通知する。
+      this.dispatchEvent(new CustomEvent('sharedcellsclear', { detail: { indices } }));
+      this._scheduleRefill(refills);
       this._emitGaugeUpdate();
     } else {
       recordFailure(stats);
@@ -370,43 +389,58 @@ export class TwoPlayerController extends EventTarget {
       audio.playFail();
     }
 
-    this._emitSelection(actor, []);
+    this._setActivePath(actor, []);
   }
 
-  _scheduleRefill(actor, refills) {
-    const board = this.boards[actor];
+  _scheduleRefill(refills) {
     const timerId = setTimeout(() => {
       this.refillTimers.delete(timerId);
-      const applied = refills.map(({ index }) => ({ index, value: board.refill(index) }));
-      this.dispatchEvent(new CustomEvent(`${actor}cellsrefill`, { detail: { cells: applied } }));
+      const applied = refills.map(({ index }) => ({ index, value: this.board.refill(index) }));
+      this.dispatchEvent(new CustomEvent('sharedcellsrefill', { detail: { cells: applied } }));
     }, CONFIG.refillDelayMs);
     this.refillTimers.add(timerId);
   }
 
+  // セルが「相手選択中」か（相手の現在なぞり経路、または相手の入れかえ1個目選択）。
+  // 仕様書9.1章。
+  _isProtectedByOpponent(actor, cellIndices) {
+    const opponent = opponentOf(actor);
+    const opponentPath = this.activePaths[opponent];
+    const opponentSwap = this.swapSelections[opponent];
+    return cellIndices.some((i) => opponentPath.includes(i) || opponentSwap === i);
+  }
+
   _destroyCell(actor, index) {
     if (this.status !== STATUS.PLAYING) return;
-    const board = this.boards[actor];
-    if (!board.isSelectable(index)) return;
+    if (!this.board.isSelectable(index)) return;
 
-    this._emitSelection(actor, []);
+    // 相手選択中のマスは破壊できない（仕様書9.4章）。確定直前（ダブルタップ確定時）
+    // に再検証する。
+    if (this._isProtectedByOpponent(actor, [index])) {
+      if (this.swapSelections[actor] === index) this._clearSwapSelection(actor);
+      this.dispatchEvent(new CustomEvent(`${actor}destroyblocked`, { detail: { index } }));
+      audio.playBlocked();
+      return;
+    }
+
+    this._setActivePath(actor, []);
     if (this.swapSelections[actor] === index) this._clearSwapSelection(actor);
     recordDestroy(this.stats[actor]);
     this.dispatchEvent(new CustomEvent(`${actor}destroy`, { detail: { index } }));
     audio.playDestroy();
 
-    const refills = board.clear([index]);
-    this.dispatchEvent(new CustomEvent(`${actor}cellsclear`, { detail: { indices: [index] } }));
-    this._scheduleRefill(actor, refills);
+    const refills = this.board.clear([index]);
+    this.dispatchEvent(new CustomEvent('sharedcellsclear', { detail: { indices: [index] } }));
+    this._scheduleRefill(refills);
   }
 
   // 数字入れかえ：1つ目のタップで選択、2つ目の異なるマスへのタップで入れ替える
-  //（仕様書12章）。P1・P2の選択状態は完全に独立している。
+  // （仕様書10章）。相手選択中のマスとの入れかえは、確定直前に不成立とする。
   _handleTap(actor, index) {
     if (this.status !== STATUS.PLAYING) return;
-    const board = this.boards[actor];
-    if (!board.isSelectable(index)) return;
+    if (!this.board.isSelectable(index)) return;
 
-    this._emitSelection(actor, []);
+    this._setActivePath(actor, []);
 
     const current = this.swapSelections[actor];
     if (current === null) {
@@ -426,13 +460,19 @@ export class TwoPlayerController extends EventTarget {
 
   _performSwap(actor, indexA, indexB) {
     this._clearSwapSelection(actor);
-    const board = this.boards[actor];
-    if (!board.isSelectable(indexA) || !board.isSelectable(indexB)) return;
+    if (!this.board.isSelectable(indexA) || !this.board.isSelectable(indexB)) return;
 
-    board.swapValues(indexA, indexB);
-    const values = [board.getValue(indexA), board.getValue(indexB)];
+    // 確定直前の再検証（仕様書9.3・9.5章）：どちらか一方でも相手選択中なら不成立。
+    if (this._isProtectedByOpponent(actor, [indexA, indexB])) {
+      this.dispatchEvent(new CustomEvent(`${actor}swapblocked`, { detail: { indices: [indexA, indexB] } }));
+      audio.playBlocked();
+      return;
+    }
+
+    this.board.swapValues(indexA, indexB);
+    const values = [this.board.getValue(indexA), this.board.getValue(indexB)];
     recordSwap(this.stats[actor]);
-    this.dispatchEvent(new CustomEvent(`${actor}swap`, { detail: { indices: [indexA, indexB], values } }));
+    this.dispatchEvent(new CustomEvent('sharedswap', { detail: { indices: [indexA, indexB], values } }));
     audio.playSwap();
   }
 
@@ -446,7 +486,6 @@ export class TwoPlayerController extends EventTarget {
     this.dispatchEvent(new CustomEvent(`${actor}swapselectionupdate`, { detail: { index: this.swapSelections[actor] } }));
   }
 
-  // 点差ベースの正規化ゲージ（仕様書16章）。フィーバー中は非表示にする。
   _emitGaugeUpdate() {
     if (this.phase === PHASE.FEVER) {
       this.dispatchEvent(new CustomEvent('gaugeupdate', { detail: { visible: false, p1Percent: 50 } }));
@@ -469,6 +508,7 @@ export class TwoPlayerController extends EventTarget {
       if (this.inputs[actor]) this.inputs[actor].forceCancel();
       this._clearSwapSelection(actor);
       this._clearSilverFever(actor);
+      this.activePaths[actor] = [];
     });
     for (const id of this.refillTimers) clearTimeout(id);
     this.refillTimers.clear();
@@ -498,7 +538,10 @@ export class TwoPlayerController extends EventTarget {
         p1Score: this.scores.p1,
         p2Score: this.scores.p2,
         p1Stats: this.stats.p1,
-        p2Stats: this.stats.p2
+        p2Stats: this.stats.p2,
+        ojamaUsed: { p1: this.ojama.getUsedCount('p1'), p2: this.ojama.getUsedCount('p2') },
+        ojamaReceived: { p1: this.ojama.getReceivedCount('p1'), p2: this.ojama.getReceivedCount('p2') },
+        ojamaTotalUses: this.ojama.getTotalUsedCount()
       }
     }));
   }

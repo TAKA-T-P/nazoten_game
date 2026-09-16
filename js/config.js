@@ -34,12 +34,24 @@ export const CONFIG = {
   cpuBattleTutorialVersion: 1,
   // 2人バトル専用チュートリアルのバージョン（Phase4実装指示書23章）。
   twoPlayerTutorialVersion: 1,
-  storageKey: 'nazoten-save-v4',
+  storageKey: 'nazoten-save-v5',
+  legacyStorageKeyV4: 'nazoten-save-v4',
   legacyStorageKeyV3: 'nazoten-save-v3',
   legacyStorageKeyV2: 'nazoten-save-v2',
   legacyStorageKeyV1: 'nazoten-save-v1',
   // バトルゲージの計算に使う点差の基準値（Phase3実装指示書 9.3章）。
   gaugeFullLead: 1500,
+  // オジャマ（Phase5実装指示書16〜19章）。残り40秒・20秒の2回、劣勢側に
+  // 5秒間だけボタンを表示する。押すと相手側の表示だけに5秒間の視覚効果を出す。
+  ojama: {
+    defaultEnabled: true,
+    checkpointsMs: [40_000, 20_000],
+    buttonDurationMs: 5_000,
+    effectDurationMs: 5_000,
+    types: ['turn', 'small', 'hidden'],
+    smallScaleMin: 0.35,
+    smallScaleMax: 0.75
+  },
   // 称号はLV.1〜LV.20が固有の名前を持つ。レベルはスコアから
   // floor(sqrt(score / 10))（下限1、上限なし）で決まる。
   // 配列の添字0がLV.1、添字19がLV.20に対応する。

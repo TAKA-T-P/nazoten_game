@@ -1,0 +1,98 @@
+/* オジャマ：ターン・スモール・ヒドゥン（Phase5実装指示書18章）。
+   いずれも盤面モデル・当たり判定・座標は変更せず、見た目だけを変える。 */
+
+/* オジャマボタン。既存の残り時間・SILVERバッジと同じ縦並びの側面パネルに
+   収まる専用枠として確保する（仕様書17.1章）。表示/非表示はhidden属性で
+   切り替えるため、パネルの他の要素の位置はずれない。 */
+.ojama-button {
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--color-forty);
+  background: linear-gradient(135deg, #fff6d9 0%, #ffdf7d 100%);
+  color: #6b4e00;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+  animation: ojama-button-pulse 0.8s ease-in-out infinite;
+}
+
+.ojama-button:active {
+  transform: scale(0.94);
+}
+
+@keyframes ojama-button-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* ターン：対象ビューの数字だけを180度回転する。盤面・選択枠・連結線・バッジは
+   回転しない（仕様書18.2章）。P2側はもともと親コンテナが180度回転済みだが、
+   数字要素へさらに180度を加えることで、P2本人から見ても逆さになる。 */
+.ojama-turn .cell-value {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+
+/* スモール：セルの大きさ・タッチ領域は変えず、数字の文字サイズだけを
+   ランダムに縮小する（仕様書18.3章）。中心位置は維持する。 */
+.ojama-small .cell-value {
+  display: inline-block;
+  font-size: calc(1em * var(--ojama-scale, 1));
+  transition: font-size 0.15s ease;
+}
+
+/* ヒドゥン：巨大な顔を盤面の上で動かし、一部の数字を隠す。盤面全体を
+   完全には覆い続けず、タッチ操作を妨げないようpointer-events:noneを必ず
+   設定する（仕様書18.4章）。 */
+.ojama-hidden-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: min(40vw, 120px);
+  pointer-events: none;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+/* author由来のdisplay:flexはUA由来の[hidden]{display:none}より優先されて
+   しまうため、明示的に上書きする（このプロジェクトで繰り返し出ている既知の
+   落とし穴）。 */
+.ojama-hidden-overlay[hidden] {
+  display: none;
+}
+
+.ojama-hidden-overlay.ojama-hidden-anim {
+  animation: ojama-hidden-move 5s ease-in-out;
+}
+
+@keyframes ojama-hidden-move {
+  0%   { transform: translate(-30%, -25%) scale(0.9); }
+  20%  { transform: translate(25%, -20%) scale(1.05); }
+  40%  { transform: translate(30%, 20%) scale(0.95); }
+  60%  { transform: translate(-25%, 25%) scale(1.1); }
+  80%  { transform: translate(-15%, -10%) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* モーション軽減：移動幅を抑え、ゆっくりにする（仕様書18.5章）。効果時間・
+   視覚的な難しさは大きく変えない。 */
+@media (prefers-reduced-motion: reduce) {
+  .ojama-hidden-overlay.ojama-hidden-anim {
+    animation: ojama-hidden-move-reduced 5s ease-in-out;
+  }
+
+  .ojama-button {
+    animation: none;
+  }
+}
+
+@keyframes ojama-hidden-move-reduced {
+  0%   { transform: translate(-10%, -8%); }
+  50%  { transform: translate(10%, 8%); }
+  100% { transform: translate(0, 0); }
+}

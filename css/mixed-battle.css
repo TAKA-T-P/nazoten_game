@@ -1,0 +1,105 @@
+/* ごちゃまぜバトル（Phase5実装指示書）。上下対面レイアウトはtwo-player.cssの
+   .tp-zone/.tp-play-row/.tp-side-panel/.tp-board-wrap/.tp-centerをそのまま
+   再利用し、ここでは対戦形式選択・相手選択の重ね表示・結果画面の追加分だけを扱う。 */
+
+/* --- 対戦形式選択画面 ------------------------------------------------------- */
+
+.battle-format-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.battle-format-btn {
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 10px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-cell-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.battle-format-btn:active {
+  transform: scale(0.98);
+}
+
+.battle-format-btn.selected {
+  border-color: var(--color-fail);
+  background: #fdeceb;
+}
+
+.battle-format-label {
+  font-weight: 900;
+  font-size: 1.05rem;
+  color: var(--color-fail);
+}
+
+.battle-format-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.battle-format-btn.selected .battle-format-desc {
+  color: var(--color-text);
+}
+
+.ojama-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+}
+
+.ojama-toggle-label {
+  font-weight: 700;
+}
+
+.ojama-toggle-btn {
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 0.9rem;
+  padding: 6px 20px;
+  border-radius: 999px;
+  border: 2px solid var(--color-cell-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  min-width: 64px;
+}
+
+.ojama-toggle-btn.is-on {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+/* --- 共有盤面：相手の選択を重ねて表示する（仕様書7.2章） -------------------- */
+/* 自分の選択は既存の.selected/.selected-validをそのまま使う。相手の選択は
+   色つきリングだけを重ね、自分側の数字が読みにくくならないようにする。 */
+.cell.opp-selected-p1 {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.6);
+}
+
+.cell.opp-selected-p2 {
+  box-shadow: 0 0 0 3px rgba(216, 57, 58, 0.6);
+}
+
+.cell.selected.opp-selected-p1,
+.cell.selected.opp-selected-p2 {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.6), 0 0 0 6px rgba(216, 57, 58, 0.35);
+}
+
+.floating-stolen {
+  color: var(--color-text-muted);
+}
+
+.floating-stolen .floating-label {
+  font-size: 0.8rem;
+}

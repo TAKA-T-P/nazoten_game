@@ -6,6 +6,7 @@ import * as ui from './ui.js';
 import { NazotenGame, STATUS } from './game.js';
 import { BattleController, STATUS as BATTLE_STATUS } from './battle.js';
 import { TwoPlayerController, STATUS as TP_STATUS } from './two-player.js';
+import { MixedBattleController, STATUS as MB_STATUS } from './mixed-battle.js';
 
 function initAudioOnce() {
   audio.init();
@@ -267,11 +268,30 @@ function main() {
 
   function startTwoPlayerCountdown() {
     ui.showScreen('two-player');
-    twoPlayer.start();
+    twoPlayer.start(ojamaEnabled);
   }
 
+  // 二重再生を避けるため、オジャマの警告音・解除音はeffectstart/effectendの
+  // イベントを受けたmain.js側だけで鳴らす（audio.jsの発動音は押した本人向けに
+  // useOjama呼び出し側で鳴らす）。
+  twoPlayer.ojama.addEventListener('effectstart', (e) => audio.playOjamaWarning());
+  twoPlayer.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
+  twoPlayer.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('tp', e.detail.actor));
+  twoPlayer.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('tp', e.detail.actor));
+  twoPlayer.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('tp', e.detail.targetActor, e.detail.type));
+  twoPlayer.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('tp', e.detail.targetActor));
+
+  document.getElementById('btn-ojama-tp-p1').addEventListener('click', () => {
+    if (twoPlayer.useOjama('p1')) audio.playOjamaActivate();
+  });
+  document.getElementById('btn-ojama-tp-p2').addEventListener('click', () => {
+    if (twoPlayer.useOjama('p2')) audio.playOjamaActivate();
+  });
+
   document.getElementById('btn-two-player').addEventListener('click', () => {
-    startTwoPlayerCountdown();
+    ui.updateFormatSelection(selectedBattleFormat);
+    ui.updateOjamaToggle(ojamaEnabled);
+    ui.showScreen('battle-format');
   });
 
   function backToTitleFromTwoPlayer() {
@@ -288,6 +308,118 @@ function main() {
 
   document.getElementById('btn-tp-result-title').addEventListener('click', () => {
     twoPlayer.backToTitle();
+    ui.showScreen('title');
+  });
+
+  // --- 対戦形式選択・オジャマ設定（Phase5実装指示書4章） -----------------------
+  // 形式・オジャマ設定はページ内メモリだけで保持し、再読み込みでは引き継がない
+  // （仕様書4.3章：ページ再読み込み時はONへ戻す。形式もデフォルトのスコアバトルに戻る）。
+  let selectedBattleFormat = 'score';
+  let ojamaEnabled = CONFIG.ojama.defaultEnabled;
+  ui.setOjamaScaleRange({ smallScaleMin: CONFIG.ojama.smallScaleMin, smallScaleMax: CONFIG.ojama.smallScaleMax });
+
+  document.querySelectorAll('.battle-format-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      selectedBattleFormat = btn.dataset.format;
+      ui.updateFormatSelection(selectedBattleFormat);
+    });
+  });
+
+  document.getElementById('btn-ojama-toggle').addEventListener('click', () => {
+    ojamaEnabled = !ojamaEnabled;
+    ui.updateOjamaToggle(ojamaEnabled);
+  });
+
+  document.getElementById('btn-battle-format-back').addEventListener('click', () => {
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-battle-format-start').addEventListener('click', () => {
+    if (selectedBattleFormat === 'mixed') {
+      startMixedBattleCountdown();
+    } else {
+      startTwoPlayerCountdown();
+    }
+  });
+
+  // --- ごちゃまぜバトル（Phase5実装指示書5〜14章） ------------------------------
+  const mbBoardEls = ui.getMixedBattleBoardElements();
+  const mixedBattle = new MixedBattleController(mbBoardEls.p1, mbBoardEls.p2);
+
+  mixedBattle.addEventListener('statechange', (e) => {
+    if (e.detail.status === MB_STATUS.PLAYING) ui.hideMixedTimeUp();
+  });
+  mixedBattle.addEventListener('boardinit', (e) => {
+    ui.hideMixedTimeUp();
+    ui.updateMixedTimer(CONFIG.gameDurationMs);
+    ui.renderMixedBattleBoards(e.detail.board);
+  });
+  mixedBattle.addEventListener('countdown', (e) => ui.showMixedCountdown(e.detail.label));
+  mixedBattle.addEventListener('feverstart', () => ui.setMixedFeverActive(true));
+  mixedBattle.addEventListener('p1silverfeverstart', () => ui.setMixedSilverFeverActive('p1', true));
+  mixedBattle.addEventListener('p1silverfeverend', () => ui.setMixedSilverFeverActive('p1', false));
+  mixedBattle.addEventListener('p2silverfeverstart', () => ui.setMixedSilverFeverActive('p2', true));
+  mixedBattle.addEventListener('p2silverfeverend', () => ui.setMixedSilverFeverActive('p2', false));
+  mixedBattle.addEventListener('timeupdate', (e) => ui.updateMixedTimer(e.detail.remainingMs));
+  mixedBattle.addEventListener('p1selectionupdate', (e) => ui.updateMixedSelection('p1', e.detail));
+  mixedBattle.addEventListener('p2selectionupdate', (e) => ui.updateMixedSelection('p2', e.detail));
+  mixedBattle.addEventListener('p1success', (e) => ui.playMixedSuccessEffect('p1', e.detail));
+  mixedBattle.addEventListener('p2success', (e) => ui.playMixedSuccessEffect('p2', e.detail));
+  mixedBattle.addEventListener('p1fail', (e) => ui.playMixedFailEffect('p1', e.detail.indices));
+  mixedBattle.addEventListener('p2fail', (e) => ui.playMixedFailEffect('p2', e.detail.indices));
+  mixedBattle.addEventListener('p1stolen', (e) => ui.playMixedStolenEffect('p1', e.detail.indices));
+  mixedBattle.addEventListener('p2stolen', (e) => ui.playMixedStolenEffect('p2', e.detail.indices));
+  mixedBattle.addEventListener('p1destroyblocked', (e) => ui.playMixedBlockedEffect('p1', [e.detail.index]));
+  mixedBattle.addEventListener('p2destroyblocked', (e) => ui.playMixedBlockedEffect('p2', [e.detail.index]));
+  mixedBattle.addEventListener('p1swapblocked', (e) => ui.playMixedBlockedEffect('p1', e.detail.indices));
+  mixedBattle.addEventListener('p2swapblocked', (e) => ui.playMixedBlockedEffect('p2', e.detail.indices));
+  mixedBattle.addEventListener('sharedcellsclear', (e) => ui.clearMixedCells(e.detail.indices));
+  mixedBattle.addEventListener('sharedcellsrefill', (e) => ui.refillMixedCells(e.detail.cells));
+  mixedBattle.addEventListener('p1swapselectionupdate', (e) => ui.updateMixedSwapSelection('p1', e.detail.index));
+  mixedBattle.addEventListener('p2swapselectionupdate', (e) => ui.updateMixedSwapSelection('p2', e.detail.index));
+  mixedBattle.addEventListener('sharedswap', (e) => ui.applyMixedSwap(e.detail.indices, e.detail.values));
+  mixedBattle.addEventListener('gaugeupdate', (e) => ui.updateMixedGauge(e.detail));
+  mixedBattle.addEventListener('timeup', () => ui.showMixedTimeUp());
+  mixedBattle.addEventListener('result', (e) => {
+    const { outcome, p1Score, p2Score, p1Stats, p2Stats, ojamaUsed, ojamaReceived, ojamaTotalUses } = e.detail;
+    storage.submitMixedBattleResult({ outcome, p1Score, p2Score, ojamaUseCount: ojamaTotalUses });
+    ui.renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2Stats, ojamaUsed, ojamaReceived });
+    ui.showScreen('mixed-battle-result');
+  });
+
+  mixedBattle.ojama.addEventListener('effectstart', () => audio.playOjamaWarning());
+  mixedBattle.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
+  mixedBattle.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('mb', e.detail.actor));
+  mixedBattle.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('mb', e.detail.actor));
+  mixedBattle.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('mb', e.detail.targetActor, e.detail.type));
+  mixedBattle.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('mb', e.detail.targetActor));
+
+  document.getElementById('btn-ojama-p1').addEventListener('click', () => {
+    if (mixedBattle.useOjama('p1')) audio.playOjamaActivate();
+  });
+  document.getElementById('btn-ojama-p2').addEventListener('click', () => {
+    if (mixedBattle.useOjama('p2')) audio.playOjamaActivate();
+  });
+
+  function startMixedBattleCountdown() {
+    ui.showScreen('mixed-battle');
+    mixedBattle.start(ojamaEnabled);
+  }
+
+  function backToTitleFromMixedBattle() {
+    mixedBattle.backToTitle();
+    ui.showScreen('title');
+  }
+
+  document.getElementById('btn-mb-back-p1').addEventListener('click', backToTitleFromMixedBattle);
+  document.getElementById('btn-mb-back-p2').addEventListener('click', backToTitleFromMixedBattle);
+
+  document.getElementById('btn-mb-rematch').addEventListener('click', () => {
+    startMixedBattleCountdown();
+  });
+
+  document.getElementById('btn-mb-result-title').addEventListener('click', () => {
+    mixedBattle.backToTitle();
     ui.showScreen('title');
   });
 
