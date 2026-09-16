@@ -6,8 +6,12 @@ import { CONFIG, CPU_LEVEL_ORDER } from './config.js';
 
 const RECORD_KEY = 'scoreAttack60Fever10';
 const LEGACY_RECORD_KEY = 'scoreAttack30';
-const SOUND_MODES = ['bgm', 'seOnly', 'off'];
-const DEFAULT_SOUND_MODE = 'bgm';
+// 'bgmOff'（表示名は「効果音のみ」）→ 'bgmRandom'（BGMをランダムに1曲再生）→
+// 'bgm1'〜'bgm5'（固定の1曲を再生）→ 'off'（無音）の8択。◀▶ボタンでこの順に循環する。
+const SOUND_MODES = ['bgmOff', 'bgmRandom', 'bgm1', 'bgm2', 'bgm3', 'bgm4', 'bgm5', 'off'];
+const DEFAULT_SOUND_MODE = 'bgmOff';
+// 旧バージョン（3択）からの読み替え：'bgm'→'bgmRandom'、'seOnly'→'bgmOff'。
+const LEGACY_SOUND_MODE_MAP = { bgm: 'bgmRandom', seOnly: 'bgmOff' };
 const DEFAULT_CPU_LEVEL = '1';
 
 function createCpuRecord() {
@@ -48,11 +52,12 @@ function asNumber(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
 }
 
-// 'bgm' | 'seOnly' | 'off' の三択。旧形式（真偽値のsoundEnabled）が残っていれば
-// bgm/offへ読み替える。
+// 8択のサウンドモード。旧バージョン（3択の文字列、またはさらに古い真偽値の
+// soundEnabled）が残っていれば読み替える。
 function normalizeSoundMode(mode, legacyBoolean) {
   if (SOUND_MODES.includes(mode)) return mode;
-  if (typeof legacyBoolean === 'boolean') return legacyBoolean ? 'bgm' : 'off';
+  if (LEGACY_SOUND_MODE_MAP[mode]) return LEGACY_SOUND_MODE_MAP[mode];
+  if (typeof legacyBoolean === 'boolean') return legacyBoolean ? 'bgmRandom' : 'off';
   return DEFAULT_SOUND_MODE;
 }
 
@@ -214,10 +219,11 @@ export function setSoundMode(mode) {
   persist();
 }
 
-// 'BGMあり' -> '効果音のみ' -> '音なし' -> 'BGMあり' … の順で切り替える。
-export function cycleSoundMode() {
+// ◀▶ボタンでSOUND_MODESの順に前後へ循環させる（delta: +1で次へ、-1で前へ）。
+export function stepSoundMode(delta) {
   const currentIndex = SOUND_MODES.indexOf(state.soundMode);
-  const next = SOUND_MODES[(currentIndex + 1) % SOUND_MODES.length];
+  const len = SOUND_MODES.length;
+  const next = SOUND_MODES[(currentIndex + delta + len) % len];
   setSoundMode(next);
   return next;
 }

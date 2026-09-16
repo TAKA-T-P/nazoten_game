@@ -16,7 +16,7 @@ const battleBoards = {
 function cacheDom() {
   el.screens = document.querySelectorAll('.screen');
   el.titleBest = document.getElementById('title-best-score');
-  el.btnSoundMode = document.getElementById('btn-sound-mode');
+  el.soundModeLabel = document.getElementById('sound-mode-label');
   el.screenGame = document.getElementById('screen-game');
   el.board = document.getElementById('board');
   el.hudTime = document.getElementById('hud-time');
@@ -98,14 +98,19 @@ export function showScreen(name) {
 }
 
 const SOUND_MODE_LABELS = {
-  bgm: 'BGMあり',
-  seOnly: '効果音のみ',
+  bgmOff: '効果音のみ',
+  bgmRandom: 'BGMランダム',
+  bgm1: 'BGM1',
+  bgm2: 'BGM2',
+  bgm3: 'BGM3',
+  bgm4: 'BGM4',
+  bgm5: 'BGM5',
   off: '音なし'
 };
 
 export function refreshSoundModeButton() {
   const mode = storage.getSoundMode();
-  el.btnSoundMode.textContent = SOUND_MODE_LABELS[mode] || SOUND_MODE_LABELS.bgm;
+  el.soundModeLabel.textContent = SOUND_MODE_LABELS[mode] || SOUND_MODE_LABELS.bgmOff;
 }
 
 export function updateBestScoreDisplays() {

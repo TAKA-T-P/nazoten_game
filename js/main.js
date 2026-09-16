@@ -15,6 +15,8 @@ function initAudioOnce() {
 }
 
 function main() {
+  // 起動のたびに必ず「効果音のみ」から始める（前回の選択は引き継がない）。
+  storage.setSoundMode('bgmOff');
   ui.init();
   audio.setSoundMode(storage.getSoundMode());
 
@@ -106,8 +108,14 @@ function main() {
     startCountdownAndPlay();
   });
 
-  document.getElementById('btn-sound-mode').addEventListener('click', () => {
-    const next = storage.cycleSoundMode();
+  document.getElementById('btn-sound-prev').addEventListener('click', () => {
+    const next = storage.stepSoundMode(-1);
+    audio.setSoundMode(next);
+    ui.refreshSoundModeButton();
+  });
+
+  document.getElementById('btn-sound-next').addEventListener('click', () => {
+    const next = storage.stepSoundMode(1);
     audio.setSoundMode(next);
     ui.refreshSoundModeButton();
   });

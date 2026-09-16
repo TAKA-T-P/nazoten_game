@@ -64,6 +64,47 @@
   transform: scale(0.96);
 }
 
+/* サウンドモード選択（◀ [ラベル] ▶）。ラベル部分を固定幅にすることで、
+   表示テキストの長さが変わっても矢印ボタンの位置がずれないようにする。 */
+.sound-mode-control {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sound-mode-arrow {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 2px solid var(--color-cell-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.sound-mode-arrow:active {
+  transform: scale(0.92);
+}
+
+.sound-mode-label {
+  display: inline-block;
+  min-width: 6.5em;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
 .version {
   margin-top: 28px;
   font-size: 0.75rem;

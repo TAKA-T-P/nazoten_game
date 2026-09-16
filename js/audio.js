@@ -5,6 +5,10 @@ let ctx = null;
 let masterGain = null;
 let seEnabled = true;
 let bgmEnabled = true;
+let soundMode = 'bgmRandom';
+
+// サウンドモードのうちbgm1〜bgm5は、対応するBGM_TRACKSのidを固定で選ぶ。
+const FIXED_TRACK_IDS = { bgm1: 'bgm01', bgm2: 'bgm02', bgm3: 'bgm03', bgm4: 'bgm04', bgm5: 'bgm05' };
 
 export function init() {
   if (ctx) return;
@@ -21,10 +25,12 @@ export function resume() {
   if (ctx && ctx.state === 'suspended') ctx.resume();
 }
 
-// mode: 'bgm'（BGM+効果音）| 'seOnly'（効果音のみ）| 'off'（音なし）
+// mode: 'bgmOff'（効果音のみ）| 'bgmRandom'（BGMランダム＋効果音）|
+//       'bgm1'〜'bgm5'（固定の1曲＋効果音）| 'off'（無音）
 export function setSoundMode(mode) {
+  soundMode = mode;
   seEnabled = mode !== 'off';
-  bgmEnabled = mode === 'bgm';
+  bgmEnabled = mode !== 'off' && mode !== 'bgmOff';
   if (!bgmEnabled) stopBgm();
 }
 
@@ -236,10 +242,14 @@ function getBgmAudioElement() {
   return bgmAudioEl;
 }
 
-// 新しいプレイ開始時に1曲だけランダムに選ぶ。まだ再生はしない。
+// 新しいプレイ開始時に1曲を選ぶ。まだ再生はしない。
+// サウンドモードがbgm1〜bgm5のときはその固定曲を、bgmRandomのときはランダムに1曲選ぶ
+// （bgmOff/offのときは選んでも再生されない）。
 export function chooseRandomBgmTrack(rng = Math.random) {
-  const idx = Math.min(Math.floor(rng() * BGM_TRACKS.length), BGM_TRACKS.length - 1);
-  const track = BGM_TRACKS[idx];
+  const fixedId = FIXED_TRACK_IDS[soundMode];
+  const track = fixedId
+    ? BGM_TRACKS.find((t) => t.id === fixedId)
+    : BGM_TRACKS[Math.min(Math.floor(rng() * BGM_TRACKS.length), BGM_TRACKS.length - 1)];
   currentTrackId = track.id;
   firedTriggers = new Set();
 

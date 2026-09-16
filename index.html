@@ -26,7 +26,11 @@
       </div>
       <p class="fever-hint">60秒／ラスト10秒は得点3倍！</p>
       <p class="best-score">ベストスコア：<span id="title-best-score">0</span></p>
-      <button id="btn-sound-mode" class="btn-sound-mode" type="button" aria-label="サウンドモードを切り替える（BGMあり・効果音のみ・音なし）">BGMあり</button>
+      <div class="sound-mode-control" role="group" aria-label="サウンドモード">
+        <button id="btn-sound-prev" class="sound-mode-arrow" type="button" aria-label="前のサウンドモードへ">◀</button>
+        <span id="sound-mode-label" class="sound-mode-label" aria-live="polite">効果音のみ</span>
+        <button id="btn-sound-next" class="sound-mode-arrow" type="button" aria-label="次のサウンドモードへ">▶</button>
+      </div>
       <p class="version">Phase 3 - v3.0.0</p>
     </div>
   </section>
