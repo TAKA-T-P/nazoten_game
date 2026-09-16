@@ -43,6 +43,8 @@ export function createStats() {
     successCount: 0,
     failureCount: 0,
     destroyCount: 0,
+    swapCount: 0,
+    silverFeverCount: 0,
     sumCounts: { 10: 0, 20: 0, 30: 0, 40: 0 },
     clearedCellCount: 0,
     highestNormalScore: 0,
@@ -79,6 +81,16 @@ export function recordFailure(stats) {
 // ダブルタップ破壊は得点にも成功・失敗回数にも含めないため、専用の回数として数える。
 export function recordDestroy(stats) {
   stats.destroyCount += 1;
+}
+
+// 数字入れかえの成立回数。結果画面では破壊回数と合算して「入れ替え・破壊回数」として表示する。
+export function recordSwap(stats) {
+  stats.swapCount += 1;
+}
+
+// シルバー・フィーバーの発動（突入）回数。
+export function recordSilverFeverTrigger(stats) {
+  stats.silverFeverCount += 1;
 }
 
 // 成功率(%)。試行回数が0の場合はnullを返す（表示側で「—」等にする）。

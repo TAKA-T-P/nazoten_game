@@ -366,6 +366,54 @@
   font-size: 0.85rem;
 }
 
+.battle-compare-record td {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.battle-compare-record td:last-child {
+  text-align: right;
+  font-weight: 700;
+}
+
+/* 1P・CPUのプレイ内容を横並びで比較する結果画面の表。 */
+.battle-stats-compare {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.battle-stats-compare th,
+.battle-stats-compare td {
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--color-cell-border);
+}
+
+.battle-stats-compare tr:last-child td {
+  border-bottom: none;
+}
+
+.battle-stats-compare thead th {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid var(--color-cell-border);
+}
+
+.battle-stats-compare td:first-child,
+.battle-stats-compare th:first-child {
+  text-align: left;
+}
+
+.battle-stats-compare td:not(:first-child),
+.battle-stats-compare th:not(:first-child) {
+  text-align: right;
+  font-weight: 700;
+}
+
 .battle-cpu-title {
   font-weight: 700;
   color: var(--color-fail);

@@ -11,7 +11,9 @@ import {
   createStats,
   applySuccess,
   recordFailure,
-  recordDestroy
+  recordDestroy,
+  recordSwap,
+  recordSilverFeverTrigger
 } from './scoring.js';
 import { CpuController } from './cpu.js';
 import * as audio from './audio.js';
@@ -49,7 +51,7 @@ export class BattleController extends EventTarget {
     this.playerScore = 0;
     this.cpuScore = 0;
     this.playerStats = createStats();
-    this.cpuStats = { successCount: 0, failureCount: 0, destroyCount: 0 };
+    this.cpuStats = createStats();
     this.remainingMs = CONFIG.gameDurationMs;
     this.endsAt = null;
     this.startedAt = null;
@@ -107,7 +109,7 @@ export class BattleController extends EventTarget {
     this.playerScore = 0;
     this.cpuScore = 0;
     this.playerStats = createStats();
-    this.cpuStats = { successCount: 0, failureCount: 0, destroyCount: 0 };
+    this.cpuStats = createStats();
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
     this.remainingMs = CONFIG.gameDurationMs;
@@ -288,9 +290,10 @@ export class BattleController extends EventTarget {
     return { isFever, multiplier, silverActive };
   }
 
-  _startSilverFever(sideState, eventName) {
+  _startSilverFever(stats, sideState, eventName) {
     sideState.active = true;
     sideState.endsAt = performance.now() + CONFIG.silverFeverDurationMs;
+    recordSilverFeverTrigger(stats);
     this.dispatchEvent(new CustomEvent(eventName, {}));
     audio.playSilverFeverStart();
   }
@@ -338,7 +341,7 @@ export class BattleController extends EventTarget {
       }
 
       if (isSilverFeverTrigger(indices.length, sum, isFever)) {
-        this._startSilverFever(this.playerSilverFever, 'playersilverfeverstart');
+        this._startSilverFever(this.playerStats, this.playerSilverFever, 'playersilverfeverstart');
       }
 
       const refills = this.playerBoard.clear(indices);
@@ -399,6 +402,7 @@ export class BattleController extends EventTarget {
 
     this.playerBoard.swapValues(indexA, indexB);
     const values = [this.playerBoard.getValue(indexA), this.playerBoard.getValue(indexB)];
+    recordSwap(this.playerStats);
     this.dispatchEvent(new CustomEvent('playerswap', { detail: { indices: [indexA, indexB], values } }));
     audio.playSwap();
   }
@@ -425,25 +429,25 @@ export class BattleController extends EventTarget {
   _applyCpuSuccess(result) {
     if (this.status !== STATUS.PLAYING) return;
     this.cpuScore += result.points;
-    this.cpuStats.successCount += 1;
+    applySuccess(this.cpuStats, result);
     this.dispatchEvent(new CustomEvent('cpusuccess', { detail: result }));
     audio.playCpuSuccess(result.pathLength, result.isForty);
     if (isSilverFeverTrigger(result.pathLength, result.sum, result.isFever)) {
-      this._startSilverFever(this.cpuSilverFever, 'cpusilverfeverstart');
+      this._startSilverFever(this.cpuStats, this.cpuSilverFever, 'cpusilverfeverstart');
     }
     this._emitGaugeUpdate();
   }
 
   _applyCpuFail(indices) {
     if (this.status !== STATUS.PLAYING) return;
-    this.cpuStats.failureCount += 1;
+    recordFailure(this.cpuStats);
     this.dispatchEvent(new CustomEvent('cpufail', { detail: { indices } }));
     audio.playCpuFail();
   }
 
   _applyCpuDestroy(index) {
     if (this.status !== STATUS.PLAYING) return;
-    this.cpuStats.destroyCount += 1;
+    recordDestroy(this.cpuStats);
     this.dispatchEvent(new CustomEvent('cpudestroy', { detail: { index } }));
     audio.playCpuDestroy();
   }

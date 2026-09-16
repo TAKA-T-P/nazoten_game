@@ -110,27 +110,19 @@
         <button id="btn-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
       </div>
 
-      <table class="result-breakdown">
-        <tbody>
-          <tr><td>通常タイム</td><td id="breakdown-normal">0</td></tr>
-          <tr><td>フィーバータイム</td><td id="breakdown-fever">0</td></tr>
-          <tr class="breakdown-total"><td>合計</td><td id="breakdown-total">0</td></tr>
-        </tbody>
-      </table>
-
       <table class="result-stats">
         <tbody>
-          <tr><td>成功回数</td><td id="stat-success">0</td></tr>
-          <tr><td>失敗回数</td><td id="stat-failure">0</td></tr>
+          <tr><td>通常タイムスコア</td><td id="breakdown-normal">0</td></tr>
+          <tr><td>Mフィーバースコア</td><td id="breakdown-fever">0</td></tr>
           <tr><td>成功率</td><td id="stat-rate">—</td></tr>
+          <tr><td>パネルを消した回数</td><td id="stat-success">0</td></tr>
           <tr><td>10を作った回数</td><td id="stat-10">0</td></tr>
           <tr><td>20を作った回数</td><td id="stat-20">0</td></tr>
           <tr><td>30を作った回数</td><td id="stat-30">0</td></tr>
           <tr><td>40を作った回数</td><td id="stat-40">0</td></tr>
-          <tr><td>フィーバー中の成功回数</td><td id="stat-fever-success">0</td></tr>
-          <tr><td>消した数字</td><td id="stat-cleared">0</td></tr>
-          <tr><td>通常タイムの最大得点</td><td id="stat-highest">0</td></tr>
-          <tr><td>フィーバー中の最大得点</td><td id="stat-fever-highest">0</td></tr>
+          <tr><td>Sフィーバー突入回数</td><td id="stat-silver-fever">0</td></tr>
+          <tr><td>入れ替え・破壊回数</td><td id="stat-swap-destroy">0</td></tr>
+          <tr><td>消したパネルの数</td><td id="stat-cleared">0</td></tr>
         </tbody>
       </table>
     </div>
@@ -182,7 +174,7 @@
         </button>
       </div>
       <p id="cpu-level-description" class="cpu-level-description">はじめてのCPUバトルにおすすめ</p>
-      <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝0敗0分</p>
+      <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝</p>
       <button id="btn-cpu-start" class="btn btn-primary" type="button">バトル開始</button>
       <button id="btn-cpu-select-back" class="btn btn-secondary" type="button">タイトルへ</button>
       <button id="btn-cpu-rules" class="btn-sound-mode" type="button">バトルルール</button>
@@ -262,6 +254,10 @@
             <td>点差</td>
             <td id="battle-score-diff">0</td>
           </tr>
+          <tr class="battle-compare-record">
+            <td>この強さの通算成績</td>
+            <td id="battle-record-summary">0勝</td>
+          </tr>
         </tbody>
       </table>
 
@@ -274,28 +270,22 @@
       </div>
       <button id="btn-battle-result-title" class="btn btn-secondary battle-title-btn" type="button">タイトルへ</button>
 
-      <table class="result-breakdown">
+      <table class="battle-stats-compare">
+        <thead>
+          <tr><th></th><th>1P</th><th>CPU</th></tr>
+        </thead>
         <tbody>
-          <tr><td>通常タイム</td><td id="battle-breakdown-normal">0</td></tr>
-          <tr><td>フィーバータイム</td><td id="battle-breakdown-fever">0</td></tr>
-          <tr class="breakdown-total"><td>合計</td><td id="battle-breakdown-total">0</td></tr>
-        </tbody>
-      </table>
-
-      <table class="result-stats">
-        <tbody>
-          <tr><td>成功回数</td><td id="battle-stat-success">0</td></tr>
-          <tr><td>失敗回数</td><td id="battle-stat-failure">0</td></tr>
-          <tr><td>成功率</td><td id="battle-stat-rate">—</td></tr>
-          <tr><td>10を作った回数</td><td id="battle-stat-10">0</td></tr>
-          <tr><td>20を作った回数</td><td id="battle-stat-20">0</td></tr>
-          <tr><td>30を作った回数</td><td id="battle-stat-30">0</td></tr>
-          <tr><td>40を作った回数</td><td id="battle-stat-40">0</td></tr>
-          <tr><td>破壊回数</td><td id="battle-stat-destroy">0</td></tr>
-          <tr><td>CPU成功回数</td><td id="battle-stat-cpu-success">0</td></tr>
-          <tr><td>CPU失敗回数</td><td id="battle-stat-cpu-failure">0</td></tr>
-          <tr><td>CPU破壊回数</td><td id="battle-stat-cpu-destroy">0</td></tr>
-          <tr><td>この強さの通算成績</td><td id="battle-record-summary">0勝0敗0分</td></tr>
+          <tr><td>通常タイムスコア</td><td id="battle-stat-normal-player">0</td><td id="battle-stat-normal-cpu">0</td></tr>
+          <tr><td>Mフィーバースコア</td><td id="battle-stat-fever-player">0</td><td id="battle-stat-fever-cpu">0</td></tr>
+          <tr><td>成功率</td><td id="battle-stat-rate-player">—</td><td id="battle-stat-rate-cpu">—</td></tr>
+          <tr><td>パネルを消した回数</td><td id="battle-stat-success-player">0</td><td id="battle-stat-success-cpu">0</td></tr>
+          <tr><td>10を作った回数</td><td id="battle-stat-10-player">0</td><td id="battle-stat-10-cpu">0</td></tr>
+          <tr><td>20を作った回数</td><td id="battle-stat-20-player">0</td><td id="battle-stat-20-cpu">0</td></tr>
+          <tr><td>30を作った回数</td><td id="battle-stat-30-player">0</td><td id="battle-stat-30-cpu">0</td></tr>
+          <tr><td>40を作った回数</td><td id="battle-stat-40-player">0</td><td id="battle-stat-40-cpu">0</td></tr>
+          <tr><td>Sフィーバー突入回数</td><td id="battle-stat-silver-player">0</td><td id="battle-stat-silver-cpu">0</td></tr>
+          <tr><td>入れ替え・破壊回数</td><td id="battle-stat-swapdestroy-player">0</td><td id="battle-stat-swapdestroy-cpu">0</td></tr>
+          <tr><td>消したパネルの数</td><td id="battle-stat-cleared-player">0</td><td id="battle-stat-cleared-cpu">0</td></tr>
         </tbody>
       </table>
     </div>

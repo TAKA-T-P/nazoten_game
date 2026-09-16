@@ -33,18 +33,15 @@ function cacheDom() {
   el.resultTitle = document.getElementById('result-title');
   el.breakdownNormal = document.getElementById('breakdown-normal');
   el.breakdownFever = document.getElementById('breakdown-fever');
-  el.breakdownTotal = document.getElementById('breakdown-total');
   el.statSuccess = document.getElementById('stat-success');
-  el.statFailure = document.getElementById('stat-failure');
   el.statRate = document.getElementById('stat-rate');
   el.stat10 = document.getElementById('stat-10');
   el.stat20 = document.getElementById('stat-20');
   el.stat30 = document.getElementById('stat-30');
   el.stat40 = document.getElementById('stat-40');
-  el.statFeverSuccess = document.getElementById('stat-fever-success');
+  el.statSilverFever = document.getElementById('stat-silver-fever');
+  el.statSwapDestroy = document.getElementById('stat-swap-destroy');
   el.statCleared = document.getElementById('stat-cleared');
-  el.statHighest = document.getElementById('stat-highest');
-  el.statFeverHighest = document.getElementById('stat-fever-highest');
 
   // CPUバトル関連
   el.btnCpuBattle = document.getElementById('btn-cpu-battle');
@@ -72,20 +69,18 @@ function cacheDom() {
   el.battleResultLevelLabel = document.getElementById('battle-result-level-label');
   el.battlePlayerTitle = document.getElementById('battle-player-title');
   el.battleCpuTitle = document.getElementById('battle-cpu-title');
-  el.battleBreakdownNormal = document.getElementById('battle-breakdown-normal');
-  el.battleBreakdownFever = document.getElementById('battle-breakdown-fever');
-  el.battleBreakdownTotal = document.getElementById('battle-breakdown-total');
-  el.battleStatSuccess = document.getElementById('battle-stat-success');
-  el.battleStatFailure = document.getElementById('battle-stat-failure');
-  el.battleStatRate = document.getElementById('battle-stat-rate');
-  el.battleStat10 = document.getElementById('battle-stat-10');
-  el.battleStat20 = document.getElementById('battle-stat-20');
-  el.battleStat30 = document.getElementById('battle-stat-30');
-  el.battleStat40 = document.getElementById('battle-stat-40');
-  el.battleStatDestroy = document.getElementById('battle-stat-destroy');
-  el.battleStatCpuSuccess = document.getElementById('battle-stat-cpu-success');
-  el.battleStatCpuFailure = document.getElementById('battle-stat-cpu-failure');
-  el.battleStatCpuDestroy = document.getElementById('battle-stat-cpu-destroy');
+  // 1P・CPUを横並びで比較する結果画面の表（player/cpuの2列）。
+  el.battleStatNormal = { player: document.getElementById('battle-stat-normal-player'), cpu: document.getElementById('battle-stat-normal-cpu') };
+  el.battleStatFever = { player: document.getElementById('battle-stat-fever-player'), cpu: document.getElementById('battle-stat-fever-cpu') };
+  el.battleStatRate = { player: document.getElementById('battle-stat-rate-player'), cpu: document.getElementById('battle-stat-rate-cpu') };
+  el.battleStatSuccess = { player: document.getElementById('battle-stat-success-player'), cpu: document.getElementById('battle-stat-success-cpu') };
+  el.battleStat10 = { player: document.getElementById('battle-stat-10-player'), cpu: document.getElementById('battle-stat-10-cpu') };
+  el.battleStat20 = { player: document.getElementById('battle-stat-20-player'), cpu: document.getElementById('battle-stat-20-cpu') };
+  el.battleStat30 = { player: document.getElementById('battle-stat-30-player'), cpu: document.getElementById('battle-stat-30-cpu') };
+  el.battleStat40 = { player: document.getElementById('battle-stat-40-player'), cpu: document.getElementById('battle-stat-40-cpu') };
+  el.battleStatSilver = { player: document.getElementById('battle-stat-silver-player'), cpu: document.getElementById('battle-stat-silver-cpu') };
+  el.battleStatSwapDestroy = { player: document.getElementById('battle-stat-swapdestroy-player'), cpu: document.getElementById('battle-stat-swapdestroy-cpu') };
+  el.battleStatCleared = { player: document.getElementById('battle-stat-cleared-player'), cpu: document.getElementById('battle-stat-cleared-cpu') };
   el.battleRecordSummary = document.getElementById('battle-record-summary');
 }
 
@@ -329,25 +324,23 @@ export function renderResult({ score, stats, isNewBest }) {
 
   el.breakdownNormal.textContent = String(stats.normalScore);
   el.breakdownFever.textContent = String(stats.feverScore);
-  el.breakdownTotal.textContent = String(stats.normalScore + stats.feverScore);
 
-  el.statSuccess.textContent = String(stats.successCount);
-  el.statFailure.textContent = String(stats.failureCount);
   el.statRate.textContent = formatRate(calcSuccessRate(stats));
+  el.statSuccess.textContent = String(stats.successCount);
   el.stat10.textContent = String(stats.sumCounts[10]);
   el.stat20.textContent = String(stats.sumCounts[20]);
   el.stat30.textContent = String(stats.sumCounts[30]);
   el.stat40.textContent = String(stats.sumCounts[40]);
-  el.statFeverSuccess.textContent = String(stats.feverSuccessCount);
+  el.statSilverFever.textContent = String(stats.silverFeverCount);
+  el.statSwapDestroy.textContent = String(stats.swapCount + stats.destroyCount);
   el.statCleared.textContent = String(stats.clearedCellCount);
-  el.statHighest.textContent = String(stats.highestNormalScore);
-  el.statFeverHighest.textContent = String(stats.highestFeverScore);
 }
 
 // --- CPUバトル -------------------------------------------------------------
 
+// 通算成績は勝利数のみを表示する（仕様変更：以前は「0勝0敗0分」だった）。
 function formatRecord(record) {
-  return `${record.wins}勝${record.losses}敗${record.draws}分`;
+  return `${record.wins}勝`;
 }
 
 export function updateCpuLevelSelection(level) {
@@ -558,20 +551,22 @@ export function renderBattleResult({ outcome, level, playerScore, cpuScore, play
   el.battlePlayerTitle.textContent = getTitleForScore(playerScore);
   el.battleCpuTitle.textContent = `CPU: ${getTitleForScore(cpuScore)}`;
 
-  el.battleBreakdownNormal.textContent = String(playerStats.normalScore);
-  el.battleBreakdownFever.textContent = String(playerStats.feverScore);
-  el.battleBreakdownTotal.textContent = String(playerStats.normalScore + playerStats.feverScore);
+  const setStat = (pair, playerValue, cpuValue) => {
+    pair.player.textContent = String(playerValue);
+    pair.cpu.textContent = String(cpuValue);
+  };
 
-  el.battleStatSuccess.textContent = String(playerStats.successCount);
-  el.battleStatFailure.textContent = String(playerStats.failureCount);
-  el.battleStatRate.textContent = formatRate(calcSuccessRate(playerStats));
-  el.battleStat10.textContent = String(playerStats.sumCounts[10]);
-  el.battleStat20.textContent = String(playerStats.sumCounts[20]);
-  el.battleStat30.textContent = String(playerStats.sumCounts[30]);
-  el.battleStat40.textContent = String(playerStats.sumCounts[40]);
-  el.battleStatDestroy.textContent = String(playerStats.destroyCount);
-  el.battleStatCpuSuccess.textContent = String(cpuStats.successCount);
-  el.battleStatCpuFailure.textContent = String(cpuStats.failureCount);
-  el.battleStatCpuDestroy.textContent = String(cpuStats.destroyCount);
+  setStat(el.battleStatNormal, playerStats.normalScore, cpuStats.normalScore);
+  setStat(el.battleStatFever, playerStats.feverScore, cpuStats.feverScore);
+  setStat(el.battleStatRate, formatRate(calcSuccessRate(playerStats)), formatRate(calcSuccessRate(cpuStats)));
+  setStat(el.battleStatSuccess, playerStats.successCount, cpuStats.successCount);
+  setStat(el.battleStat10, playerStats.sumCounts[10], cpuStats.sumCounts[10]);
+  setStat(el.battleStat20, playerStats.sumCounts[20], cpuStats.sumCounts[20]);
+  setStat(el.battleStat30, playerStats.sumCounts[30], cpuStats.sumCounts[30]);
+  setStat(el.battleStat40, playerStats.sumCounts[40], cpuStats.sumCounts[40]);
+  setStat(el.battleStatSilver, playerStats.silverFeverCount, cpuStats.silverFeverCount);
+  setStat(el.battleStatSwapDestroy, playerStats.swapCount + playerStats.destroyCount, cpuStats.swapCount + cpuStats.destroyCount);
+  setStat(el.battleStatCleared, playerStats.clearedCellCount, cpuStats.clearedCellCount);
+
   el.battleRecordSummary.textContent = formatRecord(record);
 }

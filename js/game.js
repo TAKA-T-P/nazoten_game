@@ -11,7 +11,9 @@ import {
   createStats,
   applySuccess,
   recordFailure,
-  recordDestroy
+  recordDestroy,
+  recordSwap,
+  recordSilverFeverTrigger
 } from './scoring.js';
 import * as audio from './audio.js';
 
@@ -245,6 +247,7 @@ export class NazotenGame extends EventTarget {
   _startSilverFever() {
     this.silverFeverActive = true;
     this.silverFeverEndsAt = performance.now() + CONFIG.silverFeverDurationMs;
+    recordSilverFeverTrigger(this.stats);
     this.dispatchEvent(new CustomEvent('silverfeverstart', {}));
     audio.playSilverFeverStart();
   }
@@ -373,6 +376,7 @@ export class NazotenGame extends EventTarget {
 
     this.board.swapValues(indexA, indexB);
     const values = [this.board.getValue(indexA), this.board.getValue(indexB)];
+    recordSwap(this.stats);
     this.dispatchEvent(new CustomEvent('swap', { detail: { indices: [indexA, indexB], values } }));
     audio.playSwap();
   }
