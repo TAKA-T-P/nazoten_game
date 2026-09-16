@@ -93,27 +93,41 @@
   color: var(--color-fail);
 }
 
+/* スマホ縦画面で1画面に収まるよう、CPU戦の両盤面は通常サイズの80%で表示する。 */
+.battle-player-board-wrap {
+  width: 80%;
+  max-width: 336px;
+}
+
+#player-board.board {
+  gap: 4.8px;
+}
+
+#player-board .cell {
+  font-size: clamp(0.96rem, 4.8vw, 1.44rem);
+}
+
 .battle-cpu-board-wrap {
-  width: clamp(72px, 24vw, 150px);
-  max-width: clamp(72px, 24vw, 150px);
+  width: clamp(57.6px, 19.2vw, 120px);
+  max-width: clamp(57.6px, 19.2vw, 120px);
   /* 横4マス×縦4マス。.board-wrapと同じ比率でセルを正方形に保つ。 */
   aspect-ratio: 4 / 4;
 }
 
 .battle-cpu-board {
-  gap: 3px;
+  gap: 2.4px;
   pointer-events: none;
 }
 
 .battle-cpu-board .cell {
-  font-size: clamp(0.55rem, 3vw, 0.9rem);
+  font-size: clamp(0.44rem, 2.4vw, 0.72rem);
   border-width: 1px;
 }
 
 .battle-cpu-board .order-badge {
-  width: 12px;
-  height: 12px;
-  font-size: 0.5rem;
+  width: 9.6px;
+  height: 9.6px;
+  font-size: 0.4rem;
 }
 
 .battle-center {

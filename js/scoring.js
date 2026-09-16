@@ -88,14 +88,19 @@ export function calcSuccessRate(stats) {
   return (stats.successCount / attempts) * 100;
 }
 
-// LV = floor(sqrt(score / 10))。1〜20の範囲にクランプする（4000点以上でLV.20）。
+// LV = floor(sqrt(score / 10))。下限は1（上限なし。LV.21以降は超速ナゾテン王+Nとして続く）。
 export function getTitleLevel(score) {
   const raw = Math.floor(Math.sqrt(Math.max(score, 0) / 10));
-  return Math.min(Math.max(raw, 1), 20);
+  return Math.max(raw, 1);
 }
 
+// LV.1〜LV.20はCONFIG.titleLevelsの固有称号、LV.21以降は
+// 「超速ナゾテン王+N」（N = 称号レベル - 20）として上限なく続く。
 export function getTitleForScore(score) {
   const level = getTitleLevel(score);
-  const name = CONFIG.titleLevels[level - 1];
+  const maxNamedLevel = CONFIG.titleLevels.length;
+  const name = level <= maxNamedLevel
+    ? CONFIG.titleLevels[level - 1]
+    : `${CONFIG.titleLevels[maxNamedLevel - 1]}+${level - maxNamedLevel}`;
   return `LV.${level}　${name}`;
 }
