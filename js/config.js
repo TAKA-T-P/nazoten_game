@@ -87,9 +87,25 @@ export const BGM_DELAY_TRIGGER_MS = 3_000;
 // CPUバトルの強さ別パラメータ（Phase3実装指示書 11章）。実装後のテストプレイで調整する仮値。
 export const CPU_LEVEL_ORDER = ['1', '2', '3', '4', '5', 'MAX'];
 
+// 強さを1段階ずつ弱くするため、旧レベルNのパラメータを新レベルN+1にずらしている
+// （旧レベル1→新レベル2、旧レベル2→新レベル3、…、旧レベル5→新MAX）。
+// 新レベル1は繰り上げ元がないため、旧レベル1よりさらに弱い専用の数値を設定した。
+// ラベル・ニックネーム・説明文は各枠の立ち位置（初心者向け〜最強）を表すため据え置き。
 export const CPU_LEVELS = {
   1: {
     label: '強さ1',
+    name: 'のんびり',
+    description: 'CPU戦がはじめての方に一番おすすめ',
+    thinkMinMs: 3600,
+    thinkMaxMs: 5200,
+    maxPathLength: 2,
+    bestMoveRate: 0.05,
+    mistakeRate: 0.20,
+    traceStepMs: 400,
+    noMoveDestroyMs: 4000
+  },
+  2: {
+    label: '強さ2',
     name: 'ゆっくり',
     description: 'はじめてのCPUバトルにおすすめ',
     thinkMinMs: 3000,
@@ -100,8 +116,8 @@ export const CPU_LEVELS = {
     traceStepMs: 360,
     noMoveDestroyMs: 3500
   },
-  2: {
-    label: '強さ2',
+  3: {
+    label: '強さ3',
     name: 'やさしい',
     description: '少しずつ得点してくる相手',
     thinkMinMs: 2400,
@@ -112,8 +128,8 @@ export const CPU_LEVELS = {
     traceStepMs: 320,
     noMoveDestroyMs: 3000
   },
-  3: {
-    label: '強さ3',
+  4: {
+    label: '強さ4',
     name: 'ふつう',
     description: 'バランスの取れた標準レベル',
     thinkMinMs: 1800,
@@ -124,8 +140,8 @@ export const CPU_LEVELS = {
     traceStepMs: 280,
     noMoveDestroyMs: 2500
   },
-  4: {
-    label: '強さ4',
+  5: {
+    label: '強さ5',
     name: 'つよい',
     description: '高得点の組み合わせをよく見つける',
     thinkMinMs: 1300,
@@ -136,10 +152,10 @@ export const CPU_LEVELS = {
     traceStepMs: 240,
     noMoveDestroyMs: 2000
   },
-  5: {
-    label: '強さ5',
-    name: 'すごくつよい',
-    description: '素早く正確な上級者向け',
+  MAX: {
+    label: 'MAX',
+    name: '超速',
+    description: '最高得点を迷わず狙う最強CPU',
     thinkMinMs: 900,
     thinkMaxMs: 1500,
     maxPathLength: 5,
@@ -147,17 +163,5 @@ export const CPU_LEVELS = {
     mistakeRate: 0.01,
     traceStepMs: 180,
     noMoveDestroyMs: 1600
-  },
-  MAX: {
-    label: 'MAX',
-    name: '超速',
-    description: '最高得点を迷わず狙う最強CPU',
-    thinkMinMs: 500,
-    thinkMaxMs: 900,
-    maxPathLength: 5,
-    bestMoveRate: 1,
-    mistakeRate: 0,
-    traceStepMs: 140,
-    noMoveDestroyMs: 1200
   }
 };
