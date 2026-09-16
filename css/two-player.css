@@ -319,6 +319,8 @@
   color: var(--color-text);
 }
 
+/* 記録一覧表とボタンの間の余白を最小限にする。表本体が短いときに余白が
+   table→buttons間へ入り込まないよう、子要素は上詰め（flex-start）にする。 */
 .tp-result-center {
   flex: 1 1 auto;
   min-height: 0;
@@ -327,7 +329,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 2px;
 }
 
 /* 結果画面は縦方向のスペースが限られるため、ボタンの縦幅を通常より小さくする。 */
@@ -341,8 +344,10 @@
   padding-bottom: 8px;
 }
 
+/* 伸びしろがあっても表の高さぶんだけで止め、table→buttons間に余白を
+   作らない。画面が狭いときだけ縮んで内部スクロールする（flex-shrink:1）。 */
 .tp-stats-scroll {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
   width: 100%;
   overflow-y: auto;

@@ -85,6 +85,15 @@ body {
   transform: scale(0.96);
 }
 
+/* <a class="btn">（外部リンクなど）をボタンと同じ見た目・挙動にする。 */
+a.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
 .btn-primary {
   background: var(--color-primary);
   color: #fff;

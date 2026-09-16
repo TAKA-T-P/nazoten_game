@@ -98,7 +98,7 @@ export const CPU_LEVELS = {
   1: {
     label: '強さ1',
     name: 'のんびり',
-    description: 'CPU戦がはじめての方に一番おすすめ',
+    description: 'のんびりプレイする最弱CPU',
     thinkMinMs: 3600,
     thinkMaxMs: 5200,
     maxPathLength: 2,

@@ -73,10 +73,26 @@ function main() {
   });
 
   document.getElementById('btn-howto').addEventListener('click', () => {
-    ui.showScreen('howto');
+    ui.showScreen('howto-menu');
   });
 
   document.getElementById('btn-howto-back').addEventListener('click', () => {
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-howto-menu-basic').addEventListener('click', () => {
+    ui.showScreen('howto');
+  });
+
+  document.getElementById('btn-howto-menu-battle').addEventListener('click', () => {
+    ui.showScreen('battle-rules');
+  });
+
+  document.getElementById('btn-howto-menu-back').addEventListener('click', () => {
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-battle-rules-back').addEventListener('click', () => {
     ui.showScreen('title');
   });
 
@@ -169,14 +185,6 @@ function main() {
     showCpuSelectScreen();
   });
 
-  document.getElementById('btn-cpu-howto-start').addEventListener('click', () => {
-    showCpuSelectScreen();
-  });
-
-  document.getElementById('btn-cpu-howto-back').addEventListener('click', () => {
-    ui.showScreen('title');
-  });
-
   document.getElementById('cpu-level-slider').addEventListener('input', () => {
     const level = ui.getCpuLevelFromSliderValue();
     storage.setSelectedCpuLevel(level);
@@ -190,10 +198,6 @@ function main() {
 
   document.getElementById('btn-cpu-select-back').addEventListener('click', () => {
     ui.showScreen('title');
-  });
-
-  document.getElementById('btn-cpu-rules').addEventListener('click', () => {
-    ui.showScreen('cpu-howto');
   });
 
   document.getElementById('btn-battle-back').addEventListener('click', () => {

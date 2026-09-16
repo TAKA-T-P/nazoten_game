@@ -123,6 +123,14 @@
   margin: 0;
 }
 
+.howto-subheading {
+  align-self: flex-start;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-secondary);
+}
+
 .howto-example {
   background: var(--color-surface);
   border-radius: var(--radius-md);
