@@ -71,17 +71,15 @@ function main() {
     if (storage.hasSeenCurrentTutorial()) {
       startCountdownAndPlay();
     } else {
+      // あそびかた画面にスタートボタンはないため、表示した時点で既読にする。
+      // 次に「スコアアタック」を押したときはそのままゲームが始まる。
+      storage.markTutorialSeen();
       ui.showScreen('howto');
     }
   });
 
   document.getElementById('btn-howto').addEventListener('click', () => {
     ui.showScreen('howto');
-  });
-
-  document.getElementById('btn-howto-start').addEventListener('click', () => {
-    storage.markTutorialSeen();
-    startCountdownAndPlay();
   });
 
   document.getElementById('btn-howto-back').addEventListener('click', () => {
