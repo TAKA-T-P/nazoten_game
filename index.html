@@ -151,31 +151,20 @@
   <section id="screen-cpu-select" class="screen" data-screen="cpu-select" hidden>
     <div class="cpu-select-inner">
       <h2>CPUの強さを選ぶ</h2>
-      <div id="cpu-level-grid" class="cpu-level-grid">
-        <button class="cpu-level-btn" data-level="1" type="button">
-          <span class="cpu-level-label">強さ1</span>
-          <span class="cpu-level-name">ゆっくり</span>
-        </button>
-        <button class="cpu-level-btn" data-level="2" type="button">
-          <span class="cpu-level-label">強さ2</span>
-          <span class="cpu-level-name">やさしい</span>
-        </button>
-        <button class="cpu-level-btn" data-level="3" type="button">
-          <span class="cpu-level-label">強さ3</span>
-          <span class="cpu-level-name">ふつう</span>
-        </button>
-        <button class="cpu-level-btn" data-level="4" type="button">
-          <span class="cpu-level-label">強さ4</span>
-          <span class="cpu-level-name">つよい</span>
-        </button>
-        <button class="cpu-level-btn" data-level="5" type="button">
-          <span class="cpu-level-label">強さ5</span>
-          <span class="cpu-level-name">すごくつよい</span>
-        </button>
-        <button class="cpu-level-btn" data-level="MAX" type="button">
-          <span class="cpu-level-label">MAX</span>
-          <span class="cpu-level-name">超速</span>
-        </button>
+      <div class="cpu-level-current">
+        <span id="cpu-level-current-label" class="cpu-level-label">強さ1</span>
+        <span id="cpu-level-current-name" class="cpu-level-name">ゆっくり</span>
+      </div>
+      <div class="cpu-level-slider-wrap">
+        <input id="cpu-level-slider" class="cpu-level-slider" type="range" min="0" max="5" step="1" value="0" aria-label="CPUの強さ">
+        <div class="cpu-level-slider-ticks" aria-hidden="true">
+          <span>強さ1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>4</span>
+          <span>5</span>
+          <span>MAX</span>
+        </div>
       </div>
       <p id="cpu-level-description" class="cpu-level-description">はじめてのCPUバトルにおすすめ</p>
       <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝</p>
@@ -382,7 +371,6 @@
           <tbody>
             <tr><td>最終スコア</td><td id="tp-stat-score-p1">0</td><td id="tp-stat-score-p2">0</td></tr>
             <tr><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td><td id="tp-stat-normal-p2">0</td></tr>
-            <tr><td>シルバー・フィーバースコア</td><td id="tp-stat-silverscore-p1">0</td><td id="tp-stat-silverscore-p2">0</td></tr>
             <tr><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td><td id="tp-stat-feverscore-p2">0</td></tr>
             <tr><td>成功率</td><td id="tp-stat-rate-p1">—</td><td id="tp-stat-rate-p2">—</td></tr>
             <tr><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td><td id="tp-stat-success-p2">0</td></tr>
@@ -393,7 +381,6 @@
             <tr><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td><td id="tp-stat-silver-p2">0</td></tr>
             <tr><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td><td id="tp-stat-swapdestroy-p2">0</td></tr>
             <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
-            <tr><td>1手の最高得点</td><td id="tp-stat-highest-p1">0</td><td id="tp-stat-highest-p2">0</td></tr>
           </tbody>
         </table>
       </div>

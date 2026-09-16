@@ -324,12 +324,6 @@ export class TwoPlayerController extends EventTarget {
       const result = calculateScore({ sum, pathLength: indices.length, multiplier, isFever });
       this.scores[actor] += result.points;
       applySuccess(stats, result);
-      // シルバー・フィーバー中の得点は、結果画面の3分類表示のためnormalScoreから
-      // silverScoreへ付け替える（scoring.jsの共通集計はフォーティ/ミリオン判定のみ扱う）。
-      if (silverActive) {
-        stats.normalScore -= result.points;
-        stats.silverScore = (stats.silverScore || 0) + result.points;
-      }
 
       this.dispatchEvent(new CustomEvent(`${actor}success`, { detail: { indices, ...result } }));
 

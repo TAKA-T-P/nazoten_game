@@ -177,13 +177,11 @@ function main() {
     ui.showScreen('title');
   });
 
-  document.querySelectorAll('.cpu-level-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const level = btn.dataset.level;
-      storage.setSelectedCpuLevel(level);
-      ui.updateCpuLevelSelection(level);
-      ui.updateCpuLevelRecord(storage.getCpuRecord(level));
-    });
+  document.getElementById('cpu-level-slider').addEventListener('input', () => {
+    const level = ui.getCpuLevelFromSliderValue();
+    storage.setSelectedCpuLevel(level);
+    ui.updateCpuLevelSelection(level);
+    ui.updateCpuLevelRecord(storage.getCpuRecord(level));
   });
 
   document.getElementById('btn-cpu-start').addEventListener('click', () => {

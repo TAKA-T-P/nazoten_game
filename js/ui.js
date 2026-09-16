@@ -1,6 +1,6 @@
 // 画面切替、表示更新、演出呼出（仕様書 8章・12章、Phase2実装指示書 6・8章、Phase3実装指示書 6・9・15章）。
 import * as storage from './storage.js';
-import { CPU_LEVELS } from './config.js';
+import { CPU_LEVELS, CPU_LEVEL_ORDER } from './config.js';
 import { getTitleForScore, calcSuccessRate } from './scoring.js';
 
 const el = {};
@@ -51,7 +51,9 @@ function cacheDom() {
 
   // CPUバトル関連
   el.btnCpuBattle = document.getElementById('btn-cpu-battle');
-  el.cpuLevelButtons = document.querySelectorAll('.cpu-level-btn');
+  el.cpuLevelSlider = document.getElementById('cpu-level-slider');
+  el.cpuLevelCurrentLabel = document.getElementById('cpu-level-current-label');
+  el.cpuLevelCurrentName = document.getElementById('cpu-level-current-name');
   el.cpuLevelDescription = document.getElementById('cpu-level-description');
   el.cpuLevelRecord = document.getElementById('cpu-level-record');
 
@@ -107,7 +109,6 @@ function cacheDom() {
   el.tpResultTitle = { p1: document.getElementById('tp-title-p1'), p2: document.getElementById('tp-title-p2') };
   el.tpStatScore = { p1: document.getElementById('tp-stat-score-p1'), p2: document.getElementById('tp-stat-score-p2') };
   el.tpStatNormal = { p1: document.getElementById('tp-stat-normal-p1'), p2: document.getElementById('tp-stat-normal-p2') };
-  el.tpStatSilverScore = { p1: document.getElementById('tp-stat-silverscore-p1'), p2: document.getElementById('tp-stat-silverscore-p2') };
   el.tpStatFeverScore = { p1: document.getElementById('tp-stat-feverscore-p1'), p2: document.getElementById('tp-stat-feverscore-p2') };
   el.tpStatRate = { p1: document.getElementById('tp-stat-rate-p1'), p2: document.getElementById('tp-stat-rate-p2') };
   el.tpStatSuccess = { p1: document.getElementById('tp-stat-success-p1'), p2: document.getElementById('tp-stat-success-p2') };
@@ -118,7 +119,6 @@ function cacheDom() {
   el.tpStatSilver = { p1: document.getElementById('tp-stat-silver-p1'), p2: document.getElementById('tp-stat-silver-p2') };
   el.tpStatSwapDestroy = { p1: document.getElementById('tp-stat-swapdestroy-p1'), p2: document.getElementById('tp-stat-swapdestroy-p2') };
   el.tpStatCleared = { p1: document.getElementById('tp-stat-cleared-p1'), p2: document.getElementById('tp-stat-cleared-p2') };
-  el.tpStatHighest = { p1: document.getElementById('tp-stat-highest-p1'), p2: document.getElementById('tp-stat-highest-p2') };
 }
 
 export function init() {
@@ -386,10 +386,16 @@ function formatRecord(record) {
 }
 
 export function updateCpuLevelSelection(level) {
-  el.cpuLevelButtons.forEach((btn) => {
-    btn.classList.toggle('selected', btn.dataset.level === level);
-  });
+  const index = CPU_LEVEL_ORDER.indexOf(level);
+  el.cpuLevelSlider.value = String(index >= 0 ? index : 0);
+  el.cpuLevelCurrentLabel.textContent = CPU_LEVELS[level].label;
+  el.cpuLevelCurrentName.textContent = CPU_LEVELS[level].name;
   el.cpuLevelDescription.textContent = CPU_LEVELS[level].description;
+}
+
+// スライダーの現在値（0〜5）を強さレベル（'1'〜'5'・'MAX'）へ変換する。
+export function getCpuLevelFromSliderValue() {
+  return CPU_LEVEL_ORDER[Number(el.cpuLevelSlider.value)];
 }
 
 export function updateCpuLevelRecord(record) {
@@ -822,7 +828,6 @@ export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2St
 
   setStat(el.tpStatScore, p1Score, p2Score);
   setStat(el.tpStatNormal, p1Stats.normalScore, p2Stats.normalScore);
-  setStat(el.tpStatSilverScore, p1Stats.silverScore || 0, p2Stats.silverScore || 0);
   setStat(el.tpStatFeverScore, p1Stats.feverScore, p2Stats.feverScore);
   setStat(el.tpStatRate, formatRate(calcSuccessRate(p1Stats)), formatRate(calcSuccessRate(p2Stats)));
   setStat(el.tpStatSuccess, p1Stats.successCount, p2Stats.successCount);
@@ -837,9 +842,4 @@ export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2St
     p2Stats.swapCount + p2Stats.destroyCount
   );
   setStat(el.tpStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
-  setStat(
-    el.tpStatHighest,
-    Math.max(p1Stats.highestNormalScore, p1Stats.highestFeverScore),
-    Math.max(p2Stats.highestNormalScore, p2Stats.highestFeverScore)
-  );
 }
