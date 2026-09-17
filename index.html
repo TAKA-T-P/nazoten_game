@@ -124,12 +124,12 @@
       <h3 class="howto-subheading">オジャマ（CPU戦・2人バトルの両方共通）</h3>
       <ol class="howto-steps">
         <li>対戦前にオジャマのON／OFFを選べる（初期値はON）。</li>
-        <li>残り40秒と20秒で、負けている側にオジャマボタンが5秒間だけ表示される
-          （CPU戦でCPUが劣勢のときは、CPUが自動でオジャマを使ってくる）。</li>
-        <li>押すと相手へ5秒間、ランダムな視覚妨害（数字が逆さ・小さい・見えにくい・星が降る・
-          数式が隠れるの5種類）が発生する。受けた側には受けた種類が5秒間表示される。</li>
-        <li>CPU戦でプレイヤーからCPUへの攻撃が成功すると、見た目の種類にかかわらず5秒間
-          CPUの思考・操作が遅くなる。</li>
+        <li>ボタン操作はなく、経過20秒・40秒（残り40秒・20秒）の時点で、その瞬間に
+          勝っている側が自動的にオジャマの対象になる（同点なら発動しない）。</li>
+        <li>対象になると7秒間、ランダムな視覚妨害（数字が逆さ・小さい・見えにくい・星が降る・
+          数式が隠れるの5種類）が発生する。受けた側には受けた種類が7秒間表示される。</li>
+        <li>CPU戦でCPU側が対象になると、見た目の種類にかかわらず7秒間CPUの思考・操作が
+          遅くなる。</li>
         <li>オジャマは操作や数字そのものを変えない。</li>
         <li>ラスト10秒のミリオン・フィーバーとは重ならない。</li>
       </ol>
@@ -302,7 +302,6 @@
       <p class="battle-you-label">YOU
         <span id="battle-player-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
         <span id="battle-ojama-received-player" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="battle-ojama-received-type-player"></span>」</span>
-        <button id="btn-ojama-battle-player" class="ojama-button" type="button" hidden>オジャマ！</button>
       </p>
     </div>
   </section>
@@ -409,7 +408,6 @@
       <p class="battle-you-label">YOU
         <span id="mcb-player-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
         <span id="mcb-ojama-received-player" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mcb-ojama-received-type-player"></span>」</span>
-        <button id="btn-ojama-mcb-player" class="ojama-button" type="button" hidden>オジャマ！</button>
       </p>
     </div>
   </section>
@@ -490,7 +488,6 @@
             <span id="tp-hud-time-p2" class="hud-time-value">60</span>
             <span id="tp-ojama-received-p2" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="tp-ojama-received-type-p2"></span>」</span>
             <span id="tp-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
-            <button id="btn-ojama-tp-p2" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
           <div class="board-wrap tp-board-wrap">
             <div id="tp-board-p2" class="board" role="grid" aria-label="2Pの盤面"></div>
@@ -541,7 +538,6 @@
             <span id="tp-hud-time-p1" class="hud-time-value">60</span>
             <span id="tp-ojama-received-p1" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="tp-ojama-received-type-p1"></span>」</span>
             <span id="tp-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
-            <button id="btn-ojama-tp-p1" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
           <div class="board-wrap tp-board-wrap">
             <div id="tp-board-p1" class="board" role="grid" aria-label="1Pの盤面"></div>
@@ -579,7 +575,6 @@
             <span id="mb-hud-time-p2" class="hud-time-value">60</span>
             <span id="mb-ojama-received-p2" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mb-ojama-received-type-p2"></span>」</span>
             <span id="mb-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
-            <button id="btn-ojama-p2" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
           <div class="board-wrap tp-board-wrap">
             <div id="mb-board-p2" class="board mb-board" role="grid" aria-label="共有盤面（2P視点）"></div>
@@ -630,7 +625,6 @@
             <span id="mb-hud-time-p1" class="hud-time-value">60</span>
             <span id="mb-ojama-received-p1" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mb-ojama-received-type-p1"></span>」</span>
             <span id="mb-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
-            <button id="btn-ojama-p1" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
           <div class="board-wrap tp-board-wrap">
             <div id="mb-board-p1" class="board mb-board" role="grid" aria-label="共有盤面（1P視点）"></div>
@@ -657,17 +651,19 @@
   </section>
 
   <section id="screen-mixed-battle-result" class="screen screen-two-player" data-screen="mixed-battle-result" hidden>
-    <div class="tp-result-zone tp-result-zone-p2">
-      <div class="tp-result-zone-inner">
-        <p class="tp-result-line">
-          <span id="mb-outcome-p2" class="battle-outcome">LOSE...</span>
-          <span id="mb-score-p2" class="tp-result-score">0</span>
-        </p>
-      </div>
-    </div>
-
     <div class="tp-result-center">
       <div class="tp-result-center-inner">
+        <p id="mb-outcome" class="battle-outcome">1P WIN!</p>
+
+        <div class="battle-score-card battle-score-p1">
+          <span class="battle-score-label">1P</span>
+          <span id="mb-score-p1" class="battle-score-value">0</span>
+        </div>
+        <div class="battle-score-card battle-score-p2">
+          <span class="battle-score-label">2P</span>
+          <span id="mb-score-p2" class="battle-score-value">0</span>
+        </div>
+
         <div class="result-buttons">
           <button id="btn-mb-rematch" class="btn btn-primary" type="button">もう一度</button>
           <button id="btn-mb-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
@@ -695,30 +691,25 @@
         </div>
       </div>
     </div>
-
-    <div class="tp-result-zone tp-result-zone-p1">
-      <div class="tp-result-zone-inner">
-        <p class="tp-result-line">
-          <span id="mb-outcome-p1" class="battle-outcome">WIN!</span>
-          <span id="mb-score-p1" class="tp-result-score">0</span>
-        </p>
-      </div>
-    </div>
   </section>
 
   <section id="screen-two-player-result" class="screen screen-two-player" data-screen="two-player-result" hidden>
-    <div class="tp-result-zone tp-result-zone-p2">
-      <div class="tp-result-zone-inner">
-        <p class="tp-result-line">
-          <span id="tp-outcome-p2" class="battle-outcome">LOSE...</span>
-          <span id="tp-score-p2" class="tp-result-score">0</span>
-        </p>
-        <p id="tp-title-p2" class="result-title"></p>
-      </div>
-    </div>
-
     <div class="tp-result-center">
       <div class="tp-result-center-inner">
+        <p id="tp-outcome" class="battle-outcome">1P WIN!</p>
+
+        <div class="battle-score-card battle-score-p1">
+          <span class="battle-score-label">1P</span>
+          <span id="tp-score-p1" class="battle-score-value">0</span>
+        </div>
+        <div class="battle-score-card battle-score-p2">
+          <span class="battle-score-label">2P</span>
+          <span id="tp-score-p2" class="battle-score-value">0</span>
+        </div>
+
+        <p id="tp-title-p1" class="result-title"></p>
+        <p id="tp-title-p2" class="result-title"></p>
+
         <div class="result-buttons">
           <button id="btn-tp-rematch" class="btn btn-primary" type="button">もう一度</button>
           <button id="btn-tp-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
@@ -744,16 +735,6 @@
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <div class="tp-result-zone tp-result-zone-p1">
-      <div class="tp-result-zone-inner">
-        <p class="tp-result-line">
-          <span id="tp-outcome-p1" class="battle-outcome">WIN!</span>
-          <span id="tp-score-p1" class="tp-result-score">0</span>
-        </p>
-        <p id="tp-title-p1" class="result-title"></p>
       </div>
     </div>
   </section>

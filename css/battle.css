@@ -442,6 +442,15 @@
   color: var(--color-text-muted);
 }
 
+/* 2人バトル結果画面（1P WIN!/2P WIN!）用。1P=青・2P=赤は他画面と共通の配色。 */
+.battle-outcome.outcome-p1win {
+  color: #2563eb;
+}
+
+.battle-outcome.outcome-p2win {
+  color: var(--color-fail);
+}
+
 /* YOU・CPUのスコアを2行の表ではなく横並びのカードで表示する。 */
 .battle-score-row {
   display: flex;
@@ -451,6 +460,10 @@
 
 .battle-score-card {
   flex: 1;
+  /* 2人バトル結果画面では.battle-score-rowに包まず単独で縦に並べて使う
+     （回転後に画面の左右へ来るようにするため）。その場合はflex:1が効かない
+     ため、幅は明示的に100%にしておく。 */
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -470,11 +483,13 @@
   font-weight: 900;
 }
 
-.battle-score-you {
+.battle-score-you,
+.battle-score-p1 {
   color: #2563eb;
 }
 
-.battle-score-cpu {
+.battle-score-cpu,
+.battle-score-p2 {
   color: var(--color-fail);
 }
 

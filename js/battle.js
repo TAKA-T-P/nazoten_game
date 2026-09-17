@@ -69,12 +69,10 @@ export class BattleController extends EventTarget {
     this.playerSilverFever = { active: false, endsAt: null };
     this.cpuSilverFever = { active: false, endsAt: null };
 
-    // オジャマ（CPU戦にも2P同様の判定・演出を接続する）。CPU側が対象になった
-    // 場合は自動でボタンを「押し」、1P側が対象になった場合はCPUの思考・なぞり
-    // 操作時間を一定時間だけ遅くする（見た目の種類にはよらない）。
+    // オジャマ（CPU戦にも2P同様の自動発動・演出を接続する）。CPU側が対象になった
+    // 場合は、見た目の種類にはよらずCPUの思考・なぞり操作時間を一定時間だけ
+    // 遅くする。
     this.ojama = new OjamaController(rng);
-    this.ojamaTimers = new Set();
-    this.ojama.addEventListener('buttonshow', (e) => this._maybeAutoUseOjama(e.detail.actor));
     this.ojama.addEventListener('effectstart', (e) => this._applyOjamaSlowIfCpuTarget(e.detail.targetActor));
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
@@ -103,32 +101,13 @@ export class BattleController extends EventTarget {
     this.countdownTimers = [];
     for (const id of this.refillTimers) clearTimeout(id);
     this.refillTimers.clear();
-    for (const id of this.ojamaTimers) clearTimeout(id);
-    this.ojamaTimers.clear();
   }
 
-  // CPU側（'p2'）が劣勢でボタンが表示された場合、5秒間の猶予のうちランダムな
-  // タイミングで自動的に使用する（人間のボタン操作を模す）。1P側（'p1'）は
-  // 実際のボタン操作に任せるため、ここでは何もしない。
-  _maybeAutoUseOjama(actor) {
-    if (actor !== 'p2') return;
-    const delay = 400 + this.rng() * 2000;
-    const timerId = setTimeout(() => {
-      this.ojamaTimers.delete(timerId);
-      this.ojama.use('p2');
-    }, delay);
-    this.ojamaTimers.add(timerId);
-  }
-
-  // 1P側からCPU側へのオジャマ攻撃が成功した場合、見た目の種類にかかわらず
+  // CPU側が自動オジャマの対象になった場合、見た目の種類にかかわらず
   // CPUの思考時間・なぞり操作時間を一定時間だけ遅くする。
   _applyOjamaSlowIfCpuTarget(targetActor) {
     if (targetActor !== 'p2' || !this.cpuController) return;
     this.cpuController.setSpeedMultiplier(CONFIG.ojama.cpuSlowMultiplier, CONFIG.ojama.effectDurationMs);
-  }
-
-  useOjama(actorId) {
-    return this.ojama.use(actorId);
   }
 
   // 両者が同じ初期配列から始まる独立した2盤面を作る（仕様書7.1〜7.3章）。

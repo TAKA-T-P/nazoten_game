@@ -290,51 +290,12 @@
   justify-content: stretch;
 }
 
-.tp-result-zone {
-  flex: 0 0 auto;
-  width: 100%;
-  max-width: 360px;
-  display: flex;
-  justify-content: center;
-}
-
-.tp-result-zone-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.tp-result-zone-p2 .tp-result-zone-inner {
-  transform: rotate(180deg);
-}
-
-/* 「WIN! 2500」のように結果と得点を同じ行にまとめる。 */
-.tp-result-line {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 10px;
-  margin: 0;
-}
-
-.tp-result-line .battle-outcome {
-  font-size: 1.4rem;
-}
-
-.tp-result-score {
-  font-size: 1.7rem;
-  font-weight: 900;
-  margin: 0;
-  color: var(--color-text);
-}
-
-/* 記録一覧表とボタンをまとめて右に90度回転し、画面右が「上」になる向きで
-   表示する（添付イメージ参照）。回転すると幅と高さが入れ替わるため、
-   container-type:sizeでこの枠自身の実寸をコンテナクエリ単位（cqw/cqh）
-   として子要素から参照できるようにし、回転前のブロックの幅・高さを
+/* 結果画面全体（勝敗表示・スコア・称号・ボタン・記録一覧表）を1つの塊として
+   左に90度回転し、画面左が「上」になる向きで表示する。回転すると幅と高さが
+   入れ替わるため、container-type:sizeでこの枠自身の実寸をコンテナクエリ単位
+   （cqw/cqh）として子要素から参照できるようにし、回転前のブロックの幅・高さを
    あらかじめ入れ替えて用意しておく。こうして回転後の見た目がこの枠を
-   ちょうど過不足なく埋める。 */
+   ちょうど過不足なく埋める（CPU戦結果画面と同じ内容構成をまるごと回転させる）。 */
 .tp-result-center {
   /* flex-basis:autoのままcontainer-type:sizeを指定すると、画面が非表示から
      表示に切り替わった直後にcqw/cqhがまれに0のまま解決されてしまう
@@ -345,19 +306,20 @@
   min-height: 0;
   width: 100%;
   /* 回転後の見た目の横幅はこのmax-width（画面上でのcap）で直接決まる。padding等
-     内側の余白を削っても、外枠自体の横幅（=この値）は変わらないため注意。 */
-  max-width: 300px;
+     内側の余白を削っても、外枠自体の横幅（=この値）は変わらないため注意。
+     画面全体を回転させる分、以前（ボタン+表だけ）より必要な横幅が増える。 */
+  max-width: 380px;
   position: relative;
   overflow: hidden;
   container-type: size;
 }
 
 /* 回転前はここが「幅=枠の高さ・高さ=枠の幅」の入れ替えたサイズを持つ。
-   transform-origin: top leftを起点に90度回転してから、自分の高さぶん
-   translateYで引き戻すことで、枠の左上を起点にぴったり収まる（幅と高さが
-   入れ替わった状態で）。ボタンを先に、記録表を後に並べることで、
-   回転後は画面右側にボタン、左側に記録表が来る（元の「上」が回転後は
-   「右」になるため）。 */
+   transform-origin: top leftを起点に左90度（反時計回り）回転してから、
+   自分の幅ぶんtranslateXで引き戻すことで、枠の左上を起点にぴったり収まる
+   （幅と高さが入れ替わった状態で）。要素を上から順に並べることで、回転後は
+   画面左側から右側へ向けて同じ順序で並ぶ（元の「上」が回転後は「左」になる
+   ため）。 */
 .tp-result-center-inner {
   position: absolute;
   top: 0;
@@ -368,9 +330,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 2px;
+  gap: 6px;
   transform-origin: top left;
-  transform: rotate(90deg) translateY(-100%);
+  transform: rotate(-90deg) translateX(-100%);
 }
 
 /* 結果画面は縦方向のスペースが限られるため、ボタンの縦幅を通常より小さくする。

@@ -323,11 +323,6 @@ export class MixedBattleController extends EventTarget {
     this.ojama.evaluate(this.remainingMs);
   }
 
-  // オジャマボタン押下（main.jsから呼ばれる）。条件を満たさない押下は無視される。
-  useOjama(actorId) {
-    return this.ojama.use(actorId);
-  }
-
   _loop() {
     this._evaluateTime();
     if (this.status === STATUS.PLAYING) {

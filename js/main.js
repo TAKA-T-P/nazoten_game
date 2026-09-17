@@ -174,14 +174,8 @@ function main() {
   // イベントを受けたmain.js側だけで鳴らす（two-player.js/mixed-battle.jsと同じ方針）。
   battle.ojama.addEventListener('effectstart', () => audio.playOjamaWarning());
   battle.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
-  battle.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('battle', e.detail.actor));
-  battle.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('battle', e.detail.actor));
   battle.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('battle', e.detail.targetActor, e.detail.type));
   battle.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('battle', e.detail.targetActor));
-
-  document.getElementById('btn-ojama-battle-player').addEventListener('click', () => {
-    if (battle.useOjama('p1')) audio.playOjamaActivate();
-  });
 
   function startBattleCountdown(level) {
     ui.showScreen('battle');
@@ -313,14 +307,8 @@ function main() {
 
   mixedCpuBattle.ojama.addEventListener('effectstart', () => audio.playOjamaWarning());
   mixedCpuBattle.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
-  mixedCpuBattle.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('mcb', e.detail.actor));
-  mixedCpuBattle.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('mcb', e.detail.actor));
   mixedCpuBattle.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('mcb', e.detail.targetActor, e.detail.type));
   mixedCpuBattle.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('mcb', e.detail.targetActor));
-
-  document.getElementById('btn-ojama-mcb-player').addEventListener('click', () => {
-    if (mixedCpuBattle.useOjama('p1')) audio.playOjamaActivate();
-  });
 
   function startMixedCpuBattleCountdown(level) {
     ui.showScreen('mixed-cpu-battle');
@@ -400,21 +388,11 @@ function main() {
   }
 
   // 二重再生を避けるため、オジャマの警告音・解除音はeffectstart/effectendの
-  // イベントを受けたmain.js側だけで鳴らす（audio.jsの発動音は押した本人向けに
-  // useOjama呼び出し側で鳴らす）。
+  // イベントを受けたmain.js側だけで鳴らす。
   twoPlayer.ojama.addEventListener('effectstart', (e) => audio.playOjamaWarning());
   twoPlayer.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
-  twoPlayer.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('tp', e.detail.actor));
-  twoPlayer.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('tp', e.detail.actor));
   twoPlayer.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('tp', e.detail.targetActor, e.detail.type));
   twoPlayer.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('tp', e.detail.targetActor));
-
-  document.getElementById('btn-ojama-tp-p1').addEventListener('click', () => {
-    if (twoPlayer.useOjama('p1')) audio.playOjamaActivate();
-  });
-  document.getElementById('btn-ojama-tp-p2').addEventListener('click', () => {
-    if (twoPlayer.useOjama('p2')) audio.playOjamaActivate();
-  });
 
   document.getElementById('btn-two-player').addEventListener('click', () => {
     ui.updateFormatSelection(selectedBattleFormat);
@@ -533,17 +511,8 @@ function main() {
 
   mixedBattle.ojama.addEventListener('effectstart', () => audio.playOjamaWarning());
   mixedBattle.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
-  mixedBattle.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('mb', e.detail.actor));
-  mixedBattle.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('mb', e.detail.actor));
   mixedBattle.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('mb', e.detail.targetActor, e.detail.type));
   mixedBattle.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('mb', e.detail.targetActor));
-
-  document.getElementById('btn-ojama-p1').addEventListener('click', () => {
-    if (mixedBattle.useOjama('p1')) audio.playOjamaActivate();
-  });
-  document.getElementById('btn-ojama-p2').addEventListener('click', () => {
-    if (mixedBattle.useOjama('p2')) audio.playOjamaActivate();
-  });
 
   function startMixedBattleCountdown() {
     ui.showScreen('mixed-battle');

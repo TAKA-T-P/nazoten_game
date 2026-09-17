@@ -42,21 +42,21 @@ export const CONFIG = {
   legacyStorageKeyV1: 'nazoten-save-v1',
   // バトルゲージの計算に使う点差の基準値（Phase3実装指示書 9.3章）。
   gaugeFullLead: 1500,
-  // オジャマ（Phase5実装指示書16〜19章）。残り40秒・20秒の2回、劣勢側に
-  // 5秒間だけボタンを表示する。押すと相手側の表示だけに5秒間の視覚効果を出す。
+  // オジャマ：経過20秒・40秒（＝残り40秒・20秒）の2回、自動的に発動する。
+  // ボタン操作は無く、その時点で勝っている側が自動的に7秒間妨害される。
   ojama: {
     defaultEnabled: true,
     checkpointsMs: [40_000, 20_000],
-    buttonDurationMs: 5_000,
-    effectDurationMs: 5_000,
+    effectDurationMs: 7_000,
     types: ['turn', 'small', 'hidden', 'meteor', 'formulaHide'],
     smallScaleMin: 0.35,
     smallScaleMax: 0.75,
-    // CPU戦（スコアバトル・ごちゃまぜバトル共通）：1P側からCPU側へオジャマ攻撃が
-    // 成功した場合、見た目の種類にかかわらず、effectDurationMsの間だけCPUの
+    // CPU戦（スコアバトル・ごちゃまぜバトル共通）：CPU側が自動オジャマの対象に
+    // なった場合、見た目の種類にかかわらず、effectDurationMsの間だけCPUの
     // 思考時間・なぞり操作時間をこの倍率にする（＝遅くする）。
     cpuSlowMultiplier: 2,
-    // 受けた側の残り時間表示の下に5秒間出す「オジャマ「〇〇」」表示用のラベル。
+    // 受けた側の残り時間表示の下にeffectDurationMsの間出す
+    // 「オジャマ「〇〇」」表示用のラベル。
     typeLabels: {
       turn: 'ターン',
       small: 'スモール',

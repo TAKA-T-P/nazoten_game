@@ -1,33 +1,6 @@
 /* オジャマ：ターン・スモール・スマイル・メテオ・ハイド（Phase5実装指示書18章）。
    いずれも盤面モデル・当たり判定・座標は変更せず、見た目だけを変える。 */
 
-/* オジャマボタン。既存の残り時間・SILVERバッジと同じ縦並びの側面パネルに
-   収まる専用枠として確保する（仕様書17.1章）。表示/非表示はhidden属性で
-   切り替えるため、パネルの他の要素の位置はずれない。 */
-.ojama-button {
-  font-family: inherit;
-  font-size: 0.62rem;
-  font-weight: 900;
-  padding: 4px 8px;
-  border-radius: 999px;
-  border: 2px solid var(--color-forty);
-  background: linear-gradient(135deg, #fff6d9 0%, #ffdf7d 100%);
-  color: #6b4e00;
-  cursor: pointer;
-  touch-action: manipulation;
-  white-space: nowrap;
-  animation: ojama-button-pulse 0.8s ease-in-out infinite;
-}
-
-.ojama-button:active {
-  transform: scale(0.94);
-}
-
-@keyframes ojama-button-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
 /* ターン：対象ビューの数字だけを180度回転する。盤面・選択枠・連結線・バッジは
    回転しない（仕様書18.2章）。P2側はもともと親コンテナが180度回転済みだが、
    数字要素へさらに180度を加えることで、P2本人から見ても逆さになる。 */
@@ -68,7 +41,7 @@
 }
 
 .ojama-hidden-overlay.ojama-hidden-anim {
-  animation: ojama-hidden-move 5s ease-in-out;
+  animation: ojama-hidden-move 7s ease-in-out;
 }
 
 @keyframes ojama-hidden-move {
@@ -167,15 +140,11 @@
    視覚的な難しさは大きく変えない。 */
 @media (prefers-reduced-motion: reduce) {
   .ojama-hidden-overlay.ojama-hidden-anim {
-    animation: ojama-hidden-move-reduced 5s ease-in-out;
+    animation: ojama-hidden-move-reduced 7s ease-in-out;
   }
 
   .ojama-meteor-overlay.ojama-meteor-anim .meteor-star {
     animation: ojama-meteor-fall-reduced 5s ease-in-out infinite;
-  }
-
-  .ojama-button {
-    animation: none;
   }
 }
 

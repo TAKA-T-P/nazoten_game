@@ -64,7 +64,6 @@ export class MixedCpuBattleController extends EventTarget {
     this.rafId = null;
     this.refillTimers = new Set();
     this.countdownTimers = [];
-    this.ojamaTimers = new Set();
     this.lastFeverTickSecond = null;
     this.bgmDelayTriggered = false;
     this.playerInput = null;
@@ -79,7 +78,6 @@ export class MixedCpuBattleController extends EventTarget {
       p2: { active: false, endsAt: null }
     };
     this.ojama = new OjamaController(rng);
-    this.ojama.addEventListener('buttonshow', (e) => this._maybeAutoUseOjama(e.detail.actor));
     this.ojama.addEventListener('effectstart', (e) => this._applyOjamaSlowIfCpuTarget(e.detail.targetActor));
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
@@ -108,8 +106,6 @@ export class MixedCpuBattleController extends EventTarget {
     this.countdownTimers = [];
     for (const id of this.refillTimers) clearTimeout(id);
     this.refillTimers.clear();
-    for (const id of this.ojamaTimers) clearTimeout(id);
-    this.ojamaTimers.clear();
   }
 
   start(level, ojamaEnabled = true) {
@@ -530,23 +526,7 @@ export class MixedCpuBattleController extends EventTarget {
     this.dispatchEvent(new CustomEvent('gaugeupdate', { detail: { visible: true, p1Percent } }));
   }
 
-  useOjama(actorId) {
-    return this.ojama.use(actorId);
-  }
-
-  // CPU側（'p2'）が劣勢でボタンが表示された場合、5秒間の猶予のうちランダムな
-  // タイミングで自動的に使用する（人間のボタン操作を模す）。
-  _maybeAutoUseOjama(actor) {
-    if (actor !== 'p2') return;
-    const delay = 400 + this.rng() * 2000;
-    const timerId = setTimeout(() => {
-      this.ojamaTimers.delete(timerId);
-      this.ojama.use('p2');
-    }, delay);
-    this.ojamaTimers.add(timerId);
-  }
-
-  // プレイヤーからCPUへのオジャマ攻撃が成功した場合、見た目の種類にかかわらず
+  // CPU側が自動オジャマの対象になった場合、見た目の種類にかかわらず
   // CPUの思考時間・なぞり操作時間を一定時間だけ遅くする。
   _applyOjamaSlowIfCpuTarget(targetActor) {
     if (targetActor !== 'p2' || !this.cpuController) return;

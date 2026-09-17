@@ -142,7 +142,7 @@ function cacheDom() {
   el.tpSilverBadge = { p1: document.getElementById('tp-silver-badge-p1'), p2: document.getElementById('tp-silver-badge-p2') };
   el.tpGaugeP1 = document.getElementById('tp-gauge-p1');
 
-  el.tpOutcome = { p1: document.getElementById('tp-outcome-p1'), p2: document.getElementById('tp-outcome-p2') };
+  el.tpOutcome = document.getElementById('tp-outcome');
   el.tpResultScore = { p1: document.getElementById('tp-score-p1'), p2: document.getElementById('tp-score-p2') };
   el.tpResultTitle = { p1: document.getElementById('tp-title-p1'), p2: document.getElementById('tp-title-p2') };
   el.tpStatScore = { p1: document.getElementById('tp-stat-score-p1'), p2: document.getElementById('tp-stat-score-p2') };
@@ -176,7 +176,7 @@ function cacheDom() {
   el.mbGaugeP1 = document.getElementById('mb-gauge-p1');
   el.screenMixedBattle = document.getElementById('screen-mixed-battle');
 
-  el.mbOutcome = { p1: document.getElementById('mb-outcome-p1'), p2: document.getElementById('mb-outcome-p2') };
+  el.mbOutcome = document.getElementById('mb-outcome');
   el.mbResultScore = { p1: document.getElementById('mb-score-p1'), p2: document.getElementById('mb-score-p2') };
   el.mbStatScore = { p1: document.getElementById('mb-stat-score-p1'), p2: document.getElementById('mb-stat-score-p2') };
   el.mbStatNormal = { p1: document.getElementById('mb-stat-normal-p1'), p2: document.getElementById('mb-stat-normal-p2') };
@@ -191,17 +191,10 @@ function cacheDom() {
   el.mbStatSwapDestroy = { p1: document.getElementById('mb-stat-swapdestroy-p1'), p2: document.getElementById('mb-stat-swapdestroy-p2') };
   el.mbStatCleared = { p1: document.getElementById('mb-stat-cleared-p1'), p2: document.getElementById('mb-stat-cleared-p2') };
 
-  // オジャマボタン・ヒドゥン用オーバーレイ（スコアバトル=tp・ごちゃまぜ=mbの
-  // 両方に用意する。仕様書15章）
+  // オジャマ用オーバーレイ（スコアバトル=tp・ごちゃまぜ=mbの両方に用意する）。
   // CPU戦（スコアバトルCPU=battle）はOjamaControllerをp1=プレイヤー・p2=CPUとして
-  // 再利用する。CPUは自動使用のため専用ボタンはなく、CPU側のオーバーレイ・
+  // 再利用する。オジャマは自動発動のためボタンはなく、各画面のオーバーレイ・
   // 受信ラベルだけを用意する（オジャマ被弾表示・視覚効果のため）。
-  el.ojamaButtons = {
-    tp: { p1: document.getElementById('btn-ojama-tp-p1'), p2: document.getElementById('btn-ojama-tp-p2') },
-    mb: { p1: document.getElementById('btn-ojama-p1'), p2: document.getElementById('btn-ojama-p2') },
-    battle: { p1: document.getElementById('btn-ojama-battle-player'), p2: null },
-    mcb: { p1: document.getElementById('btn-ojama-mcb-player'), p2: null }
-  };
   el.ojamaOverlays = {
     tp: { p1: document.getElementById('tp-ojama-overlay-p1'), p2: document.getElementById('tp-ojama-overlay-p2') },
     mb: { p1: document.getElementById('mb-ojama-overlay-p1'), p2: document.getElementById('mb-ojama-overlay-p2') },
@@ -701,7 +694,6 @@ export function hideBattleTimeUp() {
   setBattleCpuSilverFeverActive(false);
   clearOjamaEffect('battle', 'p1');
   clearOjamaEffect('battle', 'p2');
-  hideOjamaButton('battle', 'p1');
 }
 
 // 点差ベースのゲージ表示を更新する。非表示（フィーバー中）はCSS側の.feverクラスで
@@ -916,8 +908,6 @@ export function hideTwoPlayerTimeUp() {
   setTwoPlayerSilverFeverActive('p2', false);
   clearOjamaEffect('tp', 'p1');
   clearOjamaEffect('tp', 'p2');
-  hideOjamaButton('tp', 'p1');
-  hideOjamaButton('tp', 'p2');
   hideTwoPlayerPause();
 }
 
@@ -939,23 +929,17 @@ export function updateTwoPlayerGauge(detail) {
   el.tpGaugeP1.style.width = `${pct}%`;
 }
 
+// CPU戦結果画面と同じ「単一の勝敗表示」に統一する（以前のP1・P2別々表示から変更）。
 const TWO_PLAYER_OUTCOME_LABELS = {
-  p1win: { p1: 'WIN!', p2: 'LOSE...' },
-  p2win: { p1: 'LOSE...', p2: 'WIN!' },
-  draw: { p1: 'DRAW!', p2: 'DRAW!' }
+  p1win: '1P WIN!',
+  p2win: '2P WIN!',
+  draw: 'DRAW!'
 };
 
 export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2Stats }) {
-  const labels = TWO_PLAYER_OUTCOME_LABELS[outcome] || { p1: '', p2: '' };
-  el.tpOutcome.p1.textContent = labels.p1;
-  el.tpOutcome.p2.textContent = labels.p2;
-
-  const p1Class = outcome === 'p1win' ? 'outcome-win' : outcome === 'p2win' ? 'outcome-lose' : 'outcome-draw';
-  const p2Class = outcome === 'p2win' ? 'outcome-win' : outcome === 'p1win' ? 'outcome-lose' : 'outcome-draw';
-  el.tpOutcome.p1.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
-  el.tpOutcome.p1.classList.add(p1Class);
-  el.tpOutcome.p2.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
-  el.tpOutcome.p2.classList.add(p2Class);
+  el.tpOutcome.textContent = TWO_PLAYER_OUTCOME_LABELS[outcome] || '';
+  el.tpOutcome.classList.remove('outcome-p1win', 'outcome-p2win', 'outcome-draw');
+  el.tpOutcome.classList.add(`outcome-${outcome}`);
 
   el.tpResultScore.p1.textContent = String(p1Score);
   el.tpResultScore.p2.textContent = String(p2Score);
@@ -1257,8 +1241,6 @@ export function hideMixedTimeUp() {
   setMixedSilverFeverActive('p2', false);
   clearOjamaEffect('mb', 'p1');
   clearOjamaEffect('mb', 'p2');
-  hideOjamaButton('mb', 'p1');
-  hideOjamaButton('mb', 'p2');
   hideMixedPause();
 }
 
@@ -1276,16 +1258,9 @@ export function updateMixedGauge(detail) {
 }
 
 export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2Stats }) {
-  const labels = TWO_PLAYER_OUTCOME_LABELS[outcome] || { p1: '', p2: '' };
-  el.mbOutcome.p1.textContent = labels.p1;
-  el.mbOutcome.p2.textContent = labels.p2;
-
-  const p1Class = outcome === 'p1win' ? 'outcome-win' : outcome === 'p2win' ? 'outcome-lose' : 'outcome-draw';
-  const p2Class = outcome === 'p2win' ? 'outcome-win' : outcome === 'p1win' ? 'outcome-lose' : 'outcome-draw';
-  el.mbOutcome.p1.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
-  el.mbOutcome.p1.classList.add(p1Class);
-  el.mbOutcome.p2.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
-  el.mbOutcome.p2.classList.add(p2Class);
+  el.mbOutcome.textContent = TWO_PLAYER_OUTCOME_LABELS[outcome] || '';
+  el.mbOutcome.classList.remove('outcome-p1win', 'outcome-p2win', 'outcome-draw');
+  el.mbOutcome.classList.add(`outcome-${outcome}`);
 
   el.mbResultScore.p1.textContent = String(p1Score);
   el.mbResultScore.p2.textContent = String(p2Score);
@@ -1549,7 +1524,6 @@ export function hideMixedCpuTimeUp() {
   setMixedCpuSilverFeverActive('p2', false);
   clearOjamaEffect('mcb', 'p1');
   clearOjamaEffect('mcb', 'p2');
-  hideOjamaButton('mcb', 'p1');
 }
 
 export function updateMixedCpuGauge(detail) {
@@ -1608,16 +1582,6 @@ function getOjamaBoardEl(scope, actor) {
   if (scope === 'battle') return actor === 'p2' ? el.cpuBoard : el.playerBoard;
   if (scope === 'mcb') return actor === 'p2' ? el.mcbBoardCpu : el.mcbBoardPlayer;
   return el.tpBoard[actor];
-}
-
-export function showOjamaButton(scope, actor) {
-  const btn = el.ojamaButtons[scope][actor];
-  if (btn) btn.hidden = false;
-}
-
-export function hideOjamaButton(scope, actor) {
-  const btn = el.ojamaButtons[scope][actor];
-  if (btn) btn.hidden = true;
 }
 
 function randomOjamaScale() {
