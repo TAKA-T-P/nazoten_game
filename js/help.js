@@ -440,8 +440,8 @@ function demoMixedRace() {
     5: { red: true, order: 1, orderColor: 'red' }
   };
   return `
-    ${board(values, opts)}
     <div class="help-demo-float">＋20</div>
+    ${board(values, opts)}
     <p class="help-race-caption help-p2">先に取られた！</p>
   `;
 }

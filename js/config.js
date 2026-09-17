@@ -125,7 +125,7 @@ export const BGM_TRACKS = [
   { id: 'bgm02', file: 'BGM02_てんやわんやなお嬢様.mp3', startTrigger: 'countdown2' },
   { id: 'bgm03', file: 'BGM03_和風ロックBGM.mp3', startTrigger: 'bgm03Start' },
   { id: 'bgm04', file: 'BGM04_ColdHeart.mp3', startTrigger: 'bgm04Start' },
-  { id: 'bgm05', file: 'BGM05_達成！.mp3', startTrigger: 'countdown2' }
+  { id: 'bgm05', file: 'BGM05_達成！.mp3', startTrigger: 'start' }
 ];
 
 export const BGM_DELAY_TRIGGER_MS = 3_000;

@@ -34,6 +34,22 @@ export function setSoundMode(mode) {
   if (!bgmEnabled) stopBgm();
 }
 
+// じっくりモードはBGMを鳴らさない。タイトルで選ばれているサウンドモードが
+// 「音なし」でなければ効果音のみ鳴らす（「効果音のみ」モードへ一時的に
+// 切り替え、じっくりモードを抜けたら元のモードへ戻す）。
+let savedSoundModeBeforePuzzle = null;
+
+export function enterPuzzleAudioMode() {
+  savedSoundModeBeforePuzzle = soundMode;
+  if (soundMode !== 'off') setSoundMode('bgmOff');
+}
+
+export function exitPuzzleAudioMode() {
+  if (savedSoundModeBeforePuzzle === null) return;
+  setSoundMode(savedSoundModeBeforePuzzle);
+  savedSoundModeBeforePuzzle = null;
+}
+
 function now() {
   return ctx ? ctx.currentTime : 0;
 }
@@ -362,30 +378,10 @@ export function stopBgm() {
   bgmAudioEl.currentTime = 0;
 }
 
-// --- じっくりモード専用BGM（Phase 6実装指示書 22.4章） ----------------------
-// 最初のステージ開始時にだけ1曲選び、以後はクリア画面・ステージ選択へ戻っても
-// 同じ曲をループ再生し続ける。曲別の開始タイミング（triggerBgmStart）は
-// 60秒プレイ用のため、じっくりモードでは使わず先頭からそのまま再生する。
-let puzzleBgmStarted = false;
-
-export function startPuzzleBgm() {
-  if (puzzleBgmStarted) return;
-  puzzleBgmStarted = true;
-  chooseRandomBgmTrack();
-  if (!bgmEnabled) return;
-  const el = getBgmAudioElement();
-  el.loop = true;
-  el.currentTime = 0;
-  el.play().catch(() => {
-    // 自動再生が拒否された場合も、プレイ自体は継続する。
-  });
-}
-
-export function stopPuzzleBgm() {
-  puzzleBgmStarted = false;
-  stopBgm();
-  if (bgmAudioEl) bgmAudioEl.loop = false;
-}
+// じっくりモードはBGMを鳴らさず、効果音のみ再生する（サウンドモードが
+// 「音なし」以外なら効果音は通常どおり鳴る）。main.js側でステージ開始前後に
+// サウンドモードを一時的に「効果音のみ」へ切り替えることで実現しており、
+// BGM再生用の専用関数はここでは不要。
 
 // --- 対戦結果ジングル（CPU戦・2人対戦の結果画面用） -------------------------
 // サウンドモードがBGM系（bgmRandom／bgm1〜5）のときは、結果発表の合成SEの

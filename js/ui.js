@@ -250,6 +250,7 @@ function cacheDom() {
   el.puzzleHudFormula = document.getElementById('puzzle-hud-formula');
   el.puzzleBoard = document.getElementById('puzzle-board');
   el.btnPuzzleUndo = document.getElementById('btn-puzzle-undo');
+  el.btnPuzzleHint = document.getElementById('btn-puzzle-hint');
   el.puzzleHintMessage = document.getElementById('puzzle-hint-message');
   el.puzzleBlockedOverlay = document.getElementById('puzzle-blocked-overlay');
   el.puzzleStuckOverlay = document.getElementById('puzzle-stuck-overlay');
@@ -1896,6 +1897,10 @@ export function updatePuzzleFormula(indices, values, sum) {
 
 export function setPuzzleUndoEnabled(enabled) {
   el.btnPuzzleUndo.disabled = !enabled;
+}
+
+export function setPuzzleHintEnabled(enabled) {
+  el.btnPuzzleHint.disabled = !enabled;
 }
 
 export function setPuzzleHintMessage(text) {

@@ -430,36 +430,37 @@ export const PUZZLE_STAGES = [
     ]
   },
   {
+    // 元は「10→20→30」の順番お題だったが、2〜5マスの自由な経路を許すため、
+    // 盤面のどこかに入れかえなしの代替解が偶然できてしまう可能性を数学的に
+    // 排除しきれなかった（ユーザー報告により変更）。他の入れかえ×全消去
+    // ステージ（area4-stage01/03）と同じ「2つのグループを1回の入れかえで
+    // 同時に正しくする」設計にすることで、全マスを使い切る全消去お題では
+    // 一部の行だけを使う近道が原理的に成立しない。
     id: 'area4-stage04',
     areaId: 'area4',
     stageNumber: 4,
-    title: '10→20→30！',
+    title: '入れかえて全消去！',
     rows: 5,
     cols: 5,
     cells: [
-      3, 7, 9, 8, 5,
-      9, 8, 6, 7, 1,
-      2, 4, 6, 9, 1,
-      2, 4, 6, 9, 1,
-      2, 4, 6, 9, 3
+      4, 2, 3, 5, 9,
+      9, 8, 6, 4, 3,
+      1, 2, 1, 3, 3,
+      9, 8, 9, 7, 7,
+      1, 5, 6, 3, 2
     ],
-    mission: {
-      type: 'sequence',
-      steps: [
-        { sum: 10, exactLength: null },
-        { sum: 20, exactLength: null },
-        { sum: 30, exactLength: null }
-      ]
-    },
-    moveLimit: 5,
-    parMoves: 4,
+    mission: { type: 'clearAll', allowedSums: [10, 20, 30, 40] },
+    moveLimit: 7,
+    parMoves: 6,
     allowSwap: true,
     swapLimit: 1,
     officialSolution: [
-      { type: 'swap', a: 4, b: 24 },
-      { type: 'trace', cells: [0, 1] },
-      { type: 'trace', cells: [2, 3, 4] },
-      { type: 'trace', cells: [5, 6, 7, 8] }
+      { type: 'swap', a: 0, b: 20 },
+      { type: 'trace', cells: [0, 1, 2, 3, 4] },
+      { type: 'trace', cells: [5, 6, 7, 8, 9] },
+      { type: 'trace', cells: [10, 11, 12, 13, 14] },
+      { type: 'trace', cells: [15, 16, 17, 18, 19] },
+      { type: 'trace', cells: [20, 21, 22, 23, 24] }
     ]
   },
   {

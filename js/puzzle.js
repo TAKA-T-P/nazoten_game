@@ -239,7 +239,10 @@ export class PuzzleController extends EventTarget {
     this._clearSwapSelection();
     this.state = createInitialState(this.stage);
     this.history = [];
-    this.hintUsed = false;
+    // 「やり直す」は同じ挑戦の継続として扱うため、ヒント使用済みフラグは
+    // 引き継ぐ（一度ヒントを見た場合は、やり直した後に正解しても星3を
+    // 取れない）。ヒント使用の完全なリセットはstartStage()（ステージ選択
+    // からの再入場・クリア後の「もう一度」）でのみ行う。
     this.status = STATUS.PLAYING;
     this.dispatchEvent(new CustomEvent('restart', { detail: { cells: this.state.cells.slice() } }));
     this._emitMovesUpdate();
@@ -251,6 +254,9 @@ export class PuzzleController extends EventTarget {
   // （hintTimeBudgetMs）で打ち切るため、メインスレッドを長時間占有しない。
   requestHint() {
     if (this.status !== STATUS.PLAYING || this.hintAnimating) return false;
+    // 1ステージ（1挑戦）につきヒントは1回まで。restart()では引き継がれ、
+    // startStage()でのみリセットされる。
+    if (this.hintUsed) return false;
     this._cancelHint();
     this.dispatchEvent(new CustomEvent('hintthinking', {}));
     const token = {};

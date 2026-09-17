@@ -633,7 +633,6 @@ function main() {
   }
 
   function startPuzzleStageFlow(stageId) {
-    audio.startPuzzleBgm();
     storage.setPuzzleLastStageId(stageId);
     puzzle.startStage(stageId);
     ui.showScreen('puzzle');
@@ -666,6 +665,7 @@ function main() {
       sequenceIndex: puzzle.state.sequenceIndex
     });
     ui.setPuzzleUndoEnabled(puzzle.history.length > 0);
+    ui.setPuzzleHintEnabled(!puzzle.hintUsed);
     ui.updatePuzzleFormula([], [], 0);
     ui.hidePuzzleBlocked();
     ui.hidePuzzleStuck();
@@ -680,6 +680,7 @@ function main() {
     ui.renderPuzzleMission(stage, 0);
     ui.updatePuzzleFormula([], [], 0);
     ui.setPuzzleUndoEnabled(false);
+    ui.setPuzzleHintEnabled(true);
     ui.hideAllPuzzleOverlays();
     ui.updatePuzzleMoves(stage, { movesUsed: 0, swapsUsed: 0, sequenceIndex: 0 });
     if (stage.allowSwap && !storage.hasSeenPuzzleSwapTutorial()) {
@@ -735,6 +736,7 @@ function main() {
   puzzle.addEventListener('hintfound', (e) => {
     ui.setPuzzleHintMessage('');
     ui.showPuzzleHintHighlight(e.detail.action);
+    ui.setPuzzleHintEnabled(false);
     audio.playPuzzleHint();
   });
   puzzle.addEventListener('hintend', () => ui.clearPuzzleHintHighlight());
@@ -765,13 +767,14 @@ function main() {
   });
 
   document.getElementById('btn-puzzle').addEventListener('click', () => {
+    audio.enterPuzzleAudioMode();
     currentPuzzleAreaIndex = areaIndexForStageId(storage.getPuzzleLastStageId());
     renderCurrentPuzzleArea();
     ui.showScreen('puzzle-select');
   });
 
   document.getElementById('btn-puzzle-select-title').addEventListener('click', () => {
-    audio.stopPuzzleBgm();
+    audio.exitPuzzleAudioMode();
     ui.showScreen('title');
   });
 
