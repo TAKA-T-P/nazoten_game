@@ -53,11 +53,24 @@
   color: var(--color-secondary);
 }
 
+/* 「[前へ] 1 / 7 [次へ]」のように、前へ/次へボタンをページ番号・ドットと
+   同じ行に並べる。中央のカウンター部分だけ幅を伸縮させ、両端のボタンは
+   小さく固定する。 */
+.help-page-nav-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .help-page-counter {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .help-page-count {
@@ -70,41 +83,37 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
-  max-width: 260px;
+  gap: 5px;
+  max-width: 100%;
 }
 
 .help-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   padding: 0;
   border: none;
   border-radius: 50%;
   background: var(--color-cell-border);
   cursor: pointer;
-  /* タップ領域は見た目より広く確保する（8章：タッチ領域44px以上）。 */
+  /* タップ領域は見た目より広く確保する。 */
   position: relative;
 }
 
 .help-dot::before {
   content: '';
   position: absolute;
-  inset: -12px;
+  inset: -9px;
 }
 
 .help-dot.active {
   background: var(--color-secondary);
 }
 
-.help-page-nav {
-  width: 100%;
-  display: flex;
-  gap: 10px;
-}
-
 .help-nav-btn {
-  flex: 1;
-  min-height: 44px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
 }
 
 .help-nav-btn:disabled {
@@ -516,16 +525,19 @@
 
 .help-ojama-types {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
 }
 
 .help-ojama-chip {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 800;
-  padding: 3px 8px;
+  padding: 3px 7px;
   border-radius: 999px;
   background: var(--color-secondary);
   color: #fff;
+  white-space: nowrap;
 }
 
 /* --- 結果カード ------------------------------------------------------------ */

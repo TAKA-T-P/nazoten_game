@@ -367,7 +367,9 @@ function demoScoreFeverOjama() {
     <div class="help-ojama-types">
       <span class="help-ojama-chip">TURN</span>
       <span class="help-ojama-chip">SMALL</span>
-      <span class="help-ojama-chip">HIDDEN</span>
+      <span class="help-ojama-chip">SMILE</span>
+      <span class="help-ojama-chip">METEOR</span>
+      <span class="help-ojama-chip">HIDE</span>
     </div>
   `;
 }
@@ -471,7 +473,9 @@ function demoMixedFeverOjama() {
     <div class="help-ojama-types">
       <span class="help-ojama-chip">TURN</span>
       <span class="help-ojama-chip">SMALL</span>
-      <span class="help-ojama-chip">HIDDEN</span>
+      <span class="help-ojama-chip">SMILE</span>
+      <span class="help-ojama-chip">METEOR</span>
+      <span class="help-ojama-chip">HIDE</span>
     </div>
   `;
 }
