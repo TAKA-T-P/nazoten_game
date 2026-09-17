@@ -8,12 +8,55 @@
 }
 
 .logo {
+  position: relative;
+  display: inline-block;
   font-size: 2.9rem;
   font-weight: 900;
   letter-spacing: 0.03em;
   margin: 0;
   color: var(--color-primary);
   text-shadow: 3px 3px 0 var(--color-accent), 6px 6px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* ロゴの上に、同じ文字を光の帯だけ見えるグラデーションで重ね、
+   数秒おきに一瞬「キラッ」と光らせる（本体の色・影はそのまま）。 */
+.logo::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.95) 50%,
+    transparent 80%
+  );
+  background-size: 220% 100%;
+  background-position: 150% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  pointer-events: none;
+  animation: logo-shine 5s ease-in-out infinite;
+}
+
+@keyframes logo-shine {
+  0%,
+  55% {
+    background-position: 150% 0;
+  }
+  72% {
+    background-position: -50% 0;
+  }
+  100% {
+    background-position: -50% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo::after {
+    animation: none;
+    background-position: -50% 0;
+  }
 }
 
 .subtitle {

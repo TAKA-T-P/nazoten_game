@@ -108,11 +108,14 @@ export function getTitleLevel(score) {
 
 // LV.1〜LV.20はCONFIG.titleLevelsの固有称号、LV.21以降は
 // 「超速ナゾテン王+N」（N = 称号レベル - 20）として上限なく続く。
-export function getTitleForScore(score) {
+export function getTitleNameForScore(score) {
   const level = getTitleLevel(score);
   const maxNamedLevel = CONFIG.titleLevels.length;
-  const name = level <= maxNamedLevel
+  return level <= maxNamedLevel
     ? CONFIG.titleLevels[level - 1]
     : `${CONFIG.titleLevels[maxNamedLevel - 1]}+${level - maxNamedLevel}`;
-  return `LV.${level}　${name}`;
+}
+
+export function getTitleForScore(score) {
+  return `LV.${getTitleLevel(score)}　${getTitleNameForScore(score)}`;
 }

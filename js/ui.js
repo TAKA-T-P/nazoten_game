@@ -1,7 +1,7 @@
 // 画面切替、表示更新、演出呼出（仕様書 8章・12章、Phase2実装指示書 6・8章、Phase3実装指示書 6・9・15章）。
 import * as storage from './storage.js';
 import { CONFIG, CPU_LEVELS, CPU_LEVEL_ORDER } from './config.js';
-import { getTitleForScore, calcSuccessRate } from './scoring.js';
+import { getTitleForScore, getTitleLevel, getTitleNameForScore, calcSuccessRate } from './scoring.js';
 
 const el = {};
 let cellEls = [];
@@ -79,8 +79,12 @@ function cacheDom() {
   el.battlePlayerScore = document.getElementById('battle-player-score');
   el.battleCpuScore = document.getElementById('battle-cpu-score');
   el.battleResultLevelLabel = document.getElementById('battle-result-level-label');
+  el.battlePlayerLv = document.getElementById('battle-player-lv');
+  el.battleCpuLv = document.getElementById('battle-cpu-lv');
   el.battlePlayerTitle = document.getElementById('battle-player-title');
   el.battleCpuTitle = document.getElementById('battle-cpu-title');
+  el.battleScoreCardYou = document.getElementById('battle-score-card-you');
+  el.battleScoreCardCpu = document.getElementById('battle-score-card-cpu');
   // 1P・CPUを横並びで比較する結果画面の表（player/cpuの2列）。
   el.battleStatNormal = { player: document.getElementById('battle-stat-normal-player'), cpu: document.getElementById('battle-stat-normal-cpu') };
   el.battleStatFever = { player: document.getElementById('battle-stat-fever-player'), cpu: document.getElementById('battle-stat-fever-cpu') };
@@ -116,6 +120,8 @@ function cacheDom() {
   el.mcbPlayerScore = document.getElementById('mcb-player-score');
   el.mcbCpuScore = document.getElementById('mcb-cpu-score');
   el.mcbResultLevelLabel = document.getElementById('mcb-result-level-label');
+  el.mcbScoreCardPlayer = document.getElementById('mcb-score-card-player');
+  el.mcbScoreCardCpu = document.getElementById('mcb-score-card-cpu');
   el.mcbStatNormal = { player: document.getElementById('mcb-stat-normal-player'), cpu: document.getElementById('mcb-stat-normal-cpu') };
   el.mcbStatFever = { player: document.getElementById('mcb-stat-fever-player'), cpu: document.getElementById('mcb-stat-fever-cpu') };
   el.mcbStatRate = { player: document.getElementById('mcb-stat-rate-player'), cpu: document.getElementById('mcb-stat-rate-cpu') };
@@ -144,7 +150,9 @@ function cacheDom() {
 
   el.tpOutcome = document.getElementById('tp-outcome');
   el.tpResultScore = { p1: document.getElementById('tp-score-p1'), p2: document.getElementById('tp-score-p2') };
+  el.tpResultLv = { p1: document.getElementById('tp-lv-p1'), p2: document.getElementById('tp-lv-p2') };
   el.tpResultTitle = { p1: document.getElementById('tp-title-p1'), p2: document.getElementById('tp-title-p2') };
+  el.tpScoreCard = { p1: document.getElementById('tp-score-card-p1'), p2: document.getElementById('tp-score-card-p2') };
   el.tpStatScore = { p1: document.getElementById('tp-stat-score-p1'), p2: document.getElementById('tp-stat-score-p2') };
   el.tpStatNormal = { p1: document.getElementById('tp-stat-normal-p1'), p2: document.getElementById('tp-stat-normal-p2') };
   el.tpStatFeverScore = { p1: document.getElementById('tp-stat-feverscore-p1'), p2: document.getElementById('tp-stat-feverscore-p2') };
@@ -178,6 +186,7 @@ function cacheDom() {
 
   el.mbOutcome = document.getElementById('mb-outcome');
   el.mbResultScore = { p1: document.getElementById('mb-score-p1'), p2: document.getElementById('mb-score-p2') };
+  el.mbScoreCard = { p1: document.getElementById('mb-score-card-p1'), p2: document.getElementById('mb-score-card-p2') };
   el.mbStatScore = { p1: document.getElementById('mb-stat-score-p1'), p2: document.getElementById('mb-stat-score-p2') };
   el.mbStatNormal = { p1: document.getElementById('mb-stat-normal-p1'), p2: document.getElementById('mb-stat-normal-p2') };
   el.mbStatFeverScore = { p1: document.getElementById('mb-stat-feverscore-p1'), p2: document.getElementById('mb-stat-feverscore-p2') };
@@ -718,8 +727,12 @@ export function renderBattleResult({ outcome, level, playerScore, cpuScore, play
   el.battlePlayerScore.textContent = String(playerScore);
   el.battleCpuScore.textContent = String(cpuScore);
   el.battleResultLevelLabel.textContent = CPU_LEVELS[level].label;
-  el.battlePlayerTitle.textContent = getTitleForScore(playerScore);
-  el.battleCpuTitle.textContent = `CPU: ${getTitleForScore(cpuScore)}`;
+  el.battlePlayerLv.textContent = `LV.${getTitleLevel(playerScore)}`;
+  el.battlePlayerTitle.textContent = getTitleNameForScore(playerScore);
+  el.battleCpuLv.textContent = `LV.${getTitleLevel(cpuScore)}`;
+  el.battleCpuTitle.textContent = getTitleNameForScore(cpuScore);
+  el.battleScoreCardYou.classList.toggle('is-winner', outcome === 'win');
+  el.battleScoreCardCpu.classList.toggle('is-winner', outcome === 'lose');
 
   setStatWithHighlight(el.battleStatNormal, playerStats.normalScore, cpuStats.normalScore);
   setStatWithHighlight(el.battleStatFever, playerStats.feverScore, cpuStats.feverScore);
@@ -943,8 +956,12 @@ export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2St
 
   el.tpResultScore.p1.textContent = String(p1Score);
   el.tpResultScore.p2.textContent = String(p2Score);
-  el.tpResultTitle.p1.textContent = getTitleForScore(p1Score);
-  el.tpResultTitle.p2.textContent = getTitleForScore(p2Score);
+  el.tpResultLv.p1.textContent = `LV.${getTitleLevel(p1Score)}`;
+  el.tpResultLv.p2.textContent = `LV.${getTitleLevel(p2Score)}`;
+  el.tpResultTitle.p1.textContent = getTitleNameForScore(p1Score);
+  el.tpResultTitle.p2.textContent = getTitleNameForScore(p2Score);
+  el.tpScoreCard.p1.classList.toggle('is-winner', outcome === 'p1win');
+  el.tpScoreCard.p2.classList.toggle('is-winner', outcome === 'p2win');
 
   setStatWithHighlight(el.tpStatScore, p1Score, p2Score);
   setStatWithHighlight(el.tpStatNormal, p1Stats.normalScore, p2Stats.normalScore);
@@ -1264,6 +1281,8 @@ export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2
 
   el.mbResultScore.p1.textContent = String(p1Score);
   el.mbResultScore.p2.textContent = String(p2Score);
+  el.mbScoreCard.p1.classList.toggle('is-winner', outcome === 'p1win');
+  el.mbScoreCard.p2.classList.toggle('is-winner', outcome === 'p2win');
 
   setStatWithHighlight(el.mbStatScore, p1Score, p2Score);
   setStatWithHighlight(el.mbStatNormal, p1Stats.normalScore, p2Stats.normalScore);
@@ -1539,6 +1558,8 @@ export function renderMixedCpuBattleResult({ outcome, level, playerScore, cpuSco
   el.mcbPlayerScore.textContent = String(playerScore);
   el.mcbCpuScore.textContent = String(cpuScore);
   el.mcbResultLevelLabel.textContent = CPU_LEVELS[level].label;
+  el.mcbScoreCardPlayer.classList.toggle('is-winner', outcome === 'win');
+  el.mcbScoreCardCpu.classList.toggle('is-winner', outcome === 'lose');
 
   setStatWithHighlight(el.mcbStatNormal, playerStats.normalScore, cpuStats.normalScore);
   setStatWithHighlight(el.mcbStatFever, playerStats.feverScore, cpuStats.feverScore);

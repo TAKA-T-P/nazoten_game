@@ -478,9 +478,32 @@
   font-size: 0.8rem;
 }
 
+/* スコアの数字だけ太く大きくして目立たせる（ラベル・LV・称号は据え置き）。 */
 .battle-score-value {
-  font-size: 1.5rem;
+  font-size: 2.1rem;
   font-weight: 900;
+  line-height: 1;
+}
+
+/* LV表記と称号は、スコアカードの中に収まるよう小さめの文字にする。 */
+.battle-score-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.battle-score-lv {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.battle-score-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .battle-score-you,
@@ -491,6 +514,31 @@
 .battle-score-cpu,
 .battle-score-p2 {
   color: var(--color-fail);
+}
+
+/* 勝った側のスコアカードを金色にして光らせる。 */
+.battle-score-card.is-winner {
+  background: linear-gradient(160deg, #fff6d9 0%, #ffdf7d 100%);
+  color: #5b3d00;
+  box-shadow: 0 0 0 2px #e6a800, 0 0 14px 2px rgba(255, 213, 77, 0.7);
+  animation: score-card-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes score-card-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px #e6a800, 0 0 10px 1px rgba(255, 213, 77, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 2px #e6a800, 0 0 20px 6px rgba(255, 213, 77, 0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-score-card.is-winner {
+    animation: none;
+    box-shadow: 0 0 0 2px #e6a800, 0 0 14px 2px rgba(255, 213, 77, 0.7);
+  }
 }
 
 /* 1P・CPUのプレイ内容を横並びで比較する結果画面の表。 */
@@ -535,12 +583,6 @@
 .battle-stats-compare .stat-highlight {
   background: #fde047;
   color: #1a1a1a;
-}
-
-.battle-cpu-title {
-  font-weight: 700;
-  color: var(--color-fail);
-  margin: -6px 0 0;
 }
 
 .battle-title-btn {

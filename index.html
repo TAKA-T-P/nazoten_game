@@ -20,7 +20,7 @@
 
   <section id="screen-title" class="screen" data-screen="title">
     <div class="title-inner">
-      <h1 class="logo">ナゾテン！</h1>
+      <h1 class="logo" data-text="ナゾテン！">ナゾテン！</h1>
       <p class="subtitle">なぞって・たして・10の倍数</p>
       <p class="catchcopy">1分間の頭脳と指先の超高速チャレンジ！</p>
       <div class="title-buttons">
@@ -261,18 +261,23 @@
       <p id="battle-result-newbest" class="result-newbest" hidden>NEW BEST!</p>
 
       <div class="battle-score-row">
-        <div class="battle-score-card battle-score-you">
-          <span class="battle-score-label">YOU</span>
-          <span id="battle-player-score" class="battle-score-value">0</span>
+        <div id="battle-score-card-you" class="battle-score-card battle-score-you">
+          <div class="battle-score-top">
+            <span class="battle-score-label">YOU</span>
+            <span id="battle-player-score" class="battle-score-value">0</span>
+            <span id="battle-player-lv" class="battle-score-lv"></span>
+          </div>
+          <p id="battle-player-title" class="battle-score-title"></p>
         </div>
-        <div class="battle-score-card battle-score-cpu">
-          <span class="battle-score-label">CPU（<span id="battle-result-level-label">強さ1</span>）</span>
-          <span id="battle-cpu-score" class="battle-score-value">0</span>
+        <div id="battle-score-card-cpu" class="battle-score-card battle-score-cpu">
+          <div class="battle-score-top">
+            <span class="battle-score-label">CPU（<span id="battle-result-level-label">強さ1</span>）</span>
+            <span id="battle-cpu-score" class="battle-score-value">0</span>
+            <span id="battle-cpu-lv" class="battle-score-lv"></span>
+          </div>
+          <p id="battle-cpu-title" class="battle-score-title"></p>
         </div>
       </div>
-
-      <p id="battle-player-title" class="result-title"></p>
-      <p id="battle-cpu-title" class="battle-cpu-title"></p>
 
       <div class="result-buttons">
         <button id="btn-battle-rematch" class="btn btn-primary" type="button">もう一度</button>
@@ -366,11 +371,11 @@
       <p id="mcb-outcome" class="battle-outcome">YOU WIN!</p>
 
       <div class="battle-score-row">
-        <div class="battle-score-card battle-score-you">
+        <div id="mcb-score-card-player" class="battle-score-card battle-score-you">
           <span class="battle-score-label">YOU</span>
           <span id="mcb-player-score" class="battle-score-value">0</span>
         </div>
-        <div class="battle-score-card battle-score-cpu">
+        <div id="mcb-score-card-cpu" class="battle-score-card battle-score-cpu">
           <span class="battle-score-label">CPU（<span id="mcb-result-level-label">強さ1</span>）</span>
           <span id="mcb-cpu-score" class="battle-score-value">0</span>
         </div>
@@ -604,11 +609,11 @@
       <p id="mb-outcome" class="battle-outcome">1P WIN!</p>
 
       <div class="battle-score-row">
-        <div class="battle-score-card battle-score-p1">
+        <div id="mb-score-card-p1" class="battle-score-card battle-score-p1">
           <span class="battle-score-label">1P</span>
           <span id="mb-score-p1" class="battle-score-value">0</span>
         </div>
-        <div class="battle-score-card battle-score-p2">
+        <div id="mb-score-card-p2" class="battle-score-card battle-score-p2">
           <span class="battle-score-label">2P</span>
           <span id="mb-score-p2" class="battle-score-value">0</span>
         </div>
@@ -646,18 +651,23 @@
       <p id="tp-outcome" class="battle-outcome">1P WIN!</p>
 
       <div class="battle-score-row">
-        <div class="battle-score-card battle-score-p1">
-          <span class="battle-score-label">1P</span>
-          <span id="tp-score-p1" class="battle-score-value">0</span>
+        <div id="tp-score-card-p1" class="battle-score-card battle-score-p1">
+          <div class="battle-score-top">
+            <span class="battle-score-label">1P</span>
+            <span id="tp-score-p1" class="battle-score-value">0</span>
+            <span id="tp-lv-p1" class="battle-score-lv"></span>
+          </div>
+          <p id="tp-title-p1" class="battle-score-title"></p>
         </div>
-        <div class="battle-score-card battle-score-p2">
-          <span class="battle-score-label">2P</span>
-          <span id="tp-score-p2" class="battle-score-value">0</span>
+        <div id="tp-score-card-p2" class="battle-score-card battle-score-p2">
+          <div class="battle-score-top">
+            <span class="battle-score-label">2P</span>
+            <span id="tp-score-p2" class="battle-score-value">0</span>
+            <span id="tp-lv-p2" class="battle-score-lv"></span>
+          </div>
+          <p id="tp-title-p2" class="battle-score-title"></p>
         </div>
       </div>
-
-      <p id="tp-title-p1" class="result-title"></p>
-      <p id="tp-title-p2" class="result-title"></p>
 
       <div class="result-buttons">
         <button id="btn-tp-rematch" class="btn btn-primary" type="button">もう一度</button>
