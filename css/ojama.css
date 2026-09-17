@@ -1,4 +1,4 @@
-/* オジャマ：ターン・スモール・ヒドゥン（Phase5実装指示書18章）。
+/* オジャマ：ターン・スモール・スマイル・メテオ・ハイド（Phase5実装指示書18章）。
    いずれも盤面モデル・当たり判定・座標は変更せず、見た目だけを変える。 */
 
 /* オジャマボタン。既存の残り時間・SILVERバッジと同じ縦並びの側面パネルに
@@ -44,9 +44,10 @@
   transition: font-size 0.15s ease;
 }
 
-/* ヒドゥン：巨大な顔を盤面の上で動かし、一部の数字を隠す。盤面全体を
+/* スマイル：巨大な顔を盤面の上で動かし、一部の数字を隠す。盤面全体を
    完全には覆い続けず、タッチ操作を妨げないようpointer-events:noneを必ず
-   設定する（仕様書18.4章）。 */
+   設定する（仕様書18.4章）。クラス名はojama-hidden-*のまま据え置く
+   （内部的な種別IDはhidden、表示名だけ「スマイル」に変更したため）。 */
 .ojama-hidden-overlay {
   position: absolute;
   inset: 0;
@@ -79,11 +80,86 @@
   100% { transform: translate(0, 0) scale(1); }
 }
 
+/* メテオ：複数の⭐が右上から左下へ降り注ぎ、数字の一部を隠す。ヒドゥン同様、
+   盤面データ・当たり判定には触れず見た目だけの演出。pointer-events:noneで
+   操作を妨げない。星ごとにnth-childで開始位置とアニメーション開始を
+   ずらすことで、降り注ぐような見た目にする。 */
+.ojama-meteor-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ojama-meteor-overlay[hidden] {
+  display: none;
+}
+
+.ojama-meteor-overlay .meteor-star {
+  position: absolute;
+  top: -12%;
+  right: -12%;
+  font-size: clamp(1rem, 9vw, 1.7rem);
+  opacity: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.ojama-meteor-overlay.ojama-meteor-anim .meteor-star {
+  animation: ojama-meteor-fall 1.6s linear infinite;
+}
+
+.ojama-meteor-overlay .meteor-star:nth-child(1) { top: 4%;  right: 58%; animation-delay: 0s; }
+.ojama-meteor-overlay .meteor-star:nth-child(2) { top: -2%; right: 28%; animation-delay: 0.3s; }
+.ojama-meteor-overlay .meteor-star:nth-child(3) { top: 10%; right: 80%; animation-delay: 0.6s; }
+.ojama-meteor-overlay .meteor-star:nth-child(4) { top: -6%; right: 8%;  animation-delay: 0.9s; }
+.ojama-meteor-overlay .meteor-star:nth-child(5) { top: 6%;  right: 46%; animation-delay: 1.2s; }
+.ojama-meteor-overlay .meteor-star:nth-child(6) { top: 0%;  right: 68%; animation-delay: 1.5s; }
+
+@keyframes ojama-meteor-fall {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  12%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate(-95%, 95%); opacity: 0; }
+}
+
+/* ハイド：盤面上部の数式表示（「3+3+4=10」など）を黒い矩形で完全に覆う
+   （仕様書相当）。数式の要素自体は変更せず、::afterで上に重ねるだけなので
+   計算式のテキストや当たり判定には影響しない。 */
+.tp-hud-row.hud-formula.ojama-formula-hide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  border-radius: var(--radius-sm, 6px);
+}
+
+/* オジャマを受けた側の残り時間表示のすぐ下に「オジャマ「〇〇」」を5秒間
+   表示する。silver-badgeと同じくvisibility切り替えで常に領域を確保し、
+   表示/非表示でパネル内の他要素（SILVERバッジ・オジャマボタン）の位置が
+   ずれないようにする。 */
+.ojama-received-label {
+  visibility: hidden;
+  width: 100%;
+  font-size: 0.56rem;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--color-fail);
+}
+
+.ojama-received-label.is-active {
+  visibility: visible;
+}
+
 /* モーション軽減：移動幅を抑え、ゆっくりにする（仕様書18.5章）。効果時間・
    視覚的な難しさは大きく変えない。 */
 @media (prefers-reduced-motion: reduce) {
   .ojama-hidden-overlay.ojama-hidden-anim {
     animation: ojama-hidden-move-reduced 5s ease-in-out;
+  }
+
+  .ojama-meteor-overlay.ojama-meteor-anim .meteor-star {
+    animation: ojama-meteor-fall-reduced 5s ease-in-out infinite;
   }
 
   .ojama-button {
@@ -95,4 +171,11 @@
   0%   { transform: translate(-10%, -8%); }
   50%  { transform: translate(10%, 8%); }
   100% { transform: translate(0, 0); }
+}
+
+@keyframes ojama-meteor-fall-reduced {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  20%  { opacity: 0.9; }
+  80%  { opacity: 0.9; }
+  100% { transform: translate(-25%, 25%); opacity: 0; }
 }

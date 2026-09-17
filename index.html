@@ -351,13 +351,14 @@
   <section id="screen-two-player" class="screen screen-two-player" data-screen="two-player" hidden>
     <div class="tp-zone tp-zone-p2">
       <div class="tp-zone-inner">
-        <div class="tp-hud-row hud-formula">
+        <div id="tp-hud-formula-row-p2" class="tp-hud-row hud-formula">
           <span id="tp-hud-formula-p2" class="hud-formula-text">&nbsp;</span>
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
             <button id="btn-tp-back-p2" class="btn-small tp-back-btn" type="button">もどる</button>
             <span id="tp-hud-time-p2" class="hud-time-value">60</span>
+            <span id="tp-ojama-received-p2" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="tp-ojama-received-type-p2"></span>」</span>
             <span id="tp-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
             <button id="btn-ojama-tp-p2" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
@@ -365,6 +366,7 @@
             <div id="tp-board-p2" class="board" role="grid" aria-label="2Pの盤面"></div>
             <div id="tp-floating-layer-p2" class="floating-layer" aria-hidden="true"></div>
             <div id="tp-ojama-overlay-p2" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+            <div id="tp-ojama-meteor-p2" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
             <div id="tp-countdown-overlay-p2" class="countdown-overlay" hidden>
               <span id="tp-countdown-label-p2" class="countdown-label"></span>
             </div>
@@ -393,13 +395,14 @@
 
     <div class="tp-zone tp-zone-p1">
       <div class="tp-zone-inner">
-        <div class="tp-hud-row hud-formula">
+        <div id="tp-hud-formula-row-p1" class="tp-hud-row hud-formula">
           <span id="tp-hud-formula-p1" class="hud-formula-text">&nbsp;</span>
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
             <button id="btn-tp-back-p1" class="btn-small tp-back-btn" type="button">もどる</button>
             <span id="tp-hud-time-p1" class="hud-time-value">60</span>
+            <span id="tp-ojama-received-p1" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="tp-ojama-received-type-p1"></span>」</span>
             <span id="tp-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
             <button id="btn-ojama-tp-p1" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
@@ -407,6 +410,7 @@
             <div id="tp-board-p1" class="board" role="grid" aria-label="1Pの盤面"></div>
             <div id="tp-floating-layer-p1" class="floating-layer" aria-hidden="true"></div>
             <div id="tp-ojama-overlay-p1" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+            <div id="tp-ojama-meteor-p1" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
             <div id="tp-countdown-overlay-p1" class="countdown-overlay" hidden>
               <span id="tp-countdown-label-p1" class="countdown-label"></span>
             </div>
@@ -422,13 +426,14 @@
   <section id="screen-mixed-battle" class="screen screen-two-player screen-mixed-battle" data-screen="mixed-battle" hidden>
     <div class="tp-zone tp-zone-p2">
       <div class="tp-zone-inner">
-        <div class="tp-hud-row hud-formula">
+        <div id="mb-hud-formula-row-p2" class="tp-hud-row hud-formula">
           <span id="mb-hud-formula-p2" class="hud-formula-text">&nbsp;</span>
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
             <button id="btn-mb-back-p2" class="btn-small tp-back-btn" type="button">もどる</button>
             <span id="mb-hud-time-p2" class="hud-time-value">60</span>
+            <span id="mb-ojama-received-p2" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mb-ojama-received-type-p2"></span>」</span>
             <span id="mb-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
             <button id="btn-ojama-p2" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
@@ -436,6 +441,7 @@
             <div id="mb-board-p2" class="board mb-board" role="grid" aria-label="共有盤面（2P視点）"></div>
             <div id="mb-floating-layer-p2" class="floating-layer" aria-hidden="true"></div>
             <div id="mb-ojama-overlay-p2" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+            <div id="mb-ojama-meteor-p2" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
             <div id="mb-countdown-overlay-p2" class="countdown-overlay" hidden>
               <span id="mb-countdown-label-p2" class="countdown-label"></span>
             </div>
@@ -464,13 +470,14 @@
 
     <div class="tp-zone tp-zone-p1">
       <div class="tp-zone-inner">
-        <div class="tp-hud-row hud-formula">
+        <div id="mb-hud-formula-row-p1" class="tp-hud-row hud-formula">
           <span id="mb-hud-formula-p1" class="hud-formula-text">&nbsp;</span>
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
             <button id="btn-mb-back-p1" class="btn-small tp-back-btn" type="button">もどる</button>
             <span id="mb-hud-time-p1" class="hud-time-value">60</span>
+            <span id="mb-ojama-received-p1" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mb-ojama-received-type-p1"></span>」</span>
             <span id="mb-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
             <button id="btn-ojama-p1" class="ojama-button" type="button" hidden>オジャマ！</button>
           </div>
@@ -478,6 +485,7 @@
             <div id="mb-board-p1" class="board mb-board" role="grid" aria-label="共有盤面（1P視点）"></div>
             <div id="mb-floating-layer-p1" class="floating-layer" aria-hidden="true"></div>
             <div id="mb-ojama-overlay-p1" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+            <div id="mb-ojama-meteor-p1" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
             <div id="mb-countdown-overlay-p1" class="countdown-overlay" hidden>
               <span id="mb-countdown-label-p1" class="countdown-label"></span>
             </div>
@@ -501,30 +509,32 @@
     </div>
 
     <div class="tp-result-center">
-      <div class="tp-stats-scroll">
-        <table class="battle-stats-compare tp-stats-compare">
-          <thead>
-            <tr><th></th><th>1P</th><th>2P</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>最終スコア</td><td id="mb-stat-score-p1">0</td><td id="mb-stat-score-p2">0</td></tr>
-            <tr><td>通常タイムスコア</td><td id="mb-stat-normal-p1">0</td><td id="mb-stat-normal-p2">0</td></tr>
-            <tr><td>ミリオン・フィーバースコア</td><td id="mb-stat-feverscore-p1">0</td><td id="mb-stat-feverscore-p2">0</td></tr>
-            <tr><td>成功率</td><td id="mb-stat-rate-p1">—</td><td id="mb-stat-rate-p2">—</td></tr>
-            <tr><td>パネルを消した回数</td><td id="mb-stat-success-p1">0</td><td id="mb-stat-success-p2">0</td></tr>
-            <tr><td>10を作った回数</td><td id="mb-stat-10-p1">0</td><td id="mb-stat-10-p2">0</td></tr>
-            <tr><td>20を作った回数</td><td id="mb-stat-20-p1">0</td><td id="mb-stat-20-p2">0</td></tr>
-            <tr><td>30を作った回数</td><td id="mb-stat-30-p1">0</td><td id="mb-stat-30-p2">0</td></tr>
-            <tr><td>40を作った回数</td><td id="mb-stat-40-p1">0</td><td id="mb-stat-40-p2">0</td></tr>
-            <tr><td>シルバー突入回数</td><td id="mb-stat-silver-p1">0</td><td id="mb-stat-silver-p2">0</td></tr>
-            <tr><td>入れ替え・破壊回数</td><td id="mb-stat-swapdestroy-p1">0</td><td id="mb-stat-swapdestroy-p2">0</td></tr>
-            <tr><td>消したパネルの数</td><td id="mb-stat-cleared-p1">0</td><td id="mb-stat-cleared-p2">0</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="result-buttons">
-        <button id="btn-mb-rematch" class="btn btn-primary" type="button">もう一度</button>
-        <button id="btn-mb-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
+      <div class="tp-result-center-inner">
+        <div class="result-buttons">
+          <button id="btn-mb-rematch" class="btn btn-primary" type="button">もう一度</button>
+          <button id="btn-mb-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
+        </div>
+        <div class="tp-stats-scroll">
+          <table class="battle-stats-compare tp-stats-compare">
+            <thead>
+              <tr><th></th><th>1P</th><th>2P</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>最終スコア</td><td id="mb-stat-score-p1">0</td><td id="mb-stat-score-p2">0</td></tr>
+              <tr><td>通常タイムスコア</td><td id="mb-stat-normal-p1">0</td><td id="mb-stat-normal-p2">0</td></tr>
+              <tr><td>ミリオン・フィーバースコア</td><td id="mb-stat-feverscore-p1">0</td><td id="mb-stat-feverscore-p2">0</td></tr>
+              <tr><td>成功率</td><td id="mb-stat-rate-p1">—</td><td id="mb-stat-rate-p2">—</td></tr>
+              <tr><td>パネルを消した回数</td><td id="mb-stat-success-p1">0</td><td id="mb-stat-success-p2">0</td></tr>
+              <tr><td>10を作った回数</td><td id="mb-stat-10-p1">0</td><td id="mb-stat-10-p2">0</td></tr>
+              <tr><td>20を作った回数</td><td id="mb-stat-20-p1">0</td><td id="mb-stat-20-p2">0</td></tr>
+              <tr><td>30を作った回数</td><td id="mb-stat-30-p1">0</td><td id="mb-stat-30-p2">0</td></tr>
+              <tr><td>40を作った回数</td><td id="mb-stat-40-p1">0</td><td id="mb-stat-40-p2">0</td></tr>
+              <tr><td>シルバー突入回数</td><td id="mb-stat-silver-p1">0</td><td id="mb-stat-silver-p2">0</td></tr>
+              <tr><td>入れ替え・破壊回数</td><td id="mb-stat-swapdestroy-p1">0</td><td id="mb-stat-swapdestroy-p2">0</td></tr>
+              <tr><td>消したパネルの数</td><td id="mb-stat-cleared-p1">0</td><td id="mb-stat-cleared-p2">0</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -550,30 +560,32 @@
     </div>
 
     <div class="tp-result-center">
-      <div class="tp-stats-scroll">
-        <table class="battle-stats-compare tp-stats-compare">
-          <thead>
-            <tr><th></th><th>1P</th><th>2P</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>最終スコア</td><td id="tp-stat-score-p1">0</td><td id="tp-stat-score-p2">0</td></tr>
-            <tr><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td><td id="tp-stat-normal-p2">0</td></tr>
-            <tr><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td><td id="tp-stat-feverscore-p2">0</td></tr>
-            <tr><td>成功率</td><td id="tp-stat-rate-p1">—</td><td id="tp-stat-rate-p2">—</td></tr>
-            <tr><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td><td id="tp-stat-success-p2">0</td></tr>
-            <tr><td>10を作った回数</td><td id="tp-stat-10-p1">0</td><td id="tp-stat-10-p2">0</td></tr>
-            <tr><td>20を作った回数</td><td id="tp-stat-20-p1">0</td><td id="tp-stat-20-p2">0</td></tr>
-            <tr><td>30を作った回数</td><td id="tp-stat-30-p1">0</td><td id="tp-stat-30-p2">0</td></tr>
-            <tr><td>40を作った回数</td><td id="tp-stat-40-p1">0</td><td id="tp-stat-40-p2">0</td></tr>
-            <tr><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td><td id="tp-stat-silver-p2">0</td></tr>
-            <tr><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td><td id="tp-stat-swapdestroy-p2">0</td></tr>
-            <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="result-buttons">
-        <button id="btn-tp-rematch" class="btn btn-primary" type="button">もう一度</button>
-        <button id="btn-tp-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
+      <div class="tp-result-center-inner">
+        <div class="result-buttons">
+          <button id="btn-tp-rematch" class="btn btn-primary" type="button">もう一度</button>
+          <button id="btn-tp-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
+        </div>
+        <div class="tp-stats-scroll">
+          <table class="battle-stats-compare tp-stats-compare">
+            <thead>
+              <tr><th></th><th>1P</th><th>2P</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>最終スコア</td><td id="tp-stat-score-p1">0</td><td id="tp-stat-score-p2">0</td></tr>
+              <tr><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td><td id="tp-stat-normal-p2">0</td></tr>
+              <tr><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td><td id="tp-stat-feverscore-p2">0</td></tr>
+              <tr><td>成功率</td><td id="tp-stat-rate-p1">—</td><td id="tp-stat-rate-p2">—</td></tr>
+              <tr><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td><td id="tp-stat-success-p2">0</td></tr>
+              <tr><td>10を作った回数</td><td id="tp-stat-10-p1">0</td><td id="tp-stat-10-p2">0</td></tr>
+              <tr><td>20を作った回数</td><td id="tp-stat-20-p1">0</td><td id="tp-stat-20-p2">0</td></tr>
+              <tr><td>30を作った回数</td><td id="tp-stat-30-p1">0</td><td id="tp-stat-30-p2">0</td></tr>
+              <tr><td>40を作った回数</td><td id="tp-stat-40-p1">0</td><td id="tp-stat-40-p2">0</td></tr>
+              <tr><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td><td id="tp-stat-silver-p2">0</td></tr>
+              <tr><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td><td id="tp-stat-swapdestroy-p2">0</td></tr>
+              <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

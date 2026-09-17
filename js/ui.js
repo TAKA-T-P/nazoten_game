@@ -1,6 +1,6 @@
 // 画面切替、表示更新、演出呼出（仕様書 8章・12章、Phase2実装指示書 6・8章、Phase3実装指示書 6・9・15章）。
 import * as storage from './storage.js';
-import { CPU_LEVELS, CPU_LEVEL_ORDER } from './config.js';
+import { CONFIG, CPU_LEVELS, CPU_LEVEL_ORDER } from './config.js';
 import { getTitleForScore, calcSuccessRate } from './scoring.js';
 
 const el = {};
@@ -161,6 +161,22 @@ function cacheDom() {
   el.ojamaOverlays = {
     tp: { p1: document.getElementById('tp-ojama-overlay-p1'), p2: document.getElementById('tp-ojama-overlay-p2') },
     mb: { p1: document.getElementById('mb-ojama-overlay-p1'), p2: document.getElementById('mb-ojama-overlay-p2') }
+  };
+  el.ojamaMeteorOverlays = {
+    tp: { p1: document.getElementById('tp-ojama-meteor-p1'), p2: document.getElementById('tp-ojama-meteor-p2') },
+    mb: { p1: document.getElementById('mb-ojama-meteor-p1'), p2: document.getElementById('mb-ojama-meteor-p2') }
+  };
+  el.hudFormulaRow = {
+    tp: { p1: document.getElementById('tp-hud-formula-row-p1'), p2: document.getElementById('tp-hud-formula-row-p2') },
+    mb: { p1: document.getElementById('mb-hud-formula-row-p1'), p2: document.getElementById('mb-hud-formula-row-p2') }
+  };
+  el.ojamaReceivedLabels = {
+    tp: { p1: document.getElementById('tp-ojama-received-p1'), p2: document.getElementById('tp-ojama-received-p2') },
+    mb: { p1: document.getElementById('mb-ojama-received-p1'), p2: document.getElementById('mb-ojama-received-p2') }
+  };
+  el.ojamaReceivedType = {
+    tp: { p1: document.getElementById('tp-ojama-received-type-p1'), p2: document.getElementById('tp-ojama-received-type-p2') },
+    mb: { p1: document.getElementById('mb-ojama-received-type-p1'), p2: document.getElementById('mb-ojama-received-type-p2') }
   };
 }
 
@@ -1269,6 +1285,24 @@ export function startOjamaEffect(scope, actor, type) {
       void overlay.offsetWidth;
       overlay.classList.add('ojama-hidden-anim');
     }
+  } else if (type === 'meteor') {
+    const overlay = el.ojamaMeteorOverlays[scope][actor];
+    if (overlay) {
+      overlay.hidden = false;
+      overlay.classList.remove('ojama-meteor-anim');
+      void overlay.offsetWidth;
+      overlay.classList.add('ojama-meteor-anim');
+    }
+  } else if (type === 'formulaHide') {
+    const row = el.hudFormulaRow[scope][actor];
+    if (row) row.classList.add('ojama-formula-hide');
+  }
+
+  const typeEl = el.ojamaReceivedType[scope][actor];
+  const labelEl = el.ojamaReceivedLabels[scope][actor];
+  if (typeEl && labelEl) {
+    typeEl.textContent = CONFIG.ojama.typeLabels[type] || '';
+    labelEl.classList.add('is-active');
   }
 }
 
@@ -1282,4 +1316,13 @@ export function clearOjamaEffect(scope, actor) {
     overlay.hidden = true;
     overlay.classList.remove('ojama-hidden-anim');
   }
+  const meteorOverlay = el.ojamaMeteorOverlays[scope][actor];
+  if (meteorOverlay) {
+    meteorOverlay.hidden = true;
+    meteorOverlay.classList.remove('ojama-meteor-anim');
+  }
+  const row = el.hudFormulaRow[scope][actor];
+  if (row) row.classList.remove('ojama-formula-hide');
+  const labelEl = el.ojamaReceivedLabels[scope][actor];
+  if (labelEl) labelEl.classList.remove('is-active');
 }

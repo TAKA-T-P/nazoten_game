@@ -48,9 +48,17 @@ export const CONFIG = {
     checkpointsMs: [40_000, 20_000],
     buttonDurationMs: 5_000,
     effectDurationMs: 5_000,
-    types: ['turn', 'small', 'hidden'],
+    types: ['turn', 'small', 'hidden', 'meteor', 'formulaHide'],
     smallScaleMin: 0.35,
-    smallScaleMax: 0.75
+    smallScaleMax: 0.75,
+    // 受けた側の残り時間表示の下に5秒間出す「オジャマ「〇〇」」表示用のラベル。
+    typeLabels: {
+      turn: 'ターン',
+      small: 'スモール',
+      hidden: 'スマイル',
+      meteor: 'メテオ',
+      formulaHide: 'ハイド'
+    }
   },
   // 称号はLV.1〜LV.20が固有の名前を持つ。レベルはスコアから
   // floor(sqrt(score / 10))（下限1、上限なし）で決まる。
