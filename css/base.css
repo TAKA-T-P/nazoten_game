@@ -94,6 +94,17 @@ body {
   transform: scale(0.96);
 }
 
+/* 使用済み・操作不可のボタンは色を暗くし、押せないことを視覚的に示す
+   （例：じっくりのヒントボタンを1回使った後）。 */
+.btn:disabled {
+  filter: brightness(0.7);
+  cursor: not-allowed;
+}
+
+.btn:disabled:active {
+  transform: none;
+}
+
 /* <a class="btn">（外部リンクなど）をボタンと同じ見た目・挙動にする。 */
 a.btn {
   display: flex;

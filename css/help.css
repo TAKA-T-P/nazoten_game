@@ -2,24 +2,6 @@
    説明用ミニ盤面はゲーム本体の.cell/.board等のクラス・配色をそのまま再利用し、
    本番画面と見た目が乖離しないようにする（33.3章）。 */
 
-/* --- サブメニューの補足文 ---------------------------------------------- */
-.howto-menu-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.howto-menu-item .btn {
-  width: 100%;
-}
-
-.howto-menu-sub {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
 /* --- 説明ページ共通レイアウト（5章：メニューへ→セクション名→ページ番号/ドット→
    前へ/次へ→タイトル→画面イメージ→説明文→補足の順） -------------------------- */
 .help-page-inner {

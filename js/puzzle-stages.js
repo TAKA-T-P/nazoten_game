@@ -303,14 +303,13 @@ export const PUZZLE_STAGES = [
     cells: [2, 3, 5, 9, 2, 3, 5, 8, 8, 7, 5, 3, 9, 8, 6, 7],
     mission: { type: 'clearAll', allowedSums: [10, 20, 30, 40] },
     moveLimit: 6,
-    parMoves: 5,
+    parMoves: 4,
     allowSwap: false,
     swapLimit: 0,
     officialSolution: [
       { type: 'trace', cells: [0, 1, 2] },
-      { type: 'trace', cells: [3, 7, 11] },
-      { type: 'trace', cells: [4, 5, 6] },
-      { type: 'trace', cells: [8, 9, 10] },
+      { type: 'trace', cells: [3, 7, 6, 10, 11] },
+      { type: 'trace', cells: [4, 5, 9, 8] },
       { type: 'trace', cells: [12, 13, 14, 15] }
     ]
   },
@@ -324,16 +323,14 @@ export const PUZZLE_STAGES = [
     cells: [3, 7, 4, 6, 9, 8, 3, 9, 2, 3, 5, 6, 9, 7, 4, 5],
     mission: { type: 'clearAll', allowedSums: [10, 20, 30, 40] },
     moveLimit: 7,
-    parMoves: 6,
+    parMoves: 4,
     allowSwap: false,
     swapLimit: 0,
     officialSolution: [
       { type: 'trace', cells: [0, 1] },
-      { type: 'trace', cells: [2, 3] },
-      { type: 'trace', cells: [4, 5, 6] },
-      { type: 'trace', cells: [7, 11, 15] },
-      { type: 'trace', cells: [8, 9, 10] },
-      { type: 'trace', cells: [12, 13, 14] }
+      { type: 'trace', cells: [2, 3, 7, 6, 5] },
+      { type: 'trace', cells: [4, 8, 9, 13, 12] },
+      { type: 'trace', cells: [10, 11, 15, 14] }
     ]
   },
   {
@@ -346,17 +343,14 @@ export const PUZZLE_STAGES = [
     cells: [3, 7, 4, 6, 2, 8, 1, 9, 5, 5, 9, 8, 9, 7, 4, 3],
     mission: { type: 'clearAll', allowedSums: [10, 20, 30, 40] },
     moveLimit: 7,
-    parMoves: 7,
+    parMoves: 4,
     allowSwap: false,
     swapLimit: 0,
     officialSolution: [
       { type: 'trace', cells: [0, 1] },
-      { type: 'trace', cells: [2, 3] },
-      { type: 'trace', cells: [4, 5] },
-      { type: 'trace', cells: [6, 7] },
-      { type: 'trace', cells: [8, 9] },
-      { type: 'trace', cells: [10, 11, 15] },
-      { type: 'trace', cells: [12, 13, 14] }
+      { type: 'trace', cells: [2, 3, 7, 11, 15] },
+      { type: 'trace', cells: [4, 5, 6, 10] },
+      { type: 'trace', cells: [9, 8, 12, 13, 14] }
     ]
   },
 
@@ -383,28 +377,29 @@ export const PUZZLE_STAGES = [
     ]
   },
   {
+    // 元は「20→30」の順番お題だったが、入れかえなしで2手（[2,3,7,6]→20、
+    // [0,1,5,9,10]→30）が偶然成立してしまう不具合が発覚した（ユーザー報告）。
+    // area4-stage01/03/04と同じ「1回の入れかえで2つの行を同時に正しくする」
+    // 全消去設計に変更し、入れかえなしでは解けないことを網羅探索で確認済み
+    // （moveLimit8まで拡張した入れかえ禁止探索がstatus:'unsolved'で終了）。
     id: 'area4-stage02',
     areaId: 'area4',
     stageNumber: 2,
-    title: '入れかえて20→30！',
+    title: '入れかえて全消去！',
     rows: 4,
     cols: 4,
-    cells: [9, 8, 5, 2, 9, 8, 6, 7, 1, 2, 3, 4, 5, 6, 7, 3],
-    mission: {
-      type: 'sequence',
-      steps: [
-        { sum: 20, exactLength: null },
-        { sum: 30, exactLength: null }
-      ]
-    },
-    moveLimit: 4,
-    parMoves: 3,
+    cells: [4, 2, 8, 1, 2, 6, 4, 8, 7, 3, 1, 9, 6, 5, 5, 9],
+    mission: { type: 'clearAll', allowedSums: [10, 20, 30, 40] },
+    moveLimit: 6,
+    parMoves: 5,
     allowSwap: true,
     swapLimit: 1,
     officialSolution: [
-      { type: 'swap', a: 2, b: 15 },
-      { type: 'trace', cells: [0, 1, 2] },
-      { type: 'trace', cells: [4, 5, 6, 7] }
+      { type: 'swap', a: 0, b: 15 },
+      { type: 'trace', cells: [0, 1, 2, 3] },
+      { type: 'trace', cells: [4, 5, 6, 7] },
+      { type: 'trace', cells: [8, 9, 10, 11] },
+      { type: 'trace', cells: [12, 13, 14, 15] }
     ]
   },
   {
@@ -508,7 +503,7 @@ export const PUZZLE_STAGES = [
     ],
     mission: { type: 'clearAll', allowedSums: [10, 20, 30, 40] },
     moveLimit: 9,
-    parMoves: 9,
+    parMoves: 7,
     allowSwap: true,
     swapLimit: 2,
     officialSolution: [
@@ -516,11 +511,9 @@ export const PUZZLE_STAGES = [
       { type: 'swap', a: 5, b: 16 },
       { type: 'trace', cells: [0, 1, 2, 3, 4] },
       { type: 'trace', cells: [5, 6, 7, 8, 9] },
-      { type: 'trace', cells: [10, 11] },
-      { type: 'trace', cells: [12, 13, 14] },
+      { type: 'trace', cells: [10, 11, 12, 13, 14] },
       { type: 'trace', cells: [15, 16, 17, 18, 19] },
-      { type: 'trace', cells: [20, 21] },
-      { type: 'trace', cells: [22, 23, 24] }
+      { type: 'trace', cells: [20, 21, 22, 23, 24] }
     ]
   }
 ];
