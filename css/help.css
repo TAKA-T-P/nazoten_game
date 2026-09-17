@@ -31,19 +31,21 @@
   gap: 8px;
 }
 
+/* 「[← メニューへ] 基本ルール」のように、メニューへボタンをセクション名と
+   同じ行に並べる。 */
 .help-page-top {
   width: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 10px;
 }
 
 .help-menu-btn {
-  align-self: flex-start;
-  font-size: 0.85rem;
-  padding: 8px 14px;
-  min-height: 44px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
 }
 
 .help-section-name {

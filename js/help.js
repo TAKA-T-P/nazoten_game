@@ -196,8 +196,8 @@ function demoBasicSum() {
     1: { blue: true, order: 2 }
   };
   return `
-    ${board(values, opts)}
     <div class="help-demo-float">＋20</div>
+    ${board(values, opts)}
   `;
 }
 
