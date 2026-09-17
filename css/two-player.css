@@ -4,10 +4,11 @@
 /* .screenはflex:1（flex-basis:0%）を持つため、heightを指定してもflex-basisが
    優先されてしまい、#appの高さがauto（min-heightのみ）である限りheight指定が
    効かず、内容が多いとその分だけ#appごと伸びてページ全体がスクロールしてしまう。
-   2人バトル関連の画面が表示されているときだけ#app自体を100dvhに固定し、
-   flex-shrinkが正しく働く土台を作る（仕様書7.3章：ゲーム中は縦スクロール禁止）。 */
-#app:has(> #screen-two-player:not([hidden])),
-#app:has(> #screen-two-player-result:not([hidden])) {
+   2人バトルのプレイ画面が表示されているときだけ#app自体を100dvhに固定し、
+   flex-shrinkが正しく働く土台を作る（仕様書7.3章：ゲーム中は縦スクロール禁止）。
+   結果画面はCPU戦の結果画面と同じ、通常のスクロール可能なレイアウトに戻した
+   ため対象に含めない。 */
+#app:has(> #screen-two-player:not([hidden])) {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
@@ -279,99 +280,14 @@
 }
 
 /* --- 2人バトル結果画面 ----------------------------------------------------- */
-
-/* 結果画面もスマホ縦画面の1画面に収める。中央の記録一覧表だけを内部スクロール
-   させ、両プレイヤーの結果カードとボタンは常に見える位置に固定する。 */
-#screen-two-player-result {
-  min-height: 0;
-  overflow: hidden;
-  gap: 8px;
-  padding: 12px 16px;
-  justify-content: stretch;
-}
-
-/* 結果画面全体（勝敗表示・スコア・称号・ボタン・記録一覧表）を1つの塊として
-   左に90度回転し、画面左が「上」になる向きで表示する。回転すると幅と高さが
-   入れ替わるため、container-type:sizeでこの枠自身の実寸をコンテナクエリ単位
-   （cqw/cqh）として子要素から参照できるようにし、回転前のブロックの幅・高さを
-   あらかじめ入れ替えて用意しておく。こうして回転後の見た目がこの枠を
-   ちょうど過不足なく埋める（CPU戦結果画面と同じ内容構成をまるごと回転させる）。 */
-.tp-result-center {
-  /* flex-basis:autoのままcontainer-type:sizeを指定すると、画面が非表示から
-     表示に切り替わった直後にcqw/cqhがまれに0のまま解決されてしまう
-     （ブラウザ側のコンテナクエリ解決の既知の落とし穴）。flex-basisを0に
-     固定することでこの実寸未解決を避ける。中身は絶対配置のみのため
-     見た目上の高さには影響しない。 */
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-  /* 回転後の見た目の横幅はこのmax-width（画面上でのcap）で直接決まる。padding等
-     内側の余白を削っても、外枠自体の横幅（=この値）は変わらないため注意。
-     画面全体を回転させる分、以前（ボタン+表だけ）より必要な横幅が増える。 */
-  max-width: 380px;
-  position: relative;
-  overflow: hidden;
-  container-type: size;
-}
-
-/* 回転前はここが「幅=枠の高さ・高さ=枠の幅」の入れ替えたサイズを持つ。
-   transform-origin: top leftを起点に左90度（反時計回り）回転してから、
-   自分の幅ぶんtranslateXで引き戻すことで、枠の左上を起点にぴったり収まる
-   （幅と高さが入れ替わった状態で）。要素を上から順に並べることで、回転後は
-   画面左側から右側へ向けて同じ順序で並ぶ（元の「上」が回転後は「左」になる
-   ため）。 */
-.tp-result-center-inner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100cqh;
-  height: 100cqw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  transform-origin: top left;
-  transform: rotate(-90deg) translateX(-100%);
-}
-
-/* 結果画面は縦方向のスペースが限られるため、ボタンの縦幅を通常より小さくする。
-   .screen-two-playerクラスで指定し、スコアバトル・ごちゃまぜバトルの両方の
-   結果画面（#screen-two-player-result・#screen-mixed-battle-result）に効かせる
-   （IDだけで指定すると、片方の画面に反映され忘れる既知の落とし穴のため）。 */
-.screen-two-player .result-buttons {
-  flex: 0 0 auto;
-  margin-top: 0;
-}
-
-/* 90度回転後は縦方向の余白（padding-top/bottom）が画面上の横幅に変わるため、
-   ここを削ることで「もう一度」「タイトルへ」ボタンの見た目の横幅を狭める。 */
-.screen-two-player .result-buttons .btn {
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-/* 伸びしろがあっても表の高さぶんだけで止め、table→buttons間に余白を
-   作らない。画面が狭いときだけ縮んで内部スクロールする（flex-shrink:1）。 */
-.tp-stats-scroll {
-  flex: 0 1 auto;
-  min-height: 0;
-  width: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* 90度回転後は縦方向の余白（padding-top/bottom）が画面上の横幅に変わるため、
-   ここを削ることで記録一覧表の見た目の横幅を狭める。 */
-.tp-stats-compare td,
-.tp-stats-compare th {
-  padding: 2px 8px;
-  font-size: 0.72rem;
-}
+/* CPU戦の結果画面（screen-battle-result）と同じ、回転なしの通常レイアウトを
+   使う。.result-inner・.battle-score-row/.battle-score-cardなど、CPU戦結果
+   画面と共通のクラスをそのまま再利用する（battle.css参照）。 */
 
 /* battle-stats-compareの左寄せ/右寄せ（td:first-child等）は同じ要素に
    両方のクラスが付いているため詳細度が並ぶ。詳細度を合わせた上で、後読み込み
-   のこのファイルの指定を優先させ、中央寄せへ上書きする。 */
+   のこのファイルの指定を優先させ、中央寄せへ上書きする（CPU戦の結果表とは
+   異なり、2人バトルの結果表はこの中央寄せを維持する）。 */
 .tp-stats-compare td:first-child,
 .tp-stats-compare th:first-child,
 .tp-stats-compare td:not(:first-child),

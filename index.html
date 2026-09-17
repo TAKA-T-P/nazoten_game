@@ -651,10 +651,10 @@
   </section>
 
   <section id="screen-mixed-battle-result" class="screen screen-two-player" data-screen="mixed-battle-result" hidden>
-    <div class="tp-result-center">
-      <div class="tp-result-center-inner">
-        <p id="mb-outcome" class="battle-outcome">1P WIN!</p>
+    <div class="result-inner">
+      <p id="mb-outcome" class="battle-outcome">1P WIN!</p>
 
+      <div class="battle-score-row">
         <div class="battle-score-card battle-score-p1">
           <span class="battle-score-label">1P</span>
           <span id="mb-score-p1" class="battle-score-value">0</span>
@@ -663,41 +663,40 @@
           <span class="battle-score-label">2P</span>
           <span id="mb-score-p2" class="battle-score-value">0</span>
         </div>
-
-        <div class="result-buttons">
-          <button id="btn-mb-rematch" class="btn btn-primary" type="button">もう一度</button>
-          <button id="btn-mb-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
-        </div>
-        <div class="tp-stats-scroll">
-          <table class="battle-stats-compare tp-stats-compare">
-            <thead>
-              <tr><th>2P</th><th></th><th>1P</th></tr>
-            </thead>
-            <tbody>
-              <tr><td id="mb-stat-score-p2">0</td><td>最終スコア</td><td id="mb-stat-score-p1">0</td></tr>
-              <tr><td id="mb-stat-normal-p2">0</td><td>通常タイムスコア</td><td id="mb-stat-normal-p1">0</td></tr>
-              <tr><td id="mb-stat-feverscore-p2">0</td><td>ミリオン・フィーバースコア</td><td id="mb-stat-feverscore-p1">0</td></tr>
-              <tr><td id="mb-stat-rate-p2">—</td><td>成功率</td><td id="mb-stat-rate-p1">—</td></tr>
-              <tr><td id="mb-stat-success-p2">0</td><td>パネルを消した回数</td><td id="mb-stat-success-p1">0</td></tr>
-              <tr><td id="mb-stat-10-p2">0</td><td>10を作った回数</td><td id="mb-stat-10-p1">0</td></tr>
-              <tr><td id="mb-stat-20-p2">0</td><td>20を作った回数</td><td id="mb-stat-20-p1">0</td></tr>
-              <tr><td id="mb-stat-30-p2">0</td><td>30を作った回数</td><td id="mb-stat-30-p1">0</td></tr>
-              <tr><td id="mb-stat-40-p2">0</td><td>40を作った回数</td><td id="mb-stat-40-p1">0</td></tr>
-              <tr><td id="mb-stat-silver-p2">0</td><td>シルバー突入回数</td><td id="mb-stat-silver-p1">0</td></tr>
-              <tr><td id="mb-stat-swapdestroy-p2">0</td><td>入れ替え・破壊回数</td><td id="mb-stat-swapdestroy-p1">0</td></tr>
-              <tr><td id="mb-stat-cleared-p2">0</td><td>消したパネルの数</td><td id="mb-stat-cleared-p1">0</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
+
+      <div class="result-buttons">
+        <button id="btn-mb-rematch" class="btn btn-primary" type="button">もう一度</button>
+        <button id="btn-mb-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
+      </div>
+
+      <table class="battle-stats-compare tp-stats-compare">
+        <thead>
+          <tr><th></th><th>1P</th><th>2P</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>最終スコア</td><td id="mb-stat-score-p1">0</td><td id="mb-stat-score-p2">0</td></tr>
+          <tr><td>通常タイムスコア</td><td id="mb-stat-normal-p1">0</td><td id="mb-stat-normal-p2">0</td></tr>
+          <tr><td>ミリオン・フィーバースコア</td><td id="mb-stat-feverscore-p1">0</td><td id="mb-stat-feverscore-p2">0</td></tr>
+          <tr><td>成功率</td><td id="mb-stat-rate-p1">—</td><td id="mb-stat-rate-p2">—</td></tr>
+          <tr><td>パネルを消した回数</td><td id="mb-stat-success-p1">0</td><td id="mb-stat-success-p2">0</td></tr>
+          <tr><td>10を作った回数</td><td id="mb-stat-10-p1">0</td><td id="mb-stat-10-p2">0</td></tr>
+          <tr><td>20を作った回数</td><td id="mb-stat-20-p1">0</td><td id="mb-stat-20-p2">0</td></tr>
+          <tr><td>30を作った回数</td><td id="mb-stat-30-p1">0</td><td id="mb-stat-30-p2">0</td></tr>
+          <tr><td>40を作った回数</td><td id="mb-stat-40-p1">0</td><td id="mb-stat-40-p2">0</td></tr>
+          <tr><td>シルバー突入回数</td><td id="mb-stat-silver-p1">0</td><td id="mb-stat-silver-p2">0</td></tr>
+          <tr><td>入れ替え・破壊回数</td><td id="mb-stat-swapdestroy-p1">0</td><td id="mb-stat-swapdestroy-p2">0</td></tr>
+          <tr><td>消したパネルの数</td><td id="mb-stat-cleared-p1">0</td><td id="mb-stat-cleared-p2">0</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
   <section id="screen-two-player-result" class="screen screen-two-player" data-screen="two-player-result" hidden>
-    <div class="tp-result-center">
-      <div class="tp-result-center-inner">
-        <p id="tp-outcome" class="battle-outcome">1P WIN!</p>
+    <div class="result-inner">
+      <p id="tp-outcome" class="battle-outcome">1P WIN!</p>
 
+      <div class="battle-score-row">
         <div class="battle-score-card battle-score-p1">
           <span class="battle-score-label">1P</span>
           <span id="tp-score-p1" class="battle-score-value">0</span>
@@ -706,36 +705,35 @@
           <span class="battle-score-label">2P</span>
           <span id="tp-score-p2" class="battle-score-value">0</span>
         </div>
-
-        <p id="tp-title-p1" class="result-title"></p>
-        <p id="tp-title-p2" class="result-title"></p>
-
-        <div class="result-buttons">
-          <button id="btn-tp-rematch" class="btn btn-primary" type="button">もう一度</button>
-          <button id="btn-tp-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
-        </div>
-        <div class="tp-stats-scroll">
-          <table class="battle-stats-compare tp-stats-compare">
-            <thead>
-              <tr><th>2P</th><th></th><th>1P</th></tr>
-            </thead>
-            <tbody>
-              <tr><td id="tp-stat-score-p2">0</td><td>最終スコア</td><td id="tp-stat-score-p1">0</td></tr>
-              <tr><td id="tp-stat-normal-p2">0</td><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td></tr>
-              <tr><td id="tp-stat-feverscore-p2">0</td><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td></tr>
-              <tr><td id="tp-stat-rate-p2">—</td><td>成功率</td><td id="tp-stat-rate-p1">—</td></tr>
-              <tr><td id="tp-stat-success-p2">0</td><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td></tr>
-              <tr><td id="tp-stat-10-p2">0</td><td>10を作った回数</td><td id="tp-stat-10-p1">0</td></tr>
-              <tr><td id="tp-stat-20-p2">0</td><td>20を作った回数</td><td id="tp-stat-20-p1">0</td></tr>
-              <tr><td id="tp-stat-30-p2">0</td><td>30を作った回数</td><td id="tp-stat-30-p1">0</td></tr>
-              <tr><td id="tp-stat-40-p2">0</td><td>40を作った回数</td><td id="tp-stat-40-p1">0</td></tr>
-              <tr><td id="tp-stat-silver-p2">0</td><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td></tr>
-              <tr><td id="tp-stat-swapdestroy-p2">0</td><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td></tr>
-              <tr><td id="tp-stat-cleared-p2">0</td><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
+
+      <p id="tp-title-p1" class="result-title"></p>
+      <p id="tp-title-p2" class="result-title"></p>
+
+      <div class="result-buttons">
+        <button id="btn-tp-rematch" class="btn btn-primary" type="button">もう一度</button>
+        <button id="btn-tp-result-title" class="btn btn-secondary" type="button">タイトルへ</button>
+      </div>
+
+      <table class="battle-stats-compare tp-stats-compare">
+        <thead>
+          <tr><th></th><th>1P</th><th>2P</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>最終スコア</td><td id="tp-stat-score-p1">0</td><td id="tp-stat-score-p2">0</td></tr>
+          <tr><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td><td id="tp-stat-normal-p2">0</td></tr>
+          <tr><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td><td id="tp-stat-feverscore-p2">0</td></tr>
+          <tr><td>成功率</td><td id="tp-stat-rate-p1">—</td><td id="tp-stat-rate-p2">—</td></tr>
+          <tr><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td><td id="tp-stat-success-p2">0</td></tr>
+          <tr><td>10を作った回数</td><td id="tp-stat-10-p1">0</td><td id="tp-stat-10-p2">0</td></tr>
+          <tr><td>20を作った回数</td><td id="tp-stat-20-p1">0</td><td id="tp-stat-20-p2">0</td></tr>
+          <tr><td>30を作った回数</td><td id="tp-stat-30-p1">0</td><td id="tp-stat-30-p2">0</td></tr>
+          <tr><td>40を作った回数</td><td id="tp-stat-40-p1">0</td><td id="tp-stat-40-p2">0</td></tr>
+          <tr><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td><td id="tp-stat-silver-p2">0</td></tr>
+          <tr><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td><td id="tp-stat-swapdestroy-p2">0</td></tr>
+          <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
