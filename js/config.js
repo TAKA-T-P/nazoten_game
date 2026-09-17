@@ -114,7 +114,13 @@ export const CONFIG = {
     transitionMs: 300,
     minPathLength: 2,
     maxPathLength: 5,
-    tutorialVersion: 1
+    tutorialVersion: 1,
+    // ノーミス・入れかえなしで正解した問題1問につき加算するボーナス点。
+    noMissNoSwapBonus: 20,
+    // 結果画面のLV・称号は、スコアをこの倍率した値をscoring.getTitleForScore()の
+    // 計算式（floor(sqrt(score/10))）にそのまま当てはめて決める
+    // （例：1200点 → 1200×2.5=3000点として計算しLV.17）。
+    titleScoreMultiplier: 2.5
   }
 };
 

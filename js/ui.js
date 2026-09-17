@@ -276,6 +276,7 @@ function cacheDom() {
   el.easyTimeupOverlay = document.getElementById('easy-timeup-overlay');
   el.easyResultNewBest = document.getElementById('easy-result-newbest');
   el.easyResultScore = document.getElementById('easy-result-score');
+  el.easyResultTitle = document.getElementById('easy-result-title');
   el.easyResultBest = document.getElementById('easy-result-best');
   el.easyStatCorrect = document.getElementById('easy-stat-correct');
   el.easyStatPass = document.getElementById('easy-stat-pass');
@@ -2137,6 +2138,7 @@ export function hideEasyTimeUp() {
 export function renderEasyResult({ score, stats, isNewBest, bestScore }) {
   el.easyResultScore.textContent = String(score);
   el.easyResultNewBest.hidden = !isNewBest;
+  el.easyResultTitle.textContent = getTitleForScore(score * CONFIG.easyScoreAttack.titleScoreMultiplier);
   el.easyResultBest.textContent = String(bestScore);
 
   el.easyStatCorrect.textContent = String(stats.correctCount);

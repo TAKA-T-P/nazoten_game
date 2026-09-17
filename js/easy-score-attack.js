@@ -116,6 +116,10 @@ export class EasyScoreAttackController extends EventTarget {
     this.questionRevision = 0;
     this.blocksByBlockNumber = new Map();
     this.swapSelection = null;
+    // 現在の問題で一度でもミス（不正解のなぞり）または入れかえが発生したかを
+    // 追跡する。両方とも発生していない状態で正解すると+20点のボーナスが付く。
+    this.questionHasMiss = false;
+    this.questionHasSwap = false;
     audio.chooseRandomBgmTrack(this.rng);
 
     this.currentPattern = this._getPatternForQuestionNumber(1);
@@ -259,6 +263,7 @@ export class EasyScoreAttackController extends EventTarget {
     } else {
       this.stats.failedTraceCount += 1;
       this.stats.currentStreak = 0;
+      this.questionHasMiss = true;
       this.dispatchEvent(new CustomEvent('fail', { detail: { indices: path } }));
       audio.playFail();
     }
@@ -267,13 +272,15 @@ export class EasyScoreAttackController extends EventTarget {
   _resolveCorrectAnswer(path) {
     this.questionStatus = QUESTION_STATUS.RESOLVING;
     const result = calculateScore({ sum: this.currentPattern.targetSum, pathLength: this.currentPattern.cellCount, multiplier: 1, isFever: false });
-    this.score += result.points;
+    // ノーミス・入れかえなしで正解した場合は1問につき+20点のボーナス。
+    const bonus = (!this.questionHasMiss && !this.questionHasSwap) ? CONFIG.easyScoreAttack.noMissNoSwapBonus : 0;
+    this.score += result.points + bonus;
     this.stats.correctCount += 1;
     this.stats.patternCorrectCounts[this.currentPattern.id] += 1;
     this.stats.currentStreak += 1;
     if (this.stats.currentStreak > this.stats.bestStreak) this.stats.bestStreak = this.stats.currentStreak;
 
-    this.dispatchEvent(new CustomEvent('success', { detail: { indices: path, points: result.points, isForty: result.isForty } }));
+    this.dispatchEvent(new CustomEvent('success', { detail: { indices: path, points: result.points + bonus, isForty: result.isForty } }));
     this.dispatchEvent(new CustomEvent('scoreupdate', { detail: { score: this.score } }));
     if (result.isForty) audio.playForty(path.length);
     else audio.playSuccess(path.length);
@@ -321,6 +328,8 @@ export class EasyScoreAttackController extends EventTarget {
     this.questionStatus = QUESTION_STATUS.ACTIVE;
     this.stats.presentedCount += 1;
     this.swapSelection = null;
+    this.questionHasMiss = false;
+    this.questionHasSwap = false;
     this.dispatchEvent(new CustomEvent('questionchange', {
       detail: { questionNumber: this.questionNumber, pattern, values: question.values.slice() }
     }));
@@ -352,6 +361,7 @@ export class EasyScoreAttackController extends EventTarget {
     values[a] = values[b];
     values[b] = tmp;
     this.stats.swapCount += 1;
+    this.questionHasSwap = true;
     this.dispatchEvent(new CustomEvent('swap', { detail: { indices: [a, b], values: [values[a], values[b]] } }));
     audio.playSwap();
   }
