@@ -166,8 +166,7 @@ function main() {
   battle.addEventListener('result', (e) => {
     const { outcome, level, playerScore, cpuScore, playerStats, cpuStats } = e.detail;
     const isNewBest = storage.submitCpuBattleResult({ level, outcome, playerScore, cpuScore });
-    const record = storage.getCpuRecord(level);
-    ui.renderBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, isNewBest, record });
+    ui.renderBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, isNewBest });
     ui.showScreen('battle-result');
   });
 
@@ -301,15 +300,14 @@ function main() {
   mixedCpuBattle.addEventListener('timeup', () => ui.showMixedCpuTimeUp());
   mixedCpuBattle.addEventListener('result', (e) => {
     const { outcome, level, playerScore, cpuScore, playerStats, cpuStats, ojamaTotalUses } = e.detail;
-    const isNewBest = storage.submitMixedCpuBattleResult({
+    storage.submitMixedCpuBattleResult({
       level,
       outcome,
       playerScore,
       cpuScore,
       ojamaUseCount: ojamaTotalUses
     });
-    const record = storage.getMixedCpuRecord(level);
-    ui.renderMixedCpuBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, isNewBest, record });
+    ui.renderMixedCpuBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats });
     ui.showScreen('mixed-cpu-battle-result');
   });
 

@@ -78,7 +78,6 @@ function cacheDom() {
   el.battleResultNewBest = document.getElementById('battle-result-newbest');
   el.battlePlayerScore = document.getElementById('battle-player-score');
   el.battleCpuScore = document.getElementById('battle-cpu-score');
-  el.battleScoreDiff = document.getElementById('battle-score-diff');
   el.battleResultLevelLabel = document.getElementById('battle-result-level-label');
   el.battlePlayerTitle = document.getElementById('battle-player-title');
   el.battleCpuTitle = document.getElementById('battle-cpu-title');
@@ -94,7 +93,6 @@ function cacheDom() {
   el.battleStatSilver = { player: document.getElementById('battle-stat-silver-player'), cpu: document.getElementById('battle-stat-silver-cpu') };
   el.battleStatSwapDestroy = { player: document.getElementById('battle-stat-swapdestroy-player'), cpu: document.getElementById('battle-stat-swapdestroy-cpu') };
   el.battleStatCleared = { player: document.getElementById('battle-stat-cleared-player'), cpu: document.getElementById('battle-stat-cleared-cpu') };
-  el.battleRecordSummary = document.getElementById('battle-record-summary');
 
   // ごちゃまぜバトルCPU戦（スコアバトルCPU戦=battle-*とは別画面）。p1=プレイヤー・
   // p2=CPUとして扱い、オジャマ関連要素は既存の汎用マップにbattle同様'mcb'
@@ -117,9 +115,7 @@ function cacheDom() {
   el.mcbOutcome = document.getElementById('mcb-outcome');
   el.mcbPlayerScore = document.getElementById('mcb-player-score');
   el.mcbCpuScore = document.getElementById('mcb-cpu-score');
-  el.mcbScoreDiff = document.getElementById('mcb-score-diff');
   el.mcbResultLevelLabel = document.getElementById('mcb-result-level-label');
-  el.mcbRecordSummary = document.getElementById('mcb-record-summary');
   el.mcbStatNormal = { player: document.getElementById('mcb-stat-normal-player'), cpu: document.getElementById('mcb-stat-normal-cpu') };
   el.mcbStatFever = { player: document.getElementById('mcb-stat-fever-player'), cpu: document.getElementById('mcb-stat-fever-cpu') };
   el.mcbStatRate = { player: document.getElementById('mcb-stat-rate-player'), cpu: document.getElementById('mcb-stat-rate-cpu') };
@@ -481,12 +477,15 @@ function formatRate(rate) {
 // 1P・2Pを比べて大きい方に.stat-highlightを付ける（黄色背景・黒文字）。
 // 成功率のように表示用の文字列と比較用の生数値が異なる項目のために、
 // compare用の値を別途受け取れるようにする（省略時はvalueをそのまま使う）。
-function setStatWithHighlight(pair, p1Value, p2Value, p1Compare = p1Value, p2Compare = p2Value) {
-  pair.p1.textContent = String(p1Value);
-  pair.p2.textContent = String(p2Value);
-  const bothNumbers = typeof p1Compare === 'number' && typeof p2Compare === 'number';
-  pair.p1.classList.toggle('stat-highlight', bothNumbers && p1Compare > p2Compare);
-  pair.p2.classList.toggle('stat-highlight', bothNumbers && p2Compare > p1Compare);
+// pairはキー名が{p1,p2}・{player,cpu}のどちらでもよい2要素のオブジェクト。
+// Object.valuesで順序どおり（1つ目・2つ目）取り出して汎用的に扱う。
+function setStatWithHighlight(pair, value1, value2, compare1 = value1, compare2 = value2) {
+  const [el1, el2] = Object.values(pair);
+  el1.textContent = String(value1);
+  el2.textContent = String(value2);
+  const bothNumbers = typeof compare1 === 'number' && typeof compare2 === 'number';
+  el1.classList.toggle('stat-highlight', bothNumbers && compare1 > compare2);
+  el2.classList.toggle('stat-highlight', bothNumbers && compare2 > compare1);
 }
 
 export function renderResult({ score, stats, isNewBest }) {
@@ -718,7 +717,7 @@ const OUTCOME_LABELS = {
   draw: 'DRAW!'
 };
 
-export function renderBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, isNewBest, record }) {
+export function renderBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, isNewBest }) {
   el.battleOutcome.textContent = OUTCOME_LABELS[outcome] || '';
   el.battleOutcome.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
   el.battleOutcome.classList.add(`outcome-${outcome}`);
@@ -726,29 +725,23 @@ export function renderBattleResult({ outcome, level, playerScore, cpuScore, play
 
   el.battlePlayerScore.textContent = String(playerScore);
   el.battleCpuScore.textContent = String(cpuScore);
-  el.battleScoreDiff.textContent = String(Math.abs(playerScore - cpuScore));
   el.battleResultLevelLabel.textContent = CPU_LEVELS[level].label;
   el.battlePlayerTitle.textContent = getTitleForScore(playerScore);
   el.battleCpuTitle.textContent = `CPU: ${getTitleForScore(cpuScore)}`;
 
-  const setStat = (pair, playerValue, cpuValue) => {
-    pair.player.textContent = String(playerValue);
-    pair.cpu.textContent = String(cpuValue);
-  };
-
-  setStat(el.battleStatNormal, playerStats.normalScore, cpuStats.normalScore);
-  setStat(el.battleStatFever, playerStats.feverScore, cpuStats.feverScore);
-  setStat(el.battleStatRate, formatRate(calcSuccessRate(playerStats)), formatRate(calcSuccessRate(cpuStats)));
-  setStat(el.battleStatSuccess, playerStats.successCount, cpuStats.successCount);
-  setStat(el.battleStat10, playerStats.sumCounts[10], cpuStats.sumCounts[10]);
-  setStat(el.battleStat20, playerStats.sumCounts[20], cpuStats.sumCounts[20]);
-  setStat(el.battleStat30, playerStats.sumCounts[30], cpuStats.sumCounts[30]);
-  setStat(el.battleStat40, playerStats.sumCounts[40], cpuStats.sumCounts[40]);
-  setStat(el.battleStatSilver, playerStats.silverFeverCount, cpuStats.silverFeverCount);
-  setStat(el.battleStatSwapDestroy, playerStats.swapCount + playerStats.destroyCount, cpuStats.swapCount + cpuStats.destroyCount);
-  setStat(el.battleStatCleared, playerStats.clearedCellCount, cpuStats.clearedCellCount);
-
-  el.battleRecordSummary.textContent = formatRecord(record);
+  setStatWithHighlight(el.battleStatNormal, playerStats.normalScore, cpuStats.normalScore);
+  setStatWithHighlight(el.battleStatFever, playerStats.feverScore, cpuStats.feverScore);
+  const playerRate = calcSuccessRate(playerStats);
+  const cpuRate = calcSuccessRate(cpuStats);
+  setStatWithHighlight(el.battleStatRate, formatRate(playerRate), formatRate(cpuRate), playerRate, cpuRate);
+  setStatWithHighlight(el.battleStatSuccess, playerStats.successCount, cpuStats.successCount);
+  setStatWithHighlight(el.battleStat10, playerStats.sumCounts[10], cpuStats.sumCounts[10]);
+  setStatWithHighlight(el.battleStat20, playerStats.sumCounts[20], cpuStats.sumCounts[20]);
+  setStatWithHighlight(el.battleStat30, playerStats.sumCounts[30], cpuStats.sumCounts[30]);
+  setStatWithHighlight(el.battleStat40, playerStats.sumCounts[40], cpuStats.sumCounts[40]);
+  setStatWithHighlight(el.battleStatSilver, playerStats.silverFeverCount, cpuStats.silverFeverCount);
+  setStatWithHighlight(el.battleStatSwapDestroy, playerStats.swapCount + playerStats.destroyCount, cpuStats.swapCount + cpuStats.destroyCount);
+  setStatWithHighlight(el.battleStatCleared, playerStats.clearedCellCount, cpuStats.clearedCellCount);
 }
 
 // --- 2人バトル（Phase4実装指示書） -------------------------------------------
@@ -1564,33 +1557,28 @@ export function updateMixedCpuGauge(detail) {
   el.mcbGaugePlayer.style.width = `${pct}%`;
 }
 
-export function renderMixedCpuBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, record }) {
+export function renderMixedCpuBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats }) {
   el.mcbOutcome.textContent = OUTCOME_LABELS[outcome] || '';
   el.mcbOutcome.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
   el.mcbOutcome.classList.add(`outcome-${outcome}`);
 
   el.mcbPlayerScore.textContent = String(playerScore);
   el.mcbCpuScore.textContent = String(cpuScore);
-  el.mcbScoreDiff.textContent = String(Math.abs(playerScore - cpuScore));
   el.mcbResultLevelLabel.textContent = CPU_LEVELS[level].label;
-  el.mcbRecordSummary.textContent = formatRecord(record);
 
-  const setStat = (pair, playerValue, cpuValue) => {
-    pair.player.textContent = String(playerValue);
-    pair.cpu.textContent = String(cpuValue);
-  };
-
-  setStat(el.mcbStatNormal, playerStats.normalScore, cpuStats.normalScore);
-  setStat(el.mcbStatFever, playerStats.feverScore, cpuStats.feverScore);
-  setStat(el.mcbStatRate, formatRate(calcSuccessRate(playerStats)), formatRate(calcSuccessRate(cpuStats)));
-  setStat(el.mcbStatSuccess, playerStats.successCount, cpuStats.successCount);
-  setStat(el.mcbStat10, playerStats.sumCounts[10], cpuStats.sumCounts[10]);
-  setStat(el.mcbStat20, playerStats.sumCounts[20], cpuStats.sumCounts[20]);
-  setStat(el.mcbStat30, playerStats.sumCounts[30], cpuStats.sumCounts[30]);
-  setStat(el.mcbStat40, playerStats.sumCounts[40], cpuStats.sumCounts[40]);
-  setStat(el.mcbStatSilver, playerStats.silverFeverCount, cpuStats.silverFeverCount);
-  setStat(el.mcbStatSwapDestroy, playerStats.swapCount + playerStats.destroyCount, cpuStats.swapCount + cpuStats.destroyCount);
-  setStat(el.mcbStatCleared, playerStats.clearedCellCount, cpuStats.clearedCellCount);
+  setStatWithHighlight(el.mcbStatNormal, playerStats.normalScore, cpuStats.normalScore);
+  setStatWithHighlight(el.mcbStatFever, playerStats.feverScore, cpuStats.feverScore);
+  const playerRate = calcSuccessRate(playerStats);
+  const cpuRate = calcSuccessRate(cpuStats);
+  setStatWithHighlight(el.mcbStatRate, formatRate(playerRate), formatRate(cpuRate), playerRate, cpuRate);
+  setStatWithHighlight(el.mcbStatSuccess, playerStats.successCount, cpuStats.successCount);
+  setStatWithHighlight(el.mcbStat10, playerStats.sumCounts[10], cpuStats.sumCounts[10]);
+  setStatWithHighlight(el.mcbStat20, playerStats.sumCounts[20], cpuStats.sumCounts[20]);
+  setStatWithHighlight(el.mcbStat30, playerStats.sumCounts[30], cpuStats.sumCounts[30]);
+  setStatWithHighlight(el.mcbStat40, playerStats.sumCounts[40], cpuStats.sumCounts[40]);
+  setStatWithHighlight(el.mcbStatSilver, playerStats.silverFeverCount, cpuStats.silverFeverCount);
+  setStatWithHighlight(el.mcbStatSwapDestroy, playerStats.swapCount + playerStats.destroyCount, cpuStats.swapCount + cpuStats.destroyCount);
+  setStatWithHighlight(el.mcbStatCleared, playerStats.clearedCellCount, cpuStats.clearedCellCount);
 }
 
 // --- オジャマ（Phase5実装指示書16〜20章） -------------------------------------

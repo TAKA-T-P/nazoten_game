@@ -407,6 +407,16 @@
   font-size: 0.72rem;
 }
 
+/* battle-stats-compareの左寄せ/右寄せ（td:first-child等）は同じ要素に
+   両方のクラスが付いているため詳細度が並ぶ。詳細度を合わせた上で、後読み込み
+   のこのファイルの指定を優先させ、中央寄せへ上書きする。 */
+.tp-stats-compare td:first-child,
+.tp-stats-compare th:first-child,
+.tp-stats-compare td:not(:first-child),
+.tp-stats-compare th:not(:first-child) {
+  text-align: center;
+}
+
 /* 1P・2Pを比べて大きい方を目立たせる（黄色背景・黒文字）。 */
 .tp-stats-compare .stat-highlight {
   background: #fde047;

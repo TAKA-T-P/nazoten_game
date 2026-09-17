@@ -312,26 +312,16 @@
       <p id="battle-outcome" class="battle-outcome">YOU WIN!</p>
       <p id="battle-result-newbest" class="result-newbest" hidden>NEW BEST!</p>
 
-      <table class="battle-score-compare">
-        <tbody>
-          <tr class="battle-compare-you">
-            <td class="battle-compare-label">YOU</td>
-            <td id="battle-player-score" class="battle-compare-score">0</td>
-          </tr>
-          <tr class="battle-compare-cpu">
-            <td class="battle-compare-label">CPU（<span id="battle-result-level-label">強さ1</span>）</td>
-            <td id="battle-cpu-score" class="battle-compare-score">0</td>
-          </tr>
-          <tr class="battle-compare-diff">
-            <td>点差</td>
-            <td id="battle-score-diff">0</td>
-          </tr>
-          <tr class="battle-compare-record">
-            <td>この強さの通算成績</td>
-            <td id="battle-record-summary">0勝</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="battle-score-row">
+        <div class="battle-score-card battle-score-you">
+          <span class="battle-score-label">YOU</span>
+          <span id="battle-player-score" class="battle-score-value">0</span>
+        </div>
+        <div class="battle-score-card battle-score-cpu">
+          <span class="battle-score-label">CPU（<span id="battle-result-level-label">強さ1</span>）</span>
+          <span id="battle-cpu-score" class="battle-score-value">0</span>
+        </div>
+      </div>
 
       <p id="battle-player-title" class="result-title"></p>
       <p id="battle-cpu-title" class="battle-cpu-title"></p>
@@ -428,26 +418,16 @@
     <div class="result-inner">
       <p id="mcb-outcome" class="battle-outcome">YOU WIN!</p>
 
-      <table class="battle-score-compare">
-        <tbody>
-          <tr class="battle-compare-you">
-            <td class="battle-compare-label">YOU</td>
-            <td id="mcb-player-score" class="battle-compare-score">0</td>
-          </tr>
-          <tr class="battle-compare-cpu">
-            <td class="battle-compare-label">CPU（<span id="mcb-result-level-label">強さ1</span>）</td>
-            <td id="mcb-cpu-score" class="battle-compare-score">0</td>
-          </tr>
-          <tr class="battle-compare-diff">
-            <td>点差</td>
-            <td id="mcb-score-diff">0</td>
-          </tr>
-          <tr class="battle-compare-record">
-            <td>この強さの通算成績</td>
-            <td id="mcb-record-summary">0勝</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="battle-score-row">
+        <div class="battle-score-card battle-score-you">
+          <span class="battle-score-label">YOU</span>
+          <span id="mcb-player-score" class="battle-score-value">0</span>
+        </div>
+        <div class="battle-score-card battle-score-cpu">
+          <span class="battle-score-label">CPU（<span id="mcb-result-level-label">強さ1</span>）</span>
+          <span id="mcb-cpu-score" class="battle-score-value">0</span>
+        </div>
+      </div>
 
       <div class="result-buttons">
         <button id="btn-mcb-rematch" class="btn btn-primary" type="button">もう一度</button>
