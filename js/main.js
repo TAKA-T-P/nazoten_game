@@ -205,10 +205,16 @@ function main() {
     battle.startBattle(level, cpuOjamaEnabled);
   }
 
+  // 通算成績はスコアバトル・ごちゃまぜバトルの勝利数を合算して表示する
+  // （どちらの形式で勝っても同じ「通算勝利数」に積み上がる）。
+  function getCombinedCpuLevelWins(level) {
+    return storage.getCpuRecord(level).wins + storage.getMixedCpuRecord(level).wins;
+  }
+
   function showCpuSelectScreen() {
     const level = storage.getSelectedCpuLevel();
     ui.updateCpuLevelSelection(level);
-    ui.updateCpuLevelRecord(storage.getCpuRecord(level));
+    ui.updateCpuLevelRecord({ wins: getCombinedCpuLevelWins(level) });
     ui.updateCpuBattleFormatSelection(selectedCpuBattleFormat);
     ui.updateCpuBattleOjamaToggle(cpuOjamaEnabled);
     ui.showScreen('cpu-select');
@@ -222,7 +228,7 @@ function main() {
     const level = ui.getCpuLevelFromSliderValue();
     storage.setSelectedCpuLevel(level);
     ui.updateCpuLevelSelection(level);
-    ui.updateCpuLevelRecord(storage.getCpuRecord(level));
+    ui.updateCpuLevelRecord({ wins: getCombinedCpuLevelWins(level) });
   });
 
   // CPU戦のバトル形式（スコアバトル/ごちゃまぜバトル）・オジャマON/OFF。

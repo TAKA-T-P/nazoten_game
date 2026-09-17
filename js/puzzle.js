@@ -5,6 +5,7 @@
 import { CONFIG } from './config.js';
 import { PUZZLE_STAGES } from './puzzle-stages.js';
 import { SelectionController } from './input.js';
+import * as audio from './audio.js';
 import {
   createInitialState,
   applyTrace,
@@ -73,8 +74,15 @@ export class PuzzleController extends EventTarget {
       maxLength: CONFIG.puzzle.maxPathLength,
       doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
       longPressThresholdMs: CONFIG.longPressThresholdMs,
-      onSelectionStart: (i, sel) => this._emitSelectionUpdate(sel),
-      onCellAdded: (i, sel) => this._emitSelectionUpdate(sel),
+      onSelectionStart: (i, sel) => {
+        this._clearSwapSelection();
+        audio.playTraceNote(0);
+        this._emitSelectionUpdate(sel);
+      },
+      onCellAdded: (i, sel) => {
+        audio.playTraceNote(sel.length - 1);
+        this._emitSelectionUpdate(sel);
+      },
       onCellRemoved: (sel) => this._emitSelectionUpdate(sel),
       onSelectionEnd: (sel) => this.commitPath(sel),
       onSelectionCancel: () => this._emitSelectionUpdate([]),
