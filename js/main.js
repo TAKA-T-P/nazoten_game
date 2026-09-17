@@ -926,7 +926,8 @@ function main() {
     ui.flashEasyFail(e.detail.indices);
     audio.playFail();
   });
-  easy.addEventListener('pass', (e) => ui.flashEasyPass(e.detail.index));
+  easy.addEventListener('success', () => ui.shrinkEasyBoard());
+  easy.addEventListener('pass', () => ui.shrinkEasyBoard());
   easy.addEventListener('swapselectionupdate', (e) => ui.updateEasySwapSelection(e.detail.index));
   easy.addEventListener('swap', (e) => ui.applyEasySwap(e.detail.indices, e.detail.values));
   easy.addEventListener('timeup', () => ui.showEasyTimeUp());

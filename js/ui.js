@@ -277,16 +277,11 @@ function cacheDom() {
   el.easyResultNewBest = document.getElementById('easy-result-newbest');
   el.easyResultScore = document.getElementById('easy-result-score');
   el.easyResultBest = document.getElementById('easy-result-best');
-  el.easyStatPresented = document.getElementById('easy-stat-presented');
   el.easyStatCorrect = document.getElementById('easy-stat-correct');
   el.easyStatPass = document.getElementById('easy-stat-pass');
   el.easyStatFail = document.getElementById('easy-stat-fail');
-  el.easyStatRate = document.getElementById('easy-stat-rate');
+  el.easyStatStreak = document.getElementById('easy-stat-streak');
   el.easyStatSwap = document.getElementById('easy-stat-swap');
-  el.easyStatPattern = {};
-  for (let i = 1; i <= 10; i++) {
-    el.easyStatPattern[i] = document.getElementById(`easy-stat-pattern-${i}`);
-  }
 }
 
 export function init() {
@@ -2025,29 +2020,45 @@ export function getEasyBoardElement() {
 }
 
 function easyPatternText(pattern) {
-  return `${pattern.cellCount}マスで${pattern.targetSum}を作ろう！`;
+  const cell = `<span class="easy-question-number-highlight">${pattern.cellCount}</span>`;
+  const sum = `<span class="easy-question-number-highlight">${pattern.targetSum}</span>`;
+  return `${cell}マスで${sum}を作ろう！`;
 }
 
 // boardinit・questionchangeの両方から呼ばれる、6マス全体の一括再描画（21.3章）。
+// 新しく作るセルには縮小状態から拡大するpop-inアニメーションを付ける
+// （shrinkEasyBoard()で先に古いセルを縮小させた後、ここで一括入れかえる）。
 export function renderEasyBoard(values) {
   el.easyBoard.innerHTML = '';
   easyCellEls = [];
   values.forEach((v, i) => {
     const cellEl = document.createElement('div');
-    cellEl.className = 'cell';
+    cellEl.className = 'cell easy-cell-pop-in';
     cellEl.dataset.cellIndex = String(i);
     const valueEl = document.createElement('span');
     valueEl.className = 'cell-value';
     valueEl.textContent = String(v);
     cellEl.appendChild(valueEl);
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('easy-cell-pop-in'), { once: true });
     el.easyBoard.appendChild(cellEl);
     easyCellEls.push(cellEl);
   });
 }
 
+// 正解・パス確定時に呼び、次の問題が描画されるまでの間、6マスすべてを
+// 縮小させる（おてがるモード実装指示書のパネル切り替え演出）。
+export function shrinkEasyBoard() {
+  easyCellEls.forEach((cellEl) => {
+    cellEl.classList.remove('easy-cell-pop-in');
+    cellEl.classList.remove('easy-cell-shrink-out');
+    void cellEl.offsetWidth;
+    cellEl.classList.add('easy-cell-shrink-out');
+  });
+}
+
 export function renderEasyQuestion(questionNumber, pattern) {
   el.easyQuestionNumber.textContent = `Q.${questionNumber}`;
-  el.easyQuestionText.textContent = easyPatternText(pattern);
+  el.easyQuestionText.innerHTML = easyPatternText(pattern);
 }
 
 export function updateEasySelection(indices) {
@@ -2078,14 +2089,6 @@ export function flashEasyFail(indices) {
     cellEl.classList.add('fail-shake');
     cellEl.addEventListener('animationend', () => cellEl.classList.remove('fail-shake'), { once: true });
   });
-}
-
-// ダブルタップ＝パスの演出。1枚だけ数字をフェードさせる（次の問題は300ms後に
-// 盤面ごと再描画されるため、クラスを個別に外す必要はない）。
-export function flashEasyPass(index) {
-  const cellEl = easyCellEls[index];
-  if (!cellEl) return;
-  cellEl.classList.add('clearing');
 }
 
 export function updateEasySwapSelection(index) {
@@ -2136,16 +2139,9 @@ export function renderEasyResult({ score, stats, isNewBest, bestScore }) {
   el.easyResultNewBest.hidden = !isNewBest;
   el.easyResultBest.textContent = String(bestScore);
 
-  const resolvedCount = stats.correctCount + stats.passCount;
-  const accuracy = resolvedCount === 0 ? null : (stats.correctCount / resolvedCount) * 100;
-  el.easyStatRate.textContent = accuracy === null ? '—' : `${Math.round(accuracy)}%`;
-
-  el.easyStatPresented.textContent = String(stats.presentedCount);
   el.easyStatCorrect.textContent = String(stats.correctCount);
   el.easyStatPass.textContent = String(stats.passCount);
   el.easyStatFail.textContent = String(stats.failedTraceCount);
+  el.easyStatStreak.textContent = String(stats.bestStreak);
   el.easyStatSwap.textContent = String(stats.swapCount);
-  for (let i = 1; i <= 10; i++) {
-    el.easyStatPattern[i].textContent = String(stats.patternCorrectCounts[i]);
-  }
 }

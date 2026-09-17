@@ -180,7 +180,7 @@ export const BGM_BASE_PATH = 'assets/bgm/';
 //   delay3s                                    … ゲーム開始（START!）から3秒後（残り57秒）
 export const BGM_TRACKS = [
   { id: 'bgm01', file: 'BGM01_焦りは禁物.mp3', startTrigger: 'countdown3' },
-  { id: 'bgm02', file: 'BGM02_てんやわんやなお嬢様.mp3', startTrigger: 'countdown2' },
+  { id: 'bgm02', file: 'BGM02_てんやわんやなお嬢様.mp3', startTrigger: 'countdown3' },
   { id: 'bgm03', file: 'BGM03_和風ロックBGM.mp3', startTrigger: 'bgm03Start' },
   { id: 'bgm04', file: 'BGM04_ColdHeart.mp3', startTrigger: 'bgm04Start' },
   { id: 'bgm05', file: 'BGM05_達成！.mp3', startTrigger: 'start' }

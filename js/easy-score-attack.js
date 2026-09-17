@@ -30,6 +30,10 @@ function createInitialStats() {
     passCount: 0,
     failedTraceCount: 0,
     swapCount: 0,
+    // 連続正解数：ミス（不正解のなぞり）またはパスで0にリセットし、正解のたびに
+    // +1する。結果画面にはこのプレイで到達した最大値（bestStreak）を表示する。
+    currentStreak: 0,
+    bestStreak: 0,
     patternCorrectCounts: {
       1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
       6: 0, 7: 0, 8: 0, 9: 0, 10: 0
@@ -254,6 +258,7 @@ export class EasyScoreAttackController extends EventTarget {
       this._resolveCorrectAnswer(path);
     } else {
       this.stats.failedTraceCount += 1;
+      this.stats.currentStreak = 0;
       this.dispatchEvent(new CustomEvent('fail', { detail: { indices: path } }));
       audio.playFail();
     }
@@ -265,6 +270,8 @@ export class EasyScoreAttackController extends EventTarget {
     this.score += result.points;
     this.stats.correctCount += 1;
     this.stats.patternCorrectCounts[this.currentPattern.id] += 1;
+    this.stats.currentStreak += 1;
+    if (this.stats.currentStreak > this.stats.bestStreak) this.stats.bestStreak = this.stats.currentStreak;
 
     this.dispatchEvent(new CustomEvent('success', { detail: { indices: path, points: result.points, isForty: result.isForty } }));
     this.dispatchEvent(new CustomEvent('scoreupdate', { detail: { score: this.score } }));
@@ -286,6 +293,7 @@ export class EasyScoreAttackController extends EventTarget {
     this._clearSwapSelection();
 
     this.stats.passCount += 1;
+    this.stats.currentStreak = 0;
     this.dispatchEvent(new CustomEvent('pass', { detail: { index: cellId } }));
     audio.playDestroy();
 

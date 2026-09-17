@@ -27,6 +27,12 @@
   font-weight: 800;
 }
 
+.easy-question-number-highlight {
+  font-size: 1.3em;
+  font-weight: 900;
+  color: var(--color-secondary);
+}
+
 .easy-board-wrap {
   width: min(84vw, 360px);
   max-width: 360px;
@@ -40,6 +46,47 @@
 
 .easy-board .cell {
   font-size: clamp(1.8rem, 9vw, 3rem);
+}
+
+/* 次の問題への切り替え演出：正解・パス確定と同時に6マスとも縮小し（前半）、
+   0.3秒後に新しい数字のマスへ入れかわって拡大する（後半）。合計の切り替え
+   時間（CONFIG.easyScoreAttack.transitionMs=300ms）は変えず、その内訳として
+   縮小・拡大それぞれ0.15秒ずつ再生する。 */
+.easy-board .cell.easy-cell-shrink-out {
+  animation: easy-cell-shrink-out 0.15s ease-in forwards;
+}
+
+.easy-board .cell.easy-cell-pop-in {
+  animation: easy-cell-pop-in 0.15s ease-out;
+}
+
+@keyframes easy-cell-shrink-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes easy-cell-pop-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .easy-board .cell.easy-cell-shrink-out,
+  .easy-board .cell.easy-cell-pop-in {
+    animation: none;
+  }
 }
 
 .easy-pass-hint {
