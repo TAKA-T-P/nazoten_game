@@ -80,10 +80,15 @@
   100% { transform: translate(0, 0) scale(1); }
 }
 
-/* メテオ：複数の⭐が右上から左下へ降り注ぎ、数字の一部を隠す。ヒドゥン同様、
-   盤面データ・当たり判定には触れず見た目だけの演出。pointer-events:noneで
-   操作を妨げない。星ごとにnth-childで開始位置とアニメーション開始を
-   ずらすことで、降り注ぐような見た目にする。 */
+/* メテオ：複数の⭐が右上から左下へ、盤面全体を通り抜けるように降り注ぎ、数字を
+   隠す。スマイル同様、盤面データ・当たり判定には触れず見た目だけの演出。
+   pointer-events:noneで操作を妨げない。
+   注意：transform: translate()の%指定は要素自身の大きさが基準になり、盤面全体
+   を横断させるには使えない（絵文字1個ぶんの小さな移動にしかならない）。
+   代わりにtop/left（絶対配置の位置指定）を使う。これは常に位置の基準となる
+   .ojama-meteor-overlay自身の大きさ（＝盤面全体）に対する%になるため、
+   星の実寸によらず盤面全体を斜めに横断できる。星ごとにnth-childで横方向の
+   ずれ（--x-offset）とアニメーション開始をずらし、降り注ぐような見た目にする。 */
 .ojama-meteor-overlay {
   position: absolute;
   inset: 0;
@@ -97,29 +102,36 @@
 
 .ojama-meteor-overlay .meteor-star {
   position: absolute;
-  top: -12%;
-  right: -12%;
-  font-size: clamp(1rem, 9vw, 1.7rem);
+  top: -20%;
+  left: 100%;
+  --x-offset: 0%;
+  font-size: clamp(2rem, 18vw, 3.4rem);
   opacity: 0;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
 .ojama-meteor-overlay.ojama-meteor-anim .meteor-star {
-  animation: ojama-meteor-fall 1.6s linear infinite;
+  animation: ojama-meteor-fall 0.8s linear infinite;
 }
 
-.ojama-meteor-overlay .meteor-star:nth-child(1) { top: 4%;  right: 58%; animation-delay: 0s; }
-.ojama-meteor-overlay .meteor-star:nth-child(2) { top: -2%; right: 28%; animation-delay: 0.3s; }
-.ojama-meteor-overlay .meteor-star:nth-child(3) { top: 10%; right: 80%; animation-delay: 0.6s; }
-.ojama-meteor-overlay .meteor-star:nth-child(4) { top: -6%; right: 8%;  animation-delay: 0.9s; }
-.ojama-meteor-overlay .meteor-star:nth-child(5) { top: 6%;  right: 46%; animation-delay: 1.2s; }
-.ojama-meteor-overlay .meteor-star:nth-child(6) { top: 0%;  right: 68%; animation-delay: 1.5s; }
+.ojama-meteor-overlay .meteor-star:nth-child(1)  { --x-offset: -10%; animation-delay: 0s; }
+.ojama-meteor-overlay .meteor-star:nth-child(2)  { --x-offset: 30%;  animation-delay: 0.15s; }
+.ojama-meteor-overlay .meteor-star:nth-child(3)  { --x-offset: 55%;  animation-delay: 0.3s; }
+.ojama-meteor-overlay .meteor-star:nth-child(4)  { --x-offset: -35%; animation-delay: 0.45s; }
+.ojama-meteor-overlay .meteor-star:nth-child(5)  { --x-offset: 10%;  animation-delay: 0.6s; }
+.ojama-meteor-overlay .meteor-star:nth-child(6)  { --x-offset: 45%;  animation-delay: 0.75s; }
+.ojama-meteor-overlay .meteor-star:nth-child(7)  { --x-offset: -20%; animation-delay: 0.2s; }
+.ojama-meteor-overlay .meteor-star:nth-child(8)  { --x-offset: 20%;  animation-delay: 0.35s; }
+.ojama-meteor-overlay .meteor-star:nth-child(9)  { --x-offset: 60%;  animation-delay: 0.5s; }
+.ojama-meteor-overlay .meteor-star:nth-child(10) { --x-offset: -45%; animation-delay: 0.65s; }
+.ojama-meteor-overlay .meteor-star:nth-child(11) { --x-offset: 0%;   animation-delay: 0.05s; }
+.ojama-meteor-overlay .meteor-star:nth-child(12) { --x-offset: 35%;  animation-delay: 0.4s; }
 
 @keyframes ojama-meteor-fall {
-  0%   { transform: translate(0, 0); opacity: 0; }
+  0%   { top: -20%; left: calc(100% + var(--x-offset)); opacity: 0; }
   12%  { opacity: 1; }
   85%  { opacity: 1; }
-  100% { transform: translate(-95%, 95%); opacity: 0; }
+  100% { top: 120%;  left: calc(-30% + var(--x-offset)); opacity: 0; }
 }
 
 /* ハイド：盤面上部の数式表示（「3+3+4=10」など）を黒い矩形で完全に覆う
@@ -174,8 +186,8 @@
 }
 
 @keyframes ojama-meteor-fall-reduced {
-  0%   { transform: translate(0, 0); opacity: 0; }
+  0%   { top: -10%; left: calc(80% + var(--x-offset)); opacity: 0; }
   20%  { opacity: 0.9; }
   80%  { opacity: 0.9; }
-  100% { transform: translate(-25%, 25%); opacity: 0; }
+  100% { top: 50%;  left: calc(20% + var(--x-offset)); opacity: 0; }
 }
