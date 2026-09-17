@@ -1,0 +1,699 @@
+/* あそびかた説明画面（あそびかた説明画面改善実装指示書）。
+   説明用ミニ盤面はゲーム本体の.cell/.board等のクラス・配色をそのまま再利用し、
+   本番画面と見た目が乖離しないようにする（33.3章）。 */
+
+/* --- サブメニューの補足文 ---------------------------------------------- */
+.howto-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.howto-menu-item .btn {
+  width: 100%;
+}
+
+.howto-menu-sub {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* --- 説明ページ共通レイアウト（5章：メニューへ→セクション名→ページ番号/ドット→
+   前へ/次へ→タイトル→画面イメージ→説明文→補足の順） -------------------------- */
+.help-page-inner {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-page-top {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.help-menu-btn {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  min-height: 44px;
+}
+
+.help-section-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-secondary);
+}
+
+.help-page-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.help-page-count {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.help-page-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.help-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-cell-border);
+  cursor: pointer;
+  /* タップ領域は見た目より広く確保する（8章：タッチ領域44px以上）。 */
+  position: relative;
+}
+
+.help-dot::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+}
+
+.help-dot.active {
+  background: var(--color-secondary);
+}
+
+.help-page-nav {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.help-nav-btn {
+  flex: 1;
+  min-height: 44px;
+}
+
+.help-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.help-page-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.help-page-title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.15rem;
+}
+
+.help-page-title:focus {
+  outline: none;
+}
+
+.help-page-demo {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 14px 10px;
+}
+
+.help-page-body {
+  width: 100%;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.help-page-body p {
+  margin: 0 0 6px;
+}
+
+.help-page-body p:last-child {
+  margin-bottom: 0;
+}
+
+.help-page-calc,
+.help-page-note {
+  width: 100%;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.help-page-calc {
+  background: linear-gradient(135deg, #fff4cf 0%, #ffdf8a 100%);
+  border: 2px solid var(--color-forty);
+}
+
+.help-page-calc p {
+  margin: 0;
+  font-weight: 700;
+  color: #8a5a00;
+}
+
+.help-page-note {
+  background: var(--color-surface);
+  border: 2px dashed var(--color-cell-border);
+}
+
+.help-page-note p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* --- 説明用ミニ盤面 ------------------------------------------------------ */
+.help-board-frame {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.help-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 4px;
+  width: min(56vw, 220px);
+  aspect-ratio: 1 / 1;
+  pointer-events: none;
+}
+
+.help-board.help-board-sm {
+  width: min(34vw, 140px);
+}
+
+.help-board .cell {
+  font-size: clamp(0.75rem, 4.2vw, 1.05rem);
+}
+
+.help-board-sm .cell {
+  font-size: clamp(0.5rem, 3vw, 0.7rem);
+}
+
+.help-board-sm .order-badge {
+  width: 13px;
+  height: 13px;
+  font-size: 0.5rem;
+}
+
+/* CPU/2P側の選択色（赤）。実ゲームのなぞり選択色（青緑）と対にして使う。 */
+.help-cell-red {
+  border-color: var(--color-fail) !important;
+  background: #fdeceb !important;
+  color: var(--color-fail) !important;
+}
+
+.help-badge-red {
+  background: var(--color-fail) !important;
+}
+
+/* 「早い者勝ち」で同じマスを2人が同時に狙っている例（二重リング）。 */
+.help-cell-dual {
+  box-shadow: 0 0 0 2px #2563eb, 0 0 0 4px var(--color-fail);
+}
+
+/* 相手が選択中のため入れかえ・破壊できないマス（×印）。 */
+.help-protect-cell::after {
+  content: '×';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-fail);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* シルバー・ミリオンの配色（実ゲームの#screen-game.silver-fever/.fever相当）。 */
+.help-board-frame.is-silver .cell,
+.is-silver .cell {
+  background: linear-gradient(160deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.help-board-frame.is-gold .cell,
+.is-gold .cell {
+  background: linear-gradient(160deg, #fff6d9 0%, #ffdf7d 100%);
+  border-color: #e6a800;
+  color: #5b3d00;
+}
+
+.is-silver .cell.selected,
+.is-gold .cell.selected {
+  color: var(--color-text);
+}
+
+/* --- 小さなラベル・見出し ------------------------------------------------ */
+.help-demo-panel-label {
+  margin: 0 0 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.help-p1 {
+  color: #2563eb;
+}
+
+.help-p2,
+.help-cpu-label {
+  color: var(--color-fail);
+}
+
+.help-demo-timer,
+.help-demo-formula {
+  font-weight: 700;
+  text-align: center;
+}
+
+.help-demo-formula strong,
+.help-demo-timer strong {
+  color: var(--color-success);
+  font-size: 1.1rem;
+}
+
+.help-demo-calc {
+  text-align: center;
+  font-weight: 700;
+  color: #8a5a00;
+}
+
+.help-demo-hidden-score {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.help-demo-lv {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+/* --- バナー類（FORTY BONUS!／SILVER/MILLION FEVER／TIME UP!） ------------- */
+.help-demo-banner {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #fff;
+  background: var(--color-secondary);
+}
+
+.help-demo-banner.forty {
+  background: var(--color-forty);
+}
+
+.help-demo-banner.silver {
+  background: #64748b;
+}
+
+.help-demo-banner.gold {
+  background: linear-gradient(135deg, #e6a800, #ffdf7d);
+  color: #5b3d00;
+}
+
+.help-demo-banner.timeup {
+  background: var(--color-fail);
+}
+
+/* --- 分割パネル（2盤面比較・入れかえ/破壊など） --------------------------- */
+.help-demo-split {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.help-demo-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* --- 入れかえ・破壊 ------------------------------------------------------ */
+.help-swap-demo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.help-swap-demo .cell {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.help-swap-arrow {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #a855f7;
+}
+
+.help-destroy-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.help-destroy-demo .cell {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+  border-color: var(--color-fail);
+}
+
+.help-tap-label {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-fail);
+}
+
+/* --- CPUの強さスライダー -------------------------------------------------- */
+.help-cpu-slider {
+  width: 100%;
+  max-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-slider-end {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.help-slider-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-cell-border);
+  position: relative;
+}
+
+.help-slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: 70%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-fail);
+  transform: translate(-50%, -50%);
+}
+
+/* --- 1台2人（端末を挟むイメージ） ----------------------------------------- */
+.help-phone-frame {
+  width: min(60vw, 200px);
+  border: 3px solid var(--color-text);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.help-phone-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+}
+
+.help-phone-p2 {
+  transform: rotate(180deg);
+}
+
+.help-phone-divider {
+  height: 3px;
+  background: var(--color-text);
+}
+
+/* --- 優劣ゲージ ----------------------------------------------------------- */
+.help-gauge-demo {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.help-gauge-label-p1 {
+  color: #2563eb;
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+
+.help-gauge-label-p2 {
+  color: var(--color-fail);
+  font-weight: 800;
+  font-size: 0.75rem;
+}
+
+.help-gauge-track {
+  flex: 1;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  background: var(--color-cell-border);
+}
+
+.help-gauge-fill-p1 {
+  background: #3b82f6;
+}
+
+.help-gauge-fill-p2 {
+  background: var(--color-fail);
+}
+
+/* --- オジャマ自動発動バナー ------------------------------------------------ */
+.help-ojama-banner {
+  width: 100%;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-fail);
+  background: #fdeceb;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+
+.help-ojama-types {
+  display: flex;
+  gap: 6px;
+}
+
+.help-ojama-chip {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+/* --- 結果カード ------------------------------------------------------------ */
+.help-result-cards {
+  gap: 10px;
+}
+
+.help-result-card {
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.help-result-card-label {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.help-result-card-score {
+  margin: 2px 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.help-result-card-tag {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--color-success);
+}
+
+/* --- ごちゃまぜ共有・早い者勝ち・同期デモ ---------------------------------- */
+.help-sync-icon {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.help-race-caption {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.help-sync-grid {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+}
+
+.help-sync-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.help-sync-item-label {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.help-mini-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.help-mini-row .cell {
+  width: 30px;
+  height: 30px;
+  font-size: 0.75rem;
+  position: relative;
+}
+
+.help-sync-caption,
+.help-protect-caption {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* --- アニメーション（0.15〜0.25秒のページ切り替えフェード＋各デモの軽い動き） --- */
+@keyframes help-page-fade {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.help-page-content.help-page-anim {
+  animation: help-page-fade 0.2s ease-out;
+}
+
+@keyframes help-banner-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.help-demo-banner,
+.help-ojama-banner {
+  animation: help-banner-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes help-swap-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.help-swap-arrow {
+  animation: help-swap-pulse 1.2s ease-in-out infinite;
+}
+
+.help-slider-thumb {
+  animation: fever-timer-pulse 1.6s ease-in-out infinite;
+}
+
+.help-destroy-pulse {
+  animation: fail-shake 0.7s ease-in-out infinite;
+}
+
+.help-demo-float {
+  position: relative;
+  font-weight: 800;
+  color: var(--color-primary);
+  animation: float-up 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-page-content.help-page-anim,
+  .help-demo-banner,
+  .help-ojama-banner,
+  .help-swap-arrow,
+  .help-slider-thumb,
+  .help-destroy-pulse,
+  .help-demo-float {
+    animation: none !important;
+  }
+}
+
+/* --- 画面幅320px程度でも欠けないように調整 --------------------------------- */
+@media (max-width: 340px) {
+  .help-page-inner {
+    max-width: 100%;
+  }
+  .help-demo-split {
+    gap: 8px;
+  }
+}

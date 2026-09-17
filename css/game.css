@@ -104,7 +104,7 @@
   color: var(--color-text-muted);
 }
 
-/* 遊び方画面 */
+/* あそびかたサブメニュー（説明ページ本体は help.css を参照） */
 .howto-inner {
   width: 100%;
   max-width: 360px;
@@ -113,69 +113,6 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-}
-
-.howto-steps {
-  text-align: left;
-  padding-left: 1.4em;
-  line-height: 1.7;
-  font-size: 1.05rem;
-  margin: 0;
-}
-
-.howto-subheading {
-  align-self: flex-start;
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--color-secondary);
-}
-
-.howto-example {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  width: 100%;
-}
-
-.example-cells {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  font-size: 1.6rem;
-  font-weight: 800;
-}
-
-.example-cell {
-  background: var(--color-cell-bg);
-  border: 2px solid var(--color-secondary);
-  border-radius: var(--radius-sm);
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.example-result {
-  margin: 8px 0 0;
-  font-weight: 700;
-  color: var(--color-success);
-}
-
-.howto-fever-note {
-  width: 100%;
-  background: linear-gradient(135deg, #fff4cf 0%, #ffdf8a 100%);
-  border: 2px solid var(--color-forty);
-  border-radius: var(--radius-md);
-  padding: 10px 16px;
-}
-
-.howto-fever-note p {
-  margin: 0;
-  font-weight: 700;
-  color: #8a5a00;
 }
 
 /* ゲーム画面 */

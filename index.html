@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/mixed-battle.css">
 <link rel="stylesheet" href="css/ojama.css">
 <link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/help.css">
 </head>
 <body>
 <div id="app">
@@ -38,102 +39,49 @@
     </div>
   </section>
 
-  <section id="screen-howto" class="screen" data-screen="howto" hidden>
-    <div class="howto-inner">
-      <h2>あそびかた</h2>
-      <ol class="howto-steps">
-        <li>上下左右につながる数字を2〜5個なぞる。</li>
-        <li>合計10・20・30・40で数字が消える。</li>
-        <li>40を作るとフォーティボーナスで+100点。</li>
-        <li>5マスで合計10を作るとシルバー・フィーバーが発動し、10秒間得点2倍。</li>
-        <li>制限時間は60秒。ラスト10秒はミリオン・フィーバーで得点3倍。</li>
-        <li>数字を短くタップして選び、別の数字をタップすると位置を入れかえられる。</li>
-        <li>ジャマな数字は素早くダブルタップをすると破壊できる。</li>
-      </ol>
-      <div class="howto-example" aria-hidden="true">
-        <div class="example-cells">
-          <span class="example-cell">3</span>
-          <span class="example-arrow">→</span>
-          <span class="example-cell">7</span>
-        </div>
-        <p class="example-result">数の和×枚数＝10×2＝20点</p>
-      </div>
-      <div class="howto-fever-note">
-        <p>ミリオン・フィーバー中に<strong>40</strong>を作ると<br>40×5×3+100＝<strong>700点</strong>！</p>
-      </div>
-      <button id="btn-howto-back" class="btn btn-secondary" type="button">タイトルへ</button>
-    </div>
-  </section>
-
   <section id="screen-howto-menu" class="screen" data-screen="howto-menu" hidden>
     <div class="howto-inner">
       <h2>あそびかた</h2>
       <div class="title-buttons">
-        <button id="btn-howto-menu-basic" class="btn btn-primary" type="button">基本ルール</button>
-        <button id="btn-howto-menu-battle" class="btn btn-primary" type="button">対戦ルール</button>
+        <div class="howto-menu-item">
+          <button id="btn-howto-menu-basic" class="btn btn-primary" type="button">基本ルール</button>
+          <p class="howto-menu-sub">なぞり方・得点・フィーバー</p>
+        </div>
+        <div class="howto-menu-item">
+          <button id="btn-howto-menu-score" class="btn btn-primary" type="button">スコアバトル</button>
+          <p class="howto-menu-sub">別々の盤面でスコア勝負</p>
+        </div>
+        <div class="howto-menu-item">
+          <button id="btn-howto-menu-mixed" class="btn btn-primary" type="button">ごちゃまぜバトル</button>
+          <p class="howto-menu-sub">同じ盤面から数字を奪い合う</p>
+        </div>
         <a id="btn-howto-menu-kec" class="btn btn-secondary" href="https://taka-t-p.github.io/math-app-portal/" target="_blank" rel="noopener noreferrer">KEC数学科ラボへ</a>
         <button id="btn-howto-menu-back" class="btn btn-secondary" type="button">タイトルへ戻る</button>
       </div>
     </div>
   </section>
 
-  <section id="screen-battle-rules" class="screen" data-screen="battle-rules" hidden>
-    <div class="howto-inner">
-      <h2>対戦ルール</h2>
-      <h3 class="howto-subheading">CPU戦：スコアバトル</h3>
-      <ol class="howto-steps">
-        <li>「CPUバトル」を押すと、まず対戦形式（スコアバトル／ごちゃまぜバトル）とオジャマの
-          ON／OFFを選んでから、CPUの強さを選ぶ。</li>
-        <li>同じ数字の並びからCPUと同時にスタートする。</li>
-        <li>開始後の消去・補充は、プレイヤーとCPUでそれぞれ独立している。</li>
-        <li>プレイ中は正確な点数を表示しない。中央のゲージで優勢を確認する。</li>
-        <li>ラスト10秒は両者とも得点3倍。ゲージが消えるため最後まで勝敗は分からない。</li>
-        <li>5マスで合計10を作るとシルバー・フィーバーが発動し、発動した側だけ10秒間得点2倍。</li>
-        <li>60秒後に両者の得点と勝敗を発表する。</li>
-      </ol>
-      <h3 class="howto-subheading">CPU戦：ごちゃまぜバトル</h3>
-      <ol class="howto-steps">
-        <li>プレイヤーとCPUが同じ盤面を共有する。</li>
-        <li>CPUがなぞっている数字は、CPUの色で表示される。</li>
-        <li>同じ数字をどちらも狙えるが、先に正解を完成させた側が得点する。</li>
-        <li>CPUに先に消された選択は、失敗扱いにならない。</li>
-        <li>CPUが選択中の数字は、入れかえ・破壊できない。</li>
-        <li>結果画面では得点と勝敗を表示し、称号は表示しない。</li>
-      </ol>
-      <h3 class="howto-subheading">2人バトル：スコアバトル</h3>
-      <ol class="howto-steps">
-        <li>端末を2人の間に縦向きに置く。画面下が青の1P、画面上が赤の2P。</li>
-        <li>2人は同じ数字の並びから同時にスタートする。</li>
-        <li>開始後の盤面は、それぞれ別に変化する。</li>
-        <li>2人同時になぞり・入れかえ・破壊ができる。</li>
-        <li>プレイ中は点数を隠し、中央ゲージで優勢を確認する。</li>
-        <li>シルバー・フィーバーは、それぞれのプレイヤーが独立して発動する。</li>
-        <li>ラスト10秒はゲージが消え、両者とも得点3倍になる。</li>
-        <li>60秒後に両者の得点と勝敗を発表する。</li>
-      </ol>
-      <h3 class="howto-subheading">2人バトル：ごちゃまぜバトル</h3>
-      <ol class="howto-steps">
-        <li>2人が同じ数字の盤面を共有する。</li>
-        <li>相手がなぞっている数字は、相手の色で表示される。</li>
-        <li>同じ数字を2人で狙えるが、先に正解を完成させた側が得点する。</li>
-        <li>相手に先に消された選択は、失敗扱いにならない。</li>
-        <li>相手が選択中の数字は、入れかえ・破壊できない。</li>
-        <li>シルバーは各プレイヤー別、ミリオンは両者共通。</li>
-        <li>結果画面では得点と勝敗を表示し、称号は表示しない。</li>
-      </ol>
-      <h3 class="howto-subheading">オジャマ（CPU戦・2人バトルの両方共通）</h3>
-      <ol class="howto-steps">
-        <li>対戦前にオジャマのON／OFFを選べる（初期値はON）。</li>
-        <li>ボタン操作はなく、経過20秒・40秒（残り40秒・20秒）の時点で、その瞬間に
-          勝っている側が自動的にオジャマの対象になる（同点なら発動しない）。</li>
-        <li>対象になると7秒間、ランダムな視覚妨害（数字が逆さ・小さい・見えにくい・星が降る・
-          数式が隠れるの5種類）が発生する。受けた側には受けた種類が7秒間表示される。</li>
-        <li>CPU戦でCPU側が対象になると、見た目の種類にかかわらず7秒間CPUの思考・操作が
-          遅くなる。</li>
-        <li>オジャマは操作や数字そのものを変えない。</li>
-        <li>ラスト10秒のミリオン・フィーバーとは重ならない。</li>
-      </ol>
-      <button id="btn-battle-rules-back" class="btn btn-secondary" type="button">タイトルへ</button>
+  <section id="screen-help-page" class="screen" data-screen="help-page" hidden>
+    <div class="help-page-inner">
+      <div class="help-page-top">
+        <button id="btn-help-menu" class="btn btn-secondary help-menu-btn" type="button">← メニューへ</button>
+        <p id="help-section-name" class="help-section-name"></p>
+      </div>
+      <div class="help-page-counter">
+        <p id="help-page-count" class="help-page-count" aria-live="polite"></p>
+        <div id="help-page-dots" class="help-page-dots" aria-hidden="true"></div>
+      </div>
+      <div class="help-page-nav">
+        <button id="btn-help-prev" class="btn btn-secondary help-nav-btn" type="button">前へ</button>
+        <button id="btn-help-next" class="btn btn-secondary help-nav-btn" type="button">次へ</button>
+      </div>
+      <div id="help-page-content" class="help-page-content">
+        <h3 id="help-page-title" class="help-page-title" tabindex="-1"></h3>
+        <div id="help-page-demo" class="help-page-demo" aria-hidden="true"></div>
+        <div id="help-page-body" class="help-page-body"></div>
+        <div id="help-page-calc" class="help-page-calc" hidden></div>
+        <div id="help-page-note" class="help-page-note" hidden></div>
+      </div>
     </div>
   </section>
 

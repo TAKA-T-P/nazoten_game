@@ -8,6 +8,7 @@ import { BattleController, STATUS as BATTLE_STATUS } from './battle.js';
 import { MixedCpuBattleController, STATUS as MCB_STATUS } from './mixed-cpu-battle.js';
 import { TwoPlayerController, STATUS as TP_STATUS } from './two-player.js';
 import { MixedBattleController, STATUS as MB_STATUS } from './mixed-battle.js';
+import * as help from './help.js';
 
 function initAudioOnce() {
   audio.init();
@@ -92,27 +93,25 @@ function main() {
     startCountdownAndPlay();
   });
 
+  help.init();
+
   document.getElementById('btn-howto').addEventListener('click', () => {
     ui.showScreen('howto-menu');
   });
 
-  document.getElementById('btn-howto-back').addEventListener('click', () => {
-    ui.showScreen('title');
+  document.getElementById('btn-howto-menu-basic').addEventListener('click', (e) => {
+    help.openSection('basic', e.currentTarget);
   });
 
-  document.getElementById('btn-howto-menu-basic').addEventListener('click', () => {
-    ui.showScreen('howto');
+  document.getElementById('btn-howto-menu-score').addEventListener('click', (e) => {
+    help.openSection('scoreBattle', e.currentTarget);
   });
 
-  document.getElementById('btn-howto-menu-battle').addEventListener('click', () => {
-    ui.showScreen('battle-rules');
+  document.getElementById('btn-howto-menu-mixed').addEventListener('click', (e) => {
+    help.openSection('mixedBattle', e.currentTarget);
   });
 
   document.getElementById('btn-howto-menu-back').addEventListener('click', () => {
-    ui.showScreen('title');
-  });
-
-  document.getElementById('btn-battle-rules-back').addEventListener('click', () => {
     ui.showScreen('title');
   });
 
