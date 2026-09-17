@@ -11,6 +11,7 @@ import { MixedBattleController, STATUS as MB_STATUS } from './mixed-battle.js';
 import * as help from './help.js';
 import { PuzzleController } from './puzzle.js';
 import { PUZZLE_AREAS, PUZZLE_STAGES } from './puzzle-stages.js';
+import { EasyScoreAttackController } from './easy-score-attack.js';
 
 function initAudioOnce() {
   audio.init();
@@ -92,6 +93,15 @@ function main() {
   }
 
   document.getElementById('btn-start').addEventListener('click', () => {
+    ui.updateBestScoreDisplays();
+    ui.showScreen('score-attack-select');
+  });
+
+  document.getElementById('btn-score-attack-select-title').addEventListener('click', () => {
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-score-attack-standard-start').addEventListener('click', () => {
     startCountdownAndPlay();
   });
 
@@ -103,6 +113,10 @@ function main() {
 
   document.getElementById('btn-howto-menu-basic').addEventListener('click', (e) => {
     help.openSection('basic', e.currentTarget);
+  });
+
+  document.getElementById('btn-howto-menu-easy').addEventListener('click', (e) => {
+    help.openSection('easyScoreAttack', e.currentTarget);
   });
 
   document.getElementById('btn-howto-menu-score').addEventListener('click', (e) => {
@@ -862,6 +876,95 @@ function main() {
     currentPuzzleAreaIndex = areaIndexForStageId(puzzle.stage.id);
     renderCurrentPuzzleArea();
     ui.showScreen('puzzle-select');
+  });
+
+  // --- おてがるスコアアタック（おてがるモード実装指示書） ---------------------
+  const easy = new EasyScoreAttackController(ui.getEasyBoardElement());
+
+  function startEasyGameFlow() {
+    ui.showScreen('easy');
+    easy.startNewGame();
+  }
+
+  function requestStartEasyGame() {
+    if (!storage.hasSeenEasyScoreAttackTutorial()) {
+      help.openSection('easyScoreAttack', null, () => {
+        storage.markEasyScoreAttackTutorialSeen();
+        startEasyGameFlow();
+      });
+      return;
+    }
+    startEasyGameFlow();
+  }
+
+  document.getElementById('btn-score-attack-easy-start').addEventListener('click', () => {
+    requestStartEasyGame();
+  });
+
+  function renderEasyQuestionDisplay(detail) {
+    ui.renderEasyBoard(detail.values);
+    ui.renderEasyQuestion(detail.questionNumber, detail.pattern);
+    ui.updateEasyFormula([], 0);
+    ui.updateEasySwapSelection(null);
+  }
+
+  easy.addEventListener('boardinit', (e) => {
+    ui.hideEasyTimeUp();
+    ui.updateEasyTimer(CONFIG.easyScoreAttack.durationMs);
+    ui.updateEasyScore(0);
+    renderEasyQuestionDisplay(e.detail);
+  });
+  easy.addEventListener('questionchange', (e) => renderEasyQuestionDisplay(e.detail));
+  easy.addEventListener('countdown', (e) => ui.showEasyCountdown(e.detail.label));
+  easy.addEventListener('timeupdate', (e) => ui.updateEasyTimer(e.detail.remainingMs));
+  easy.addEventListener('scoreupdate', (e) => ui.updateEasyScore(e.detail.score));
+  easy.addEventListener('selectionupdate', (e) => {
+    ui.updateEasySelection(e.detail.indices);
+    ui.updateEasyFormula(e.detail.values, e.detail.sum);
+  });
+  easy.addEventListener('fail', (e) => {
+    ui.flashEasyFail(e.detail.indices);
+    audio.playFail();
+  });
+  easy.addEventListener('pass', (e) => ui.flashEasyPass(e.detail.index));
+  easy.addEventListener('swapselectionupdate', (e) => ui.updateEasySwapSelection(e.detail.index));
+  easy.addEventListener('swap', (e) => ui.applyEasySwap(e.detail.indices, e.detail.values));
+  easy.addEventListener('timeup', () => ui.showEasyTimeUp());
+  easy.addEventListener('result', (e) => {
+    const { score, stats } = e.detail;
+    const isNewBest = storage.submitEasyScoreAttackResult({
+      score,
+      correctCount: stats.correctCount,
+      passCount: stats.passCount,
+      patternCorrectCounts: stats.patternCorrectCounts
+    });
+    ui.updateBestScoreDisplays();
+    ui.renderEasyResult({ score, stats, isNewBest, bestScore: storage.getEasyScoreAttackRecord().bestScore });
+    ui.showScreen('easy-result');
+  });
+
+  document.getElementById('btn-easy-back').addEventListener('click', () => {
+    easy.leave();
+    ui.updateBestScoreDisplays();
+    ui.showScreen('score-attack-select');
+  });
+
+  document.getElementById('btn-easy-retry').addEventListener('click', () => {
+    startEasyGameFlow();
+  });
+
+  document.getElementById('btn-easy-retry-result').addEventListener('click', () => {
+    startEasyGameFlow();
+  });
+
+  document.getElementById('btn-easy-result-select').addEventListener('click', () => {
+    ui.updateBestScoreDisplays();
+    ui.showScreen('score-attack-select');
+  });
+
+  document.getElementById('btn-easy-result-title').addEventListener('click', () => {
+    ui.updateBestScoreDisplays();
+    ui.showScreen('title');
   });
 
   ui.updateBestScoreDisplays();

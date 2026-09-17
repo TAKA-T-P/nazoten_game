@@ -216,6 +216,20 @@
   width: min(34vw, 140px);
 }
 
+/* おてがるスコアアタックの2×3盤面デモ用（.help-boardの4×4正方形とは別比率）。
+   modifierクラスはboard()内部で.help-board-frame側に付くため、.help-board自体
+   ではなくフレーム経由の子孫セレクタで上書きする（.help-board-smと同じ構造）。 */
+.help-board-frame.help-board-easy .help-board {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  aspect-ratio: 3 / 2;
+  width: min(60vw, 220px);
+}
+
+.help-board-easy .cell {
+  font-size: clamp(1rem, 5vw, 1.4rem);
+}
+
 .help-board .cell {
   font-size: clamp(0.75rem, 4.2vw, 1.05rem);
 }

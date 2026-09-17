@@ -88,6 +88,24 @@ function createPuzzleStageRecord() {
   };
 }
 
+// おてがるスコアアタック（おてがるモード実装指示書 28章）。スタンダード
+// （RECORD_KEY=scoreAttack60Fever10）とは別枠で保存し、互いに影響しない。
+const EASY_RECORD_KEY = 'scoreAttackEasy60';
+
+function createEasyScoreAttackRecord() {
+  return {
+    bestScore: 0,
+    playCount: 0,
+    bestCorrectCount: 0,
+    totalCorrectCount: 0,
+    totalPassCount: 0,
+    patternCorrectCounts: {
+      1: 0, 2: 0, 3: 0, 4: 0, 5: 0,
+      6: 0, 7: 0, 8: 0, 9: 0, 10: 0
+    }
+  };
+}
+
 function createPuzzleProgress() {
   return {
     tutorialVersion: 0,
@@ -104,9 +122,11 @@ function defaultState() {
     tutorialVersion: 0,
     cpuBattleTutorialVersion: 0,
     twoPlayerTutorialVersion: 0,
+    easyScoreAttackTutorialVersion: 0,
     selectedCpuLevel: DEFAULT_CPU_LEVEL,
     records: {
       [RECORD_KEY]: { bestScore: 0, playCount: 0 },
+      [EASY_RECORD_KEY]: createEasyScoreAttackRecord(),
       cpuBattle: createCpuRecords(),
       mixedCpuBattle: createMixedCpuRecords(),
       twoPlayerBattle: createTwoPlayerRecord(),
@@ -208,6 +228,27 @@ function sanitizeMixedBattleRecord(raw) {
   };
 }
 
+function sanitizePatternCorrectCounts(raw) {
+  const d = createEasyScoreAttackRecord().patternCorrectCounts;
+  if (!raw || typeof raw !== 'object') return d;
+  const counts = {};
+  for (const id of Object.keys(d)) counts[id] = asNumber(raw[id], 0);
+  return counts;
+}
+
+function sanitizeEasyScoreAttackRecord(raw) {
+  const d = createEasyScoreAttackRecord();
+  if (!raw || typeof raw !== 'object') return d;
+  return {
+    bestScore: asNumber(raw.bestScore, 0),
+    playCount: asNumber(raw.playCount, 0),
+    bestCorrectCount: asNumber(raw.bestCorrectCount, 0),
+    totalCorrectCount: asNumber(raw.totalCorrectCount, 0),
+    totalPassCount: asNumber(raw.totalPassCount, 0),
+    patternCorrectCounts: sanitizePatternCorrectCounts(raw.patternCorrectCounts)
+  };
+}
+
 function sanitizePuzzleStageRecord(raw) {
   const d = createPuzzleStageRecord();
   if (!raw || typeof raw !== 'object') return d;
@@ -253,12 +294,14 @@ function sanitize(parsed) {
     tutorialVersion: asNumber(parsed.tutorialVersion, d.tutorialVersion),
     cpuBattleTutorialVersion: asNumber(parsed.cpuBattleTutorialVersion, d.cpuBattleTutorialVersion),
     twoPlayerTutorialVersion: asNumber(parsed.twoPlayerTutorialVersion, d.twoPlayerTutorialVersion),
+    easyScoreAttackTutorialVersion: asNumber(parsed.easyScoreAttackTutorialVersion, d.easyScoreAttackTutorialVersion),
     selectedCpuLevel: normalizeCpuLevel(parsed.selectedCpuLevel),
     records: {
       [RECORD_KEY]: {
         bestScore: asNumber(record && record.bestScore, 0),
         playCount: asNumber(record && record.playCount, 0)
       },
+      [EASY_RECORD_KEY]: sanitizeEasyScoreAttackRecord(parsed.records && parsed.records[EASY_RECORD_KEY]),
       cpuBattle: sanitizeCpuRecords(parsed.records && parsed.records.cpuBattle),
       mixedCpuBattle: sanitizeMixedCpuRecords(parsed.records && parsed.records.mixedCpuBattle),
       twoPlayerBattle: sanitizeTwoPlayerRecord(parsed.records && parsed.records.twoPlayerBattle),
@@ -562,6 +605,38 @@ export function submitMixedBattleResult({ outcome, p1Score, p2Score, ojamaUseCou
 
   persist();
   return { isNewP1Best, isNewP2Best };
+}
+
+// --- おてがるスコアアタック（おてがるモード実装指示書 28章） -----------------
+
+export function getEasyScoreAttackRecord() {
+  return { ...state.records[EASY_RECORD_KEY], patternCorrectCounts: { ...state.records[EASY_RECORD_KEY].patternCorrectCounts } };
+}
+
+// 60秒を完走して結果処理へ進んだ場合だけ呼ぶこと（途中で「もどる」を押した
+// プレイは記録しない、28.2章）。戻り値：このプレイでベストスコアを更新したか。
+export function submitEasyScoreAttackResult({ score, correctCount, passCount, patternCorrectCounts }) {
+  const record = state.records[EASY_RECORD_KEY];
+  record.playCount += 1;
+  const isNewBest = score > record.bestScore;
+  if (isNewBest) record.bestScore = score;
+  if (correctCount > record.bestCorrectCount) record.bestCorrectCount = correctCount;
+  record.totalCorrectCount += asNumber(correctCount, 0);
+  record.totalPassCount += asNumber(passCount, 0);
+  for (const id of Object.keys(record.patternCorrectCounts)) {
+    record.patternCorrectCounts[id] += asNumber(patternCorrectCounts && patternCorrectCounts[id], 0);
+  }
+  persist();
+  return isNewBest;
+}
+
+export function hasSeenEasyScoreAttackTutorial() {
+  return state.easyScoreAttackTutorialVersion >= CONFIG.easyScoreAttack.tutorialVersion;
+}
+
+export function markEasyScoreAttackTutorialSeen() {
+  state.easyScoreAttackTutorialVersion = CONFIG.easyScoreAttack.tutorialVersion;
+  persist();
 }
 
 // --- じっくりモード（Phase 6実装指示書 23章） -------------------------------

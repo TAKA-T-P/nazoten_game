@@ -104,6 +104,64 @@ export const CONFIG = {
     hintNodeLimit: 50_000,
     hintTimeBudgetMs: 300,
     hintAnimationMs: 1_800
+  },
+  // スコアアタック「おてがる」モード（おてがるモード実装指示書）。2×3盤面で
+  // 指定合計・指定マス数の1問形式を60秒間解き続ける。フィーバー・称号は使わない。
+  easyScoreAttack: {
+    rows: 2,
+    cols: 3,
+    durationMs: 60_000,
+    transitionMs: 300,
+    minPathLength: 2,
+    maxPathLength: 5,
+    tutorialVersion: 1
+  }
+};
+
+// おてがるスコアアタックの10種類の出題パターン（おてがるモード実装指示書 9章）。
+// scoreは合計×マス数＋フォーティボーナス（scoring.calculateScoreと同じ式）で
+// 導出できる値だが、検証・表示用に定数としても持たせる。
+export const EASY_PATTERNS = [
+  { id: 1, targetSum: 10, cellCount: 2, score: 20 },
+  { id: 2, targetSum: 10, cellCount: 3, score: 30 },
+  { id: 3, targetSum: 10, cellCount: 4, score: 40 },
+  { id: 4, targetSum: 10, cellCount: 5, score: 50 },
+  { id: 5, targetSum: 20, cellCount: 3, score: 60 },
+  { id: 6, targetSum: 20, cellCount: 4, score: 80 },
+  { id: 7, targetSum: 20, cellCount: 5, score: 100 },
+  { id: 8, targetSum: 30, cellCount: 4, score: 120 },
+  { id: 9, targetSum: 30, cellCount: 5, score: 150 },
+  { id: 10, targetSum: 40, cellCount: 5, score: 300 }
+];
+
+// スコアアタックの2モード。既存の4×4モードは名称のみ「スタンダード」に変更し、
+// 保存キー・内部進行（game.js）はそのまま流用する。
+export const SCORE_ATTACK_MODES = {
+  easy: {
+    id: 'easy',
+    label: 'おてがる',
+    rows: 2,
+    cols: 3,
+    durationMs: 60_000,
+    silverFeverEnabled: false,
+    millionFeverEnabled: false,
+    swapEnabled: true,
+    destroyBehavior: 'pass',
+    showTitleResult: false,
+    storageRecordKey: 'scoreAttackEasy60'
+  },
+  standard: {
+    id: 'standard',
+    label: 'スタンダード',
+    rows: 4,
+    cols: 4,
+    durationMs: 60_000,
+    silverFeverEnabled: true,
+    millionFeverEnabled: true,
+    swapEnabled: true,
+    destroyBehavior: 'singleCell',
+    showTitleResult: true,
+    storageRecordKey: 'scoreAttack60Fever10'
   }
 };
 

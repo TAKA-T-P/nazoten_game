@@ -21,8 +21,9 @@ const twoPlayerBoards = {
 
 function cacheDom() {
   el.screens = document.querySelectorAll('.screen');
-  el.titleBest = document.getElementById('title-best-score');
   el.soundModeLabel = document.getElementById('sound-mode-label');
+  el.saEasyBest = document.getElementById('sa-easy-best');
+  el.saStandardBest = document.getElementById('sa-standard-best');
   el.screenGame = document.getElementById('screen-game');
   el.board = document.getElementById('board');
   el.hudTime = document.getElementById('hud-time');
@@ -262,13 +263,37 @@ function cacheDom() {
   el.puzzleClearHint = document.getElementById('puzzle-clear-hint');
   el.puzzleClearBest = document.getElementById('puzzle-clear-best');
   el.btnPuzzleClearNext = document.getElementById('btn-puzzle-clear-next');
+
+  // おてがるスコアアタック（おてがるモード実装指示書）
+  el.easyBoard = document.getElementById('easy-board');
+  el.easyHudTime = document.getElementById('easy-hud-time');
+  el.easyHudScore = document.getElementById('easy-hud-score');
+  el.easyHudFormula = document.getElementById('easy-hud-formula');
+  el.easyQuestionNumber = document.getElementById('easy-question-number');
+  el.easyQuestionText = document.getElementById('easy-question-text');
+  el.easyCountdownOverlay = document.getElementById('easy-countdown-overlay');
+  el.easyCountdownLabel = document.getElementById('easy-countdown-label');
+  el.easyTimeupOverlay = document.getElementById('easy-timeup-overlay');
+  el.easyResultNewBest = document.getElementById('easy-result-newbest');
+  el.easyResultScore = document.getElementById('easy-result-score');
+  el.easyResultBest = document.getElementById('easy-result-best');
+  el.easyStatPresented = document.getElementById('easy-stat-presented');
+  el.easyStatCorrect = document.getElementById('easy-stat-correct');
+  el.easyStatPass = document.getElementById('easy-stat-pass');
+  el.easyStatFail = document.getElementById('easy-stat-fail');
+  el.easyStatRate = document.getElementById('easy-stat-rate');
+  el.easyStatSwap = document.getElementById('easy-stat-swap');
+  el.easyStatPattern = {};
+  for (let i = 1; i <= 10; i++) {
+    el.easyStatPattern[i] = document.getElementById(`easy-stat-pattern-${i}`);
+  }
 }
 
 export function init() {
   cacheDom();
   reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   refreshSoundModeButton();
-  el.titleBest.textContent = storage.getBestScore();
+  updateBestScoreDisplays();
 }
 
 export function showScreen(name) {
@@ -294,8 +319,9 @@ export function refreshSoundModeButton() {
 }
 
 export function updateBestScoreDisplays() {
-  el.titleBest.textContent = storage.getBestScore();
   el.hudBest.textContent = storage.getBestScore();
+  el.saStandardBest.textContent = storage.getBestScore();
+  el.saEasyBest.textContent = storage.getEasyScoreAttackRecord().bestScore;
 }
 
 export function getBoardElement() {
@@ -1987,4 +2013,139 @@ export function renderPuzzleClear({ stars, movesUsed, parMoves, hintUsed, isLast
   el.puzzleClearHint.textContent = hintUsed ? 'ヒント使用' : 'ノーヒント！';
   el.puzzleClearBest.hidden = !isNewBest;
   el.btnPuzzleClearNext.textContent = isLastStage ? 'ステージ選択へ' : '次のステージ';
+}
+
+// --- おてがるスコアアタック（おてがるモード実装指示書） ----------------------
+// 得点・保存・タイマー等には一切関与しない、表示専用の関数群。
+
+let easyCellEls = [];
+
+export function getEasyBoardElement() {
+  return el.easyBoard;
+}
+
+function easyPatternText(pattern) {
+  return `${pattern.cellCount}マスで${pattern.targetSum}を作ろう！`;
+}
+
+// boardinit・questionchangeの両方から呼ばれる、6マス全体の一括再描画（21.3章）。
+export function renderEasyBoard(values) {
+  el.easyBoard.innerHTML = '';
+  easyCellEls = [];
+  values.forEach((v, i) => {
+    const cellEl = document.createElement('div');
+    cellEl.className = 'cell';
+    cellEl.dataset.cellIndex = String(i);
+    const valueEl = document.createElement('span');
+    valueEl.className = 'cell-value';
+    valueEl.textContent = String(v);
+    cellEl.appendChild(valueEl);
+    el.easyBoard.appendChild(cellEl);
+    easyCellEls.push(cellEl);
+  });
+}
+
+export function renderEasyQuestion(questionNumber, pattern) {
+  el.easyQuestionNumber.textContent = `Q.${questionNumber}`;
+  el.easyQuestionText.textContent = easyPatternText(pattern);
+}
+
+export function updateEasySelection(indices) {
+  const selected = new Set(indices);
+  easyCellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('selected', selected.has(i));
+    const badge = cellEl.querySelector('.order-badge');
+    if (badge) badge.remove();
+  });
+  indices.forEach((cellIndex, order) => {
+    const badge = document.createElement('span');
+    badge.className = 'order-badge';
+    badge.textContent = String(order + 1);
+    easyCellEls[cellIndex].appendChild(badge);
+  });
+}
+
+export function updateEasyFormula(values, sum) {
+  el.easyHudFormula.textContent = values.length === 0 ? ' ' : `${values.join(' + ')} = ${sum}`;
+}
+
+export function flashEasyFail(indices) {
+  indices.forEach((i) => {
+    const cellEl = easyCellEls[i];
+    if (!cellEl) return;
+    cellEl.classList.remove('fail-shake');
+    void cellEl.offsetWidth;
+    cellEl.classList.add('fail-shake');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('fail-shake'), { once: true });
+  });
+}
+
+// ダブルタップ＝パスの演出。1枚だけ数字をフェードさせる（次の問題は300ms後に
+// 盤面ごと再描画されるため、クラスを個別に外す必要はない）。
+export function flashEasyPass(index) {
+  const cellEl = easyCellEls[index];
+  if (!cellEl) return;
+  cellEl.classList.add('clearing');
+}
+
+export function updateEasySwapSelection(index) {
+  easyCellEls.forEach((cellEl, i) => cellEl.classList.toggle('swap-selected', i === index));
+}
+
+export function applyEasySwap(indices, values) {
+  indices.forEach((index, i) => {
+    const cellEl = easyCellEls[index];
+    if (!cellEl) return;
+    cellEl.classList.remove('swap-selected');
+    const valueEl = cellEl.querySelector('.cell-value');
+    if (valueEl) valueEl.textContent = String(values[i]);
+  });
+}
+
+export function updateEasyTimer(remainingMs) {
+  el.easyHudTime.textContent = String(Math.max(0, Math.ceil(remainingMs / 1000)));
+}
+
+export function updateEasyScore(score) {
+  el.easyHudScore.textContent = String(score);
+}
+
+export function showEasyCountdown(label) {
+  el.easyCountdownOverlay.hidden = false;
+  el.easyCountdownLabel.textContent = label;
+  el.easyCountdownLabel.classList.remove('countdown-pop');
+  void el.easyCountdownLabel.offsetWidth;
+  el.easyCountdownLabel.classList.add('countdown-pop');
+  if (label === 'START!') {
+    setTimeout(() => {
+      el.easyCountdownOverlay.hidden = true;
+    }, 450);
+  }
+}
+
+export function showEasyTimeUp() {
+  el.easyTimeupOverlay.hidden = false;
+}
+
+export function hideEasyTimeUp() {
+  el.easyTimeupOverlay.hidden = true;
+}
+
+export function renderEasyResult({ score, stats, isNewBest, bestScore }) {
+  el.easyResultScore.textContent = String(score);
+  el.easyResultNewBest.hidden = !isNewBest;
+  el.easyResultBest.textContent = String(bestScore);
+
+  const resolvedCount = stats.correctCount + stats.passCount;
+  const accuracy = resolvedCount === 0 ? null : (stats.correctCount / resolvedCount) * 100;
+  el.easyStatRate.textContent = accuracy === null ? '—' : `${Math.round(accuracy)}%`;
+
+  el.easyStatPresented.textContent = String(stats.presentedCount);
+  el.easyStatCorrect.textContent = String(stats.correctCount);
+  el.easyStatPass.textContent = String(stats.passCount);
+  el.easyStatFail.textContent = String(stats.failedTraceCount);
+  el.easyStatSwap.textContent = String(stats.swapCount);
+  for (let i = 1; i <= 10; i++) {
+    el.easyStatPattern[i].textContent = String(stats.patternCorrectCounts[i]);
+  }
 }

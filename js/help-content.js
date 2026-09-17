@@ -132,6 +132,38 @@ export const HELP_SECTIONS = {
       }
     ]
   },
+  easyScoreAttack: {
+    menuTitle: 'おてがるスコアアタック',
+    pages: [
+      {
+        id: 'easy-intro',
+        title: '2×3の盤面でお題に挑戦！',
+        body: ['スコアアタックには「おてがる」と「スタンダード」があります。おてがるは2×3の6マスで、指定された合計とマス数の両方を作る1問形式です。'],
+        note: '制限時間は60秒。スタンダードとハイスコアは別々に保存されます。'
+      },
+      {
+        id: 'easy-mission',
+        title: 'お題と同じ合計・マス数をなぞろう',
+        body: ['画面のお題（例：「3マスで10を作ろう！」）と同じ合計・マス数になるように、上下左右につながる数字をなぞります。'],
+        note: '合計だけ、マス数だけが合っていても正解にはなりません。'
+      },
+      {
+        id: 'easy-no-swap',
+        title: '入れかえなしで必ず解ける！',
+        body: ['盤面には、入れかえを使わなくても必ず正解できる経路があります。数字の入れかえも使えるので、なぞりにくいときは活用しましょう。']
+      },
+      {
+        id: 'easy-next',
+        title: '正解すると0.3秒後に次のお題へ',
+        body: ['正解すると、0.3秒後に6つの数字がすべて次の問題に変わります。パネルをダブルタップすると、その問題を0点であきらめて次に進めます（パス）。']
+      },
+      {
+        id: 'easy-no-fever',
+        title: 'シルバー・ミリオン・称号はなし',
+        body: ['おてがるでは、シルバー・フィーバーやミリオン・フィーバーは発動しません。結果画面にLV・称号も表示されません。60秒でできるだけ高いスコアを狙おう！']
+      }
+    ]
+  },
   puzzle: {
     menuTitle: 'じっくりルール',
     pages: [
@@ -163,4 +195,4 @@ export const HELP_SECTIONS = {
   }
 };
 
-export const HELP_SECTION_ORDER = ['basic', 'scoreBattle', 'mixedBattle', 'puzzle'];
+export const HELP_SECTION_ORDER = ['basic', 'easyScoreAttack', 'scoreBattle', 'mixedBattle', 'puzzle'];

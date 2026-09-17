@@ -1,0 +1,70 @@
+/* スコアアタック モード選択画面（おてがるモード実装指示書 6章）。 */
+.sa-select-inner {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.sa-select-heading {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+.sa-mode-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 3px 0 var(--color-cell-border);
+}
+
+.sa-mode-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-secondary);
+}
+
+.sa-mode-desc {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.sa-mode-best {
+  margin: 2px 0 6px;
+  font-weight: 700;
+}
+
+.sa-mode-card .btn {
+  width: 100%;
+  min-height: 44px;
+}
+
+/* タブレット・PC幅では2枚のカードを横並びにする（6.3章）。 */
+@media (min-width: 560px) {
+  .sa-select-inner {
+    max-width: 620px;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .sa-select-heading,
+  .sa-select-inner > .btn {
+    flex: 0 0 100%;
+  }
+
+  .sa-mode-card {
+    flex: 1 1 260px;
+  }
+}

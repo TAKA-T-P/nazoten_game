@@ -446,6 +446,24 @@ function demoMixedRace() {
   `;
 }
 
+function demoEasyIntro() {
+  const values = [3, 7, 2, 9, 5, 1];
+  return board(values, {}, 'help-board-easy');
+}
+
+function demoEasyMission() {
+  const values = [4, 6, 8, 2, 3, 5];
+  const opts = {
+    3: { blue: true, order: 1 },
+    4: { blue: true, order: 2 },
+    5: { blue: true, order: 3 }
+  };
+  return `
+    ${board(values, opts, 'help-board-easy')}
+    <div class="help-demo-formula">2 ＋ 3 ＋ 5 ＝ <strong>10</strong></div>
+  `;
+}
+
 function demoMixedSync() {
   return `
     <div class="help-sync-grid">
@@ -568,6 +586,8 @@ const DEMOS = {
   'basic-silver': demoBasicSilver,
   'basic-million': demoBasicMillion,
   'basic-swap-destroy': demoBasicSwapDestroy,
+  'easy-intro': demoEasyIntro,
+  'easy-mission': demoEasyMission,
   'score-split-boards': demoScoreSplit,
   'score-cpu': demoScoreCpu,
   'score-two-player': demoScoreTwoPlayer,

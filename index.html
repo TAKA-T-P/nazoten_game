@@ -15,6 +15,8 @@
 <link rel="stylesheet" href="css/animations.css">
 <link rel="stylesheet" href="css/help.css">
 <link rel="stylesheet" href="css/puzzle.css">
+<link rel="stylesheet" href="css/score-attack-select.css">
+<link rel="stylesheet" href="css/easy-score-attack.css">
 </head>
 <body>
 <div id="app">
@@ -33,7 +35,6 @@
         </div>
         <button id="btn-howto" class="btn btn-secondary" type="button">遊び方</button>
       </div>
-      <p class="best-score">ベストスコア：<span id="title-best-score">0</span></p>
       <div class="sound-mode-control" role="group" aria-label="サウンドモード">
         <button id="btn-sound-prev" class="sound-mode-arrow" type="button" aria-label="前のサウンドモードへ">◀</button>
         <span id="sound-mode-label" class="sound-mode-label" aria-live="polite">効果音のみ</span>
@@ -51,6 +52,10 @@
         <div class="howto-menu-item">
           <button id="btn-howto-menu-basic" class="btn btn-primary" type="button">基本ルール</button>
           <p class="howto-menu-sub">なぞり方・得点・フィーバー</p>
+        </div>
+        <div class="howto-menu-item">
+          <button id="btn-howto-menu-easy" class="btn btn-primary" type="button">おてがるスコアアタック</button>
+          <p class="howto-menu-sub">2×3盤面でお題を解く1問形式</p>
         </div>
         <div class="howto-menu-item">
           <button id="btn-howto-menu-score" class="btn btn-primary" type="button">スコアバトル</button>
@@ -91,6 +96,95 @@
         <div id="help-page-calc" class="help-page-calc" hidden></div>
         <div id="help-page-note" class="help-page-note" hidden></div>
       </div>
+    </div>
+  </section>
+
+  <section id="screen-score-attack-select" class="screen" data-screen="score-attack-select" hidden>
+    <div class="sa-select-inner">
+      <p class="sa-select-heading">スコアアタック</p>
+      <div class="sa-mode-card">
+        <p class="sa-mode-name">おてがる</p>
+        <p class="sa-mode-desc">2×3の小さな盤面で、お題に挑戦！</p>
+        <p class="sa-mode-best">BEST <strong id="sa-easy-best">0</strong></p>
+        <button id="btn-score-attack-easy-start" class="btn btn-primary" type="button">はじめる</button>
+      </div>
+      <div class="sa-mode-card">
+        <p class="sa-mode-name">スタンダード</p>
+        <p class="sa-mode-desc">4×4の盤面で、フィーバーを狙おう！</p>
+        <p class="sa-mode-best">BEST <strong id="sa-standard-best">0</strong></p>
+        <button id="btn-score-attack-standard-start" class="btn btn-primary" type="button">はじめる</button>
+      </div>
+      <button id="btn-score-attack-select-title" class="btn btn-secondary" type="button">タイトルへ</button>
+    </div>
+  </section>
+
+  <section id="screen-easy" class="screen" data-screen="easy" hidden>
+    <button id="btn-easy-back" class="btn-small btn-top-left" type="button">もどる</button>
+    <button id="btn-easy-retry" class="btn-small btn-top-right" type="button">リトライ</button>
+    <header class="game-hud">
+      <div class="hud-row hud-time">
+        <span class="hud-label">のこり</span>
+        <span id="easy-hud-time" class="hud-time-value">60</span>
+      </div>
+      <div class="hud-row hud-score">
+        <span class="hud-score-current">SCORE <strong id="easy-hud-score">0</strong></span>
+      </div>
+      <div class="easy-question-card">
+        <p id="easy-question-number" class="easy-question-number">Q.1</p>
+        <p id="easy-question-text" class="easy-question-text"></p>
+      </div>
+      <div class="hud-row hud-formula">
+        <span id="easy-hud-formula" class="hud-formula-text">&nbsp;</span>
+      </div>
+    </header>
+
+    <div id="easy-board-wrap" class="board-wrap easy-board-wrap">
+      <div id="easy-board" class="board easy-board" role="grid" aria-label="おてがる盤面"></div>
+
+      <div id="easy-countdown-overlay" class="countdown-overlay" hidden>
+        <span id="easy-countdown-label" class="countdown-label"></span>
+      </div>
+
+      <div id="easy-timeup-overlay" class="timeup-overlay" hidden>
+        <span class="timeup-label">TIME UP!</span>
+      </div>
+    </div>
+    <p class="easy-pass-hint">ダブルタップでパス</p>
+  </section>
+
+  <section id="screen-easy-result" class="screen" data-screen="easy-result" hidden>
+    <div class="result-inner">
+      <p class="easy-result-timeup">TIME UP!</p>
+      <p id="easy-result-newbest" class="result-newbest" hidden>NEW BEST!</p>
+      <p class="result-score-line"><span class="result-score-label">SCORE</span> <strong id="easy-result-score" class="result-score-value">0</strong></p>
+      <p class="sa-mode-best">BEST <strong id="easy-result-best">0</strong></p>
+
+      <div class="result-buttons">
+        <button id="btn-easy-retry-result" class="btn btn-primary" type="button">もう一度</button>
+        <button id="btn-easy-result-select" class="btn btn-secondary" type="button">モード選択へ</button>
+      </div>
+      <button id="btn-easy-result-title" class="btn btn-secondary easy-result-title-btn" type="button">タイトルへ</button>
+
+      <table class="result-stats">
+        <tbody>
+          <tr><td>出題数</td><td id="easy-stat-presented">0</td></tr>
+          <tr><td>正解数</td><td id="easy-stat-correct">0</td></tr>
+          <tr><td>パス数</td><td id="easy-stat-pass">0</td></tr>
+          <tr><td>ミス回数</td><td id="easy-stat-fail">0</td></tr>
+          <tr><td>正解率</td><td id="easy-stat-rate">—</td></tr>
+          <tr><td>①2マスで10</td><td id="easy-stat-pattern-1">0</td></tr>
+          <tr><td>②3マスで10</td><td id="easy-stat-pattern-2">0</td></tr>
+          <tr><td>③4マスで10</td><td id="easy-stat-pattern-3">0</td></tr>
+          <tr><td>④5マスで10</td><td id="easy-stat-pattern-4">0</td></tr>
+          <tr><td>⑤3マスで20</td><td id="easy-stat-pattern-5">0</td></tr>
+          <tr><td>⑥4マスで20</td><td id="easy-stat-pattern-6">0</td></tr>
+          <tr><td>⑦5マスで20</td><td id="easy-stat-pattern-7">0</td></tr>
+          <tr><td>⑧4マスで30</td><td id="easy-stat-pattern-8">0</td></tr>
+          <tr><td>⑨5マスで30</td><td id="easy-stat-pattern-9">0</td></tr>
+          <tr><td>⑩5マスで40</td><td id="easy-stat-pattern-10">0</td></tr>
+          <tr><td>入れかえ回数</td><td id="easy-stat-swap">0</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 

@@ -1,0 +1,62 @@
+/* おてがるスコアアタック プレイ画面（おてがるモード実装指示書 24章）。
+   2×3固定盤面で、スタンダードより大きくセルを表示する。 */
+#screen-easy .hud-score {
+  justify-content: center;
+}
+
+.easy-question-card {
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  text-align: center;
+  margin: 4px 0;
+  box-sizing: border-box;
+}
+
+.easy-question-number {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.easy-question-text {
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.easy-board-wrap {
+  width: min(84vw, 360px);
+  max-width: 360px;
+  aspect-ratio: 3 / 2;
+}
+
+.easy-board {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.easy-board .cell {
+  font-size: clamp(1.8rem, 9vw, 3rem);
+}
+
+.easy-pass-hint {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.easy-result-timeup {
+  margin: 0;
+  font-weight: 900;
+  font-size: 1.4rem;
+  color: var(--color-secondary);
+}
+
+.easy-result-title-btn {
+  width: 100%;
+  max-width: 280px;
+}
