@@ -569,6 +569,50 @@
   border-radius: var(--radius-md);
 }
 
+/* 2人バトル（スコアバトル・ごちゃまぜバトル）の「ポーズ」確認ダイアログ。
+   盤面ラップ内に、既存のtimeup-overlayと同じ「盤面全体を覆う絶対配置」で
+   配置する。P1・P2それぞれのゾーンに1つずつ用意することで、.tp-zone-p2の
+   180度回転にそのまま追従し、押した側から見て正しい向きで表示される。 */
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-md);
+  z-index: 6;
+  text-align: center;
+}
+
+.pause-overlay[hidden] {
+  display: none;
+}
+
+.pause-message {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.pause-buttons {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.pause-buttons .btn {
+  flex: 1;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 0.9rem;
+}
+
 .fever-start-title {
   font-size: 1.15rem;
   font-weight: 900;

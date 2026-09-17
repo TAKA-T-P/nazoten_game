@@ -425,12 +425,28 @@ function main() {
   });
 
   function backToTitleFromTwoPlayer() {
+    ui.hideTwoPlayerPause();
     twoPlayer.backToTitle();
     ui.showScreen('title');
   }
 
-  document.getElementById('btn-tp-back-p1').addEventListener('click', backToTitleFromTwoPlayer);
-  document.getElementById('btn-tp-back-p2').addEventListener('click', backToTitleFromTwoPlayer);
+  // 「もどる」→「ポーズ」化（Phase6）。押すと即座にタイトルへは戻らず、
+  // 一時停止して確認ダイアログを表示する。
+  function pauseTwoPlayer() {
+    if (twoPlayer.pause()) ui.showTwoPlayerPause();
+  }
+
+  function resumeTwoPlayer() {
+    twoPlayer.resume();
+    ui.hideTwoPlayerPause();
+  }
+
+  document.getElementById('btn-tp-back-p1').addEventListener('click', pauseTwoPlayer);
+  document.getElementById('btn-tp-back-p2').addEventListener('click', pauseTwoPlayer);
+  document.getElementById('btn-tp-pause-yes-p1').addEventListener('click', backToTitleFromTwoPlayer);
+  document.getElementById('btn-tp-pause-yes-p2').addEventListener('click', backToTitleFromTwoPlayer);
+  document.getElementById('btn-tp-pause-no-p1').addEventListener('click', resumeTwoPlayer);
+  document.getElementById('btn-tp-pause-no-p2').addEventListener('click', resumeTwoPlayer);
 
   document.getElementById('btn-tp-rematch').addEventListener('click', () => {
     startTwoPlayerCountdown();
@@ -537,12 +553,26 @@ function main() {
   }
 
   function backToTitleFromMixedBattle() {
+    ui.hideMixedPause();
     mixedBattle.backToTitle();
     ui.showScreen('title');
   }
 
-  document.getElementById('btn-mb-back-p1').addEventListener('click', backToTitleFromMixedBattle);
-  document.getElementById('btn-mb-back-p2').addEventListener('click', backToTitleFromMixedBattle);
+  function pauseMixedBattle() {
+    if (mixedBattle.pause()) ui.showMixedPause();
+  }
+
+  function resumeMixedBattle() {
+    mixedBattle.resume();
+    ui.hideMixedPause();
+  }
+
+  document.getElementById('btn-mb-back-p1').addEventListener('click', pauseMixedBattle);
+  document.getElementById('btn-mb-back-p2').addEventListener('click', pauseMixedBattle);
+  document.getElementById('btn-mb-pause-yes-p1').addEventListener('click', backToTitleFromMixedBattle);
+  document.getElementById('btn-mb-pause-yes-p2').addEventListener('click', backToTitleFromMixedBattle);
+  document.getElementById('btn-mb-pause-no-p1').addEventListener('click', resumeMixedBattle);
+  document.getElementById('btn-mb-pause-no-p2').addEventListener('click', resumeMixedBattle);
 
   document.getElementById('btn-mb-rematch').addEventListener('click', () => {
     startMixedBattleCountdown();

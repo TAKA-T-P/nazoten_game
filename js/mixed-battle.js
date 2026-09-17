@@ -76,6 +76,10 @@ export class MixedBattleController extends EventTarget {
       p2: { active: false, endsAt: null }
     };
     this.ojama = new OjamaController(rng);
+    // ポーズ中は残り時間を止め、両者の入力を止める。再開時にendsAt・シルバー・
+    // フィーバーの終了時刻をポーズしていた分だけ後ろへずらし、時間を消費しない。
+    this.paused = false;
+    this.pausedAt = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -129,6 +133,8 @@ export class MixedBattleController extends EventTarget {
       p1: { active: false, endsAt: null },
       p2: { active: false, endsAt: null }
     };
+    this.paused = false;
+    this.pausedAt = null;
     audio.chooseRandomBgmTrack(this.rng);
     this.ojama.start({
       enabled: ojamaEnabled,
@@ -158,7 +164,7 @@ export class MixedBattleController extends EventTarget {
     return new SelectionController(this.boardEls[actor], {
       // 両者とも同じ共有盤面(this.board)を参照する。相手が選択中というだけの
       // 理由でisSelectableをfalseにはしない（仕様書9.2章：同じマスを同時になぞれる）。
-      isSelectable: (i) => this.status === STATUS.PLAYING && this.board.isSelectable(i),
+      isSelectable: (i) => this.status === STATUS.PLAYING && !this.paused && this.board.isSelectable(i),
       areAdjacent: (a, b) => Board.areAdjacent(a, b),
       maxLength: CONFIG.maxPathLength,
       doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
@@ -195,8 +201,43 @@ export class MixedBattleController extends EventTarget {
     this.feverStarted = false;
     this.swapSelections = { p1: null, p2: null };
     this.activePaths = { p1: [], p2: [] };
+    this.paused = false;
+    this.pausedAt = null;
     ACTORS.forEach((actor) => this._clearSilverFever(actor));
     this._setStatus(STATUS.IDLE);
+  }
+
+  // ポーズ（Phase6：もどる→ポーズボタン化）。プレイ中だけ有効。RAFループを
+  // 止めて残り時間の進行と入力を止め、進行中のなぞりは強制的に解除する。
+  pause() {
+    if (this.status !== STATUS.PLAYING || this.paused) return false;
+    this.paused = true;
+    this.pausedAt = performance.now();
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    ACTORS.forEach((actor) => {
+      if (this.inputs[actor]) this.inputs[actor].forceCancel();
+    });
+    // オジャマのボタン猶予・進行中の効果もここで打ち切る（再開後に無関係な
+    // タイミングで消えるとかえって分かりにくいため）。ミリオン強制終了と
+    // 同じ「未使用ボタン・進行中効果を消す」処理をそのまま再利用する。
+    this.ojama.forceStopForMillion();
+    return true;
+  }
+
+  resume() {
+    if (!this.paused) return;
+    const pausedDuration = performance.now() - this.pausedAt;
+    this.endsAt += pausedDuration;
+    ACTORS.forEach((actor) => {
+      const side = this.silverFever[actor];
+      if (side.active && side.endsAt !== null) side.endsAt += pausedDuration;
+    });
+    this.paused = false;
+    this.pausedAt = null;
+    this._loop();
   }
 
   // 自分の現在経路を更新し、両ビューへ通知する。UI側は自分の盤面には自分色、
@@ -244,7 +285,7 @@ export class MixedBattleController extends EventTarget {
   }
 
   _evaluateTime() {
-    if (this.status !== STATUS.PLAYING) return;
+    if (this.status !== STATUS.PLAYING || this.paused) return;
 
     const now = performance.now();
     this.remainingMs = Math.max(0, this.endsAt - now);

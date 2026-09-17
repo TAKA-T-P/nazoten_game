@@ -224,7 +224,6 @@
         <button id="btn-cpu-ojama-toggle" class="ojama-toggle-btn" type="button" aria-pressed="true">ON</button>
       </div>
       <div class="cpu-level-current">
-        <span id="cpu-level-current-label" class="cpu-level-label">強さ1</span>
         <span id="cpu-level-current-name" class="cpu-level-name">ゆっくり</span>
       </div>
       <div class="cpu-level-slider-wrap">
@@ -240,8 +239,10 @@
       </div>
       <p id="cpu-level-description" class="cpu-level-description">のんびりプレイする最弱CPU</p>
       <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝</p>
-      <button id="btn-cpu-start" class="btn btn-primary" type="button">バトル開始</button>
-      <button id="btn-cpu-select-back" class="btn btn-secondary" type="button">タイトルへ</button>
+      <div class="result-buttons">
+        <button id="btn-cpu-start" class="btn btn-primary" type="button">バトル開始</button>
+        <button id="btn-cpu-select-back" class="btn btn-secondary" type="button">タイトルへ</button>
+      </div>
     </div>
   </section>
 
@@ -505,7 +506,7 @@
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
-            <button id="btn-tp-back-p2" class="btn-small tp-back-btn" type="button">もどる</button>
+            <button id="btn-tp-back-p2" class="btn-small tp-back-btn" type="button">ポーズ</button>
             <span id="tp-hud-time-p2" class="hud-time-value">60</span>
             <span id="tp-ojama-received-p2" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="tp-ojama-received-type-p2"></span>」</span>
             <span id="tp-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
@@ -521,6 +522,13 @@
             </div>
             <div id="tp-timeup-overlay-p2" class="timeup-overlay" hidden>
               <span class="timeup-label">TIME UP!</span>
+            </div>
+            <div id="tp-pause-overlay-p2" class="pause-overlay" hidden>
+              <p class="pause-message">バトルをやめてタイトル画面に戻りますか？</p>
+              <div class="pause-buttons">
+                <button id="btn-tp-pause-yes-p2" class="btn btn-primary" type="button">はい</button>
+                <button id="btn-tp-pause-no-p2" class="btn btn-secondary" type="button">いいえ</button>
+              </div>
             </div>
           </div>
         </div>
@@ -549,7 +557,7 @@
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
-            <button id="btn-tp-back-p1" class="btn-small tp-back-btn" type="button">もどる</button>
+            <button id="btn-tp-back-p1" class="btn-small tp-back-btn" type="button">ポーズ</button>
             <span id="tp-hud-time-p1" class="hud-time-value">60</span>
             <span id="tp-ojama-received-p1" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="tp-ojama-received-type-p1"></span>」</span>
             <span id="tp-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
@@ -566,6 +574,13 @@
             <div id="tp-timeup-overlay-p1" class="timeup-overlay" hidden>
               <span class="timeup-label">TIME UP!</span>
             </div>
+            <div id="tp-pause-overlay-p1" class="pause-overlay" hidden>
+              <p class="pause-message">バトルをやめてタイトル画面に戻りますか？</p>
+              <div class="pause-buttons">
+                <button id="btn-tp-pause-yes-p1" class="btn btn-primary" type="button">はい</button>
+                <button id="btn-tp-pause-no-p1" class="btn btn-secondary" type="button">いいえ</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -580,7 +595,7 @@
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
-            <button id="btn-mb-back-p2" class="btn-small tp-back-btn" type="button">もどる</button>
+            <button id="btn-mb-back-p2" class="btn-small tp-back-btn" type="button">ポーズ</button>
             <span id="mb-hud-time-p2" class="hud-time-value">60</span>
             <span id="mb-ojama-received-p2" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mb-ojama-received-type-p2"></span>」</span>
             <span id="mb-silver-badge-p2" class="silver-badge silver-badge-small">SILVER ×2</span>
@@ -596,6 +611,13 @@
             </div>
             <div id="mb-timeup-overlay-p2" class="timeup-overlay" hidden>
               <span class="timeup-label">TIME UP!</span>
+            </div>
+            <div id="mb-pause-overlay-p2" class="pause-overlay" hidden>
+              <p class="pause-message">バトルをやめてタイトル画面に戻りますか？</p>
+              <div class="pause-buttons">
+                <button id="btn-mb-pause-yes-p2" class="btn btn-primary" type="button">はい</button>
+                <button id="btn-mb-pause-no-p2" class="btn btn-secondary" type="button">いいえ</button>
+              </div>
             </div>
           </div>
         </div>
@@ -624,7 +646,7 @@
         </div>
         <div class="tp-play-row">
           <div class="tp-side-panel">
-            <button id="btn-mb-back-p1" class="btn-small tp-back-btn" type="button">もどる</button>
+            <button id="btn-mb-back-p1" class="btn-small tp-back-btn" type="button">ポーズ</button>
             <span id="mb-hud-time-p1" class="hud-time-value">60</span>
             <span id="mb-ojama-received-p1" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mb-ojama-received-type-p1"></span>」</span>
             <span id="mb-silver-badge-p1" class="silver-badge silver-badge-small">SILVER ×2</span>
@@ -640,6 +662,13 @@
             </div>
             <div id="mb-timeup-overlay-p1" class="timeup-overlay" hidden>
               <span class="timeup-label">TIME UP!</span>
+            </div>
+            <div id="mb-pause-overlay-p1" class="pause-overlay" hidden>
+              <p class="pause-message">バトルをやめてタイトル画面に戻りますか？</p>
+              <div class="pause-buttons">
+                <button id="btn-mb-pause-yes-p1" class="btn btn-primary" type="button">はい</button>
+                <button id="btn-mb-pause-no-p1" class="btn btn-secondary" type="button">いいえ</button>
+              </div>
             </div>
           </div>
         </div>
@@ -666,21 +695,21 @@
         <div class="tp-stats-scroll">
           <table class="battle-stats-compare tp-stats-compare">
             <thead>
-              <tr><th></th><th>1P</th><th>2P</th></tr>
+              <tr><th>2P</th><th></th><th>1P</th></tr>
             </thead>
             <tbody>
-              <tr><td>最終スコア</td><td id="mb-stat-score-p1">0</td><td id="mb-stat-score-p2">0</td></tr>
-              <tr><td>通常タイムスコア</td><td id="mb-stat-normal-p1">0</td><td id="mb-stat-normal-p2">0</td></tr>
-              <tr><td>ミリオン・フィーバースコア</td><td id="mb-stat-feverscore-p1">0</td><td id="mb-stat-feverscore-p2">0</td></tr>
-              <tr><td>成功率</td><td id="mb-stat-rate-p1">—</td><td id="mb-stat-rate-p2">—</td></tr>
-              <tr><td>パネルを消した回数</td><td id="mb-stat-success-p1">0</td><td id="mb-stat-success-p2">0</td></tr>
-              <tr><td>10を作った回数</td><td id="mb-stat-10-p1">0</td><td id="mb-stat-10-p2">0</td></tr>
-              <tr><td>20を作った回数</td><td id="mb-stat-20-p1">0</td><td id="mb-stat-20-p2">0</td></tr>
-              <tr><td>30を作った回数</td><td id="mb-stat-30-p1">0</td><td id="mb-stat-30-p2">0</td></tr>
-              <tr><td>40を作った回数</td><td id="mb-stat-40-p1">0</td><td id="mb-stat-40-p2">0</td></tr>
-              <tr><td>シルバー突入回数</td><td id="mb-stat-silver-p1">0</td><td id="mb-stat-silver-p2">0</td></tr>
-              <tr><td>入れ替え・破壊回数</td><td id="mb-stat-swapdestroy-p1">0</td><td id="mb-stat-swapdestroy-p2">0</td></tr>
-              <tr><td>消したパネルの数</td><td id="mb-stat-cleared-p1">0</td><td id="mb-stat-cleared-p2">0</td></tr>
+              <tr><td id="mb-stat-score-p2">0</td><td>最終スコア</td><td id="mb-stat-score-p1">0</td></tr>
+              <tr><td id="mb-stat-normal-p2">0</td><td>通常タイムスコア</td><td id="mb-stat-normal-p1">0</td></tr>
+              <tr><td id="mb-stat-feverscore-p2">0</td><td>ミリオン・フィーバースコア</td><td id="mb-stat-feverscore-p1">0</td></tr>
+              <tr><td id="mb-stat-rate-p2">—</td><td>成功率</td><td id="mb-stat-rate-p1">—</td></tr>
+              <tr><td id="mb-stat-success-p2">0</td><td>パネルを消した回数</td><td id="mb-stat-success-p1">0</td></tr>
+              <tr><td id="mb-stat-10-p2">0</td><td>10を作った回数</td><td id="mb-stat-10-p1">0</td></tr>
+              <tr><td id="mb-stat-20-p2">0</td><td>20を作った回数</td><td id="mb-stat-20-p1">0</td></tr>
+              <tr><td id="mb-stat-30-p2">0</td><td>30を作った回数</td><td id="mb-stat-30-p1">0</td></tr>
+              <tr><td id="mb-stat-40-p2">0</td><td>40を作った回数</td><td id="mb-stat-40-p1">0</td></tr>
+              <tr><td id="mb-stat-silver-p2">0</td><td>シルバー突入回数</td><td id="mb-stat-silver-p1">0</td></tr>
+              <tr><td id="mb-stat-swapdestroy-p2">0</td><td>入れ替え・破壊回数</td><td id="mb-stat-swapdestroy-p1">0</td></tr>
+              <tr><td id="mb-stat-cleared-p2">0</td><td>消したパネルの数</td><td id="mb-stat-cleared-p1">0</td></tr>
             </tbody>
           </table>
         </div>
@@ -717,21 +746,21 @@
         <div class="tp-stats-scroll">
           <table class="battle-stats-compare tp-stats-compare">
             <thead>
-              <tr><th></th><th>1P</th><th>2P</th></tr>
+              <tr><th>2P</th><th></th><th>1P</th></tr>
             </thead>
             <tbody>
-              <tr><td>最終スコア</td><td id="tp-stat-score-p1">0</td><td id="tp-stat-score-p2">0</td></tr>
-              <tr><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td><td id="tp-stat-normal-p2">0</td></tr>
-              <tr><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td><td id="tp-stat-feverscore-p2">0</td></tr>
-              <tr><td>成功率</td><td id="tp-stat-rate-p1">—</td><td id="tp-stat-rate-p2">—</td></tr>
-              <tr><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td><td id="tp-stat-success-p2">0</td></tr>
-              <tr><td>10を作った回数</td><td id="tp-stat-10-p1">0</td><td id="tp-stat-10-p2">0</td></tr>
-              <tr><td>20を作った回数</td><td id="tp-stat-20-p1">0</td><td id="tp-stat-20-p2">0</td></tr>
-              <tr><td>30を作った回数</td><td id="tp-stat-30-p1">0</td><td id="tp-stat-30-p2">0</td></tr>
-              <tr><td>40を作った回数</td><td id="tp-stat-40-p1">0</td><td id="tp-stat-40-p2">0</td></tr>
-              <tr><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td><td id="tp-stat-silver-p2">0</td></tr>
-              <tr><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td><td id="tp-stat-swapdestroy-p2">0</td></tr>
-              <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
+              <tr><td id="tp-stat-score-p2">0</td><td>最終スコア</td><td id="tp-stat-score-p1">0</td></tr>
+              <tr><td id="tp-stat-normal-p2">0</td><td>通常タイムスコア</td><td id="tp-stat-normal-p1">0</td></tr>
+              <tr><td id="tp-stat-feverscore-p2">0</td><td>ミリオン・フィーバースコア</td><td id="tp-stat-feverscore-p1">0</td></tr>
+              <tr><td id="tp-stat-rate-p2">—</td><td>成功率</td><td id="tp-stat-rate-p1">—</td></tr>
+              <tr><td id="tp-stat-success-p2">0</td><td>パネルを消した回数</td><td id="tp-stat-success-p1">0</td></tr>
+              <tr><td id="tp-stat-10-p2">0</td><td>10を作った回数</td><td id="tp-stat-10-p1">0</td></tr>
+              <tr><td id="tp-stat-20-p2">0</td><td>20を作った回数</td><td id="tp-stat-20-p1">0</td></tr>
+              <tr><td id="tp-stat-30-p2">0</td><td>30を作った回数</td><td id="tp-stat-30-p1">0</td></tr>
+              <tr><td id="tp-stat-40-p2">0</td><td>40を作った回数</td><td id="tp-stat-40-p1">0</td></tr>
+              <tr><td id="tp-stat-silver-p2">0</td><td>シルバー突入回数</td><td id="tp-stat-silver-p1">0</td></tr>
+              <tr><td id="tp-stat-swapdestroy-p2">0</td><td>入れ替え・破壊回数</td><td id="tp-stat-swapdestroy-p1">0</td></tr>
+              <tr><td id="tp-stat-cleared-p2">0</td><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td></tr>
             </tbody>
           </table>
         </div>

@@ -344,7 +344,9 @@
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
-  max-width: 360px;
+  /* 回転後の見た目の横幅はこのmax-width（画面上でのcap）で直接決まる。padding等
+     内側の余白を削っても、外枠自体の横幅（=この値）は変わらないため注意。 */
+  max-width: 300px;
   position: relative;
   overflow: hidden;
   container-type: size;
@@ -371,15 +373,20 @@
   transform: rotate(90deg) translateY(-100%);
 }
 
-/* 結果画面は縦方向のスペースが限られるため、ボタンの縦幅を通常より小さくする。 */
-#screen-two-player-result .result-buttons {
+/* 結果画面は縦方向のスペースが限られるため、ボタンの縦幅を通常より小さくする。
+   .screen-two-playerクラスで指定し、スコアバトル・ごちゃまぜバトルの両方の
+   結果画面（#screen-two-player-result・#screen-mixed-battle-result）に効かせる
+   （IDだけで指定すると、片方の画面に反映され忘れる既知の落とし穴のため）。 */
+.screen-two-player .result-buttons {
   flex: 0 0 auto;
   margin-top: 0;
 }
 
-#screen-two-player-result .result-buttons .btn {
-  padding-top: 8px;
-  padding-bottom: 8px;
+/* 90度回転後は縦方向の余白（padding-top/bottom）が画面上の横幅に変わるため、
+   ここを削ることで「もう一度」「タイトルへ」ボタンの見た目の横幅を狭める。 */
+.screen-two-player .result-buttons .btn {
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 /* 伸びしろがあっても表の高さぶんだけで止め、table→buttons間に余白を
@@ -392,8 +399,17 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* 90度回転後は縦方向の余白（padding-top/bottom）が画面上の横幅に変わるため、
+   ここを削ることで記録一覧表の見た目の横幅を狭める。 */
 .tp-stats-compare td,
 .tp-stats-compare th {
-  padding: 4px 8px;
+  padding: 2px 8px;
   font-size: 0.72rem;
+}
+
+/* 1P・2Pを比べて大きい方を目立たせる（黄色背景・黒文字）。 */
+.tp-stats-compare .stat-highlight {
+  background: #fde047;
+  color: #1a1a1a;
+  font-weight: 800;
 }

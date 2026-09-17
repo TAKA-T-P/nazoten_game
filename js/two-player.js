@@ -70,6 +70,10 @@ export class TwoPlayerController extends EventTarget {
     };
     // オジャマ（Phase5実装指示書15章）。main.jsはthis.ojamaへ直接イベント登録する。
     this.ojama = new OjamaController(rng);
+    // ポーズ中は残り時間を止め、両者の入力を止める。再開時にendsAt・シルバー・
+    // フィーバーの終了時刻をポーズしていた分だけ後ろへずらし、時間を消費しない。
+    this.paused = false;
+    this.pausedAt = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -124,6 +128,8 @@ export class TwoPlayerController extends EventTarget {
       p1: { active: false, endsAt: null },
       p2: { active: false, endsAt: null }
     };
+    this.paused = false;
+    this.pausedAt = null;
     audio.chooseRandomBgmTrack(this.rng);
     this.ojama.start({
       enabled: ojamaEnabled,
@@ -146,7 +152,7 @@ export class TwoPlayerController extends EventTarget {
   _createInput(actor) {
     const board = this.boards[actor];
     return new SelectionController(this.boardEls[actor], {
-      isSelectable: (i) => this.status === STATUS.PLAYING && board.isSelectable(i),
+      isSelectable: (i) => this.status === STATUS.PLAYING && !this.paused && board.isSelectable(i),
       areAdjacent: (a, b) => Board.areAdjacent(a, b),
       maxLength: CONFIG.maxPathLength,
       doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
@@ -182,8 +188,43 @@ export class TwoPlayerController extends EventTarget {
     this.phase = PHASE.NORMAL;
     this.feverStarted = false;
     this.swapSelections = { p1: null, p2: null };
+    this.paused = false;
+    this.pausedAt = null;
     ACTORS.forEach((actor) => this._clearSilverFever(actor));
     this._setStatus(STATUS.IDLE);
+  }
+
+  // ポーズ（Phase6：もどる→ポーズボタン化）。プレイ中だけ有効。RAFループを
+  // 止めて残り時間の進行と入力を止め、進行中のなぞりは強制的に解除する。
+  pause() {
+    if (this.status !== STATUS.PLAYING || this.paused) return false;
+    this.paused = true;
+    this.pausedAt = performance.now();
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    ACTORS.forEach((actor) => {
+      if (this.inputs[actor]) this.inputs[actor].forceCancel();
+    });
+    // オジャマのボタン猶予・進行中の効果もここで打ち切る（再開後に無関係な
+    // タイミングで消えるとかえって分かりにくいため）。ミリオン強制終了と
+    // 同じ「未使用ボタン・進行中効果を消す」処理をそのまま再利用する。
+    this.ojama.forceStopForMillion();
+    return true;
+  }
+
+  resume() {
+    if (!this.paused) return;
+    const pausedDuration = performance.now() - this.pausedAt;
+    this.endsAt += pausedDuration;
+    ACTORS.forEach((actor) => {
+      const side = this.silverFever[actor];
+      if (side.active && side.endsAt !== null) side.endsAt += pausedDuration;
+    });
+    this.paused = false;
+    this.pausedAt = null;
+    this._loop();
   }
 
   _emitSelection(actor, selection) {
@@ -231,7 +272,7 @@ export class TwoPlayerController extends EventTarget {
 
   // 1つの共通時計（startedAt/endsAt）からP1・P2共通の残り時間を算出する（仕様書9.2章）。
   _evaluateTime() {
-    if (this.status !== STATUS.PLAYING) return;
+    if (this.status !== STATUS.PLAYING || this.paused) return;
 
     const now = performance.now();
     this.remainingMs = Math.max(0, this.endsAt - now);

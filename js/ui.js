@@ -52,7 +52,6 @@ function cacheDom() {
   // CPUバトル関連
   el.btnCpuBattle = document.getElementById('btn-cpu-battle');
   el.cpuLevelSlider = document.getElementById('cpu-level-slider');
-  el.cpuLevelCurrentLabel = document.getElementById('cpu-level-current-label');
   el.cpuLevelCurrentName = document.getElementById('cpu-level-current-name');
   el.cpuLevelDescription = document.getElementById('cpu-level-description');
   el.cpuLevelRecord = document.getElementById('cpu-level-record');
@@ -143,6 +142,7 @@ function cacheDom() {
   el.tpCountdownOverlay = { p1: document.getElementById('tp-countdown-overlay-p1'), p2: document.getElementById('tp-countdown-overlay-p2') };
   el.tpCountdownLabel = { p1: document.getElementById('tp-countdown-label-p1'), p2: document.getElementById('tp-countdown-label-p2') };
   el.tpTimeupOverlay = { p1: document.getElementById('tp-timeup-overlay-p1'), p2: document.getElementById('tp-timeup-overlay-p2') };
+  el.tpPauseOverlay = { p1: document.getElementById('tp-pause-overlay-p1'), p2: document.getElementById('tp-pause-overlay-p2') };
   el.tpSilverBadge = { p1: document.getElementById('tp-silver-badge-p1'), p2: document.getElementById('tp-silver-badge-p2') };
   el.tpGaugeP1 = document.getElementById('tp-gauge-p1');
 
@@ -174,6 +174,7 @@ function cacheDom() {
   el.mbCountdownOverlay = { p1: document.getElementById('mb-countdown-overlay-p1'), p2: document.getElementById('mb-countdown-overlay-p2') };
   el.mbCountdownLabel = { p1: document.getElementById('mb-countdown-label-p1'), p2: document.getElementById('mb-countdown-label-p2') };
   el.mbTimeupOverlay = { p1: document.getElementById('mb-timeup-overlay-p1'), p2: document.getElementById('mb-timeup-overlay-p2') };
+  el.mbPauseOverlay = { p1: document.getElementById('mb-pause-overlay-p1'), p2: document.getElementById('mb-pause-overlay-p2') };
   el.mbSilverBadge = { p1: document.getElementById('mb-silver-badge-p1'), p2: document.getElementById('mb-silver-badge-p2') };
   el.mbOjamaOverlay = { p1: document.getElementById('mb-ojama-overlay-p1'), p2: document.getElementById('mb-ojama-overlay-p2') };
   el.mbGaugeP1 = document.getElementById('mb-gauge-p1');
@@ -476,6 +477,18 @@ function formatRate(rate) {
   return `${Math.round(rate)}%`;
 }
 
+// 2人バトル系の結果画面（スコアバトル・ごちゃまぜバトル）の記録一覧表で、
+// 1P・2Pを比べて大きい方に.stat-highlightを付ける（黄色背景・黒文字）。
+// 成功率のように表示用の文字列と比較用の生数値が異なる項目のために、
+// compare用の値を別途受け取れるようにする（省略時はvalueをそのまま使う）。
+function setStatWithHighlight(pair, p1Value, p2Value, p1Compare = p1Value, p2Compare = p2Value) {
+  pair.p1.textContent = String(p1Value);
+  pair.p2.textContent = String(p2Value);
+  const bothNumbers = typeof p1Compare === 'number' && typeof p2Compare === 'number';
+  pair.p1.classList.toggle('stat-highlight', bothNumbers && p1Compare > p2Compare);
+  pair.p2.classList.toggle('stat-highlight', bothNumbers && p2Compare > p1Compare);
+}
+
 export function renderResult({ score, stats, isNewBest }) {
   el.resultScore.textContent = String(score);
   el.resultNewBest.hidden = !isNewBest;
@@ -505,7 +518,6 @@ function formatRecord(record) {
 export function updateCpuLevelSelection(level) {
   const index = CPU_LEVEL_ORDER.indexOf(level);
   el.cpuLevelSlider.value = String(index >= 0 ? index : 0);
-  el.cpuLevelCurrentLabel.textContent = CPU_LEVELS[level].label;
   el.cpuLevelCurrentName.textContent = CPU_LEVELS[level].name;
   el.cpuLevelDescription.textContent = CPU_LEVELS[level].description;
 }
@@ -913,6 +925,18 @@ export function hideTwoPlayerTimeUp() {
   clearOjamaEffect('tp', 'p2');
   hideOjamaButton('tp', 'p1');
   hideOjamaButton('tp', 'p2');
+  hideTwoPlayerPause();
+}
+
+// ポーズ確認（Phase6：もどる→ポーズボタン化）。P1・P2両方のゾーンへ同時に
+// 表示し、押した側から見て正しい向きで読めるようにする（timeup-overlayと
+// 同じ「両ゾーンに1つずつ用意する」方式）。
+export function showTwoPlayerPause() {
+  TWO_PLAYER_ACTORS.forEach((actor) => { el.tpPauseOverlay[actor].hidden = false; });
+}
+
+export function hideTwoPlayerPause() {
+  TWO_PLAYER_ACTORS.forEach((actor) => { el.tpPauseOverlay[actor].hidden = true; });
 }
 
 // 点差ベースのゲージ表示を更新する（仕様書16章）。P1側の幅を直接指定し、P2側は
@@ -945,27 +969,24 @@ export function renderTwoPlayerResult({ outcome, p1Score, p2Score, p1Stats, p2St
   el.tpResultTitle.p1.textContent = getTitleForScore(p1Score);
   el.tpResultTitle.p2.textContent = getTitleForScore(p2Score);
 
-  const setStat = (pair, p1Value, p2Value) => {
-    pair.p1.textContent = String(p1Value);
-    pair.p2.textContent = String(p2Value);
-  };
-
-  setStat(el.tpStatScore, p1Score, p2Score);
-  setStat(el.tpStatNormal, p1Stats.normalScore, p2Stats.normalScore);
-  setStat(el.tpStatFeverScore, p1Stats.feverScore, p2Stats.feverScore);
-  setStat(el.tpStatRate, formatRate(calcSuccessRate(p1Stats)), formatRate(calcSuccessRate(p2Stats)));
-  setStat(el.tpStatSuccess, p1Stats.successCount, p2Stats.successCount);
-  setStat(el.tpStat10, p1Stats.sumCounts[10], p2Stats.sumCounts[10]);
-  setStat(el.tpStat20, p1Stats.sumCounts[20], p2Stats.sumCounts[20]);
-  setStat(el.tpStat30, p1Stats.sumCounts[30], p2Stats.sumCounts[30]);
-  setStat(el.tpStat40, p1Stats.sumCounts[40], p2Stats.sumCounts[40]);
-  setStat(el.tpStatSilver, p1Stats.silverFeverCount, p2Stats.silverFeverCount);
-  setStat(
+  setStatWithHighlight(el.tpStatScore, p1Score, p2Score);
+  setStatWithHighlight(el.tpStatNormal, p1Stats.normalScore, p2Stats.normalScore);
+  setStatWithHighlight(el.tpStatFeverScore, p1Stats.feverScore, p2Stats.feverScore);
+  const p1Rate = calcSuccessRate(p1Stats);
+  const p2Rate = calcSuccessRate(p2Stats);
+  setStatWithHighlight(el.tpStatRate, formatRate(p1Rate), formatRate(p2Rate), p1Rate, p2Rate);
+  setStatWithHighlight(el.tpStatSuccess, p1Stats.successCount, p2Stats.successCount);
+  setStatWithHighlight(el.tpStat10, p1Stats.sumCounts[10], p2Stats.sumCounts[10]);
+  setStatWithHighlight(el.tpStat20, p1Stats.sumCounts[20], p2Stats.sumCounts[20]);
+  setStatWithHighlight(el.tpStat30, p1Stats.sumCounts[30], p2Stats.sumCounts[30]);
+  setStatWithHighlight(el.tpStat40, p1Stats.sumCounts[40], p2Stats.sumCounts[40]);
+  setStatWithHighlight(el.tpStatSilver, p1Stats.silverFeverCount, p2Stats.silverFeverCount);
+  setStatWithHighlight(
     el.tpStatSwapDestroy,
     p1Stats.swapCount + p1Stats.destroyCount,
     p2Stats.swapCount + p2Stats.destroyCount
   );
-  setStat(el.tpStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
+  setStatWithHighlight(el.tpStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
 }
 
 // --- 対戦形式選択・オジャマ設定（Phase5実装指示書4章） -----------------------
@@ -1245,6 +1266,15 @@ export function hideMixedTimeUp() {
   clearOjamaEffect('mb', 'p2');
   hideOjamaButton('mb', 'p1');
   hideOjamaButton('mb', 'p2');
+  hideMixedPause();
+}
+
+export function showMixedPause() {
+  ['p1', 'p2'].forEach((actor) => { el.mbPauseOverlay[actor].hidden = false; });
+}
+
+export function hideMixedPause() {
+  ['p1', 'p2'].forEach((actor) => { el.mbPauseOverlay[actor].hidden = true; });
 }
 
 export function updateMixedGauge(detail) {
@@ -1267,27 +1297,24 @@ export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2
   el.mbResultScore.p1.textContent = String(p1Score);
   el.mbResultScore.p2.textContent = String(p2Score);
 
-  const setStat = (pair, p1Value, p2Value) => {
-    pair.p1.textContent = String(p1Value);
-    pair.p2.textContent = String(p2Value);
-  };
-
-  setStat(el.mbStatScore, p1Score, p2Score);
-  setStat(el.mbStatNormal, p1Stats.normalScore, p2Stats.normalScore);
-  setStat(el.mbStatFeverScore, p1Stats.feverScore, p2Stats.feverScore);
-  setStat(el.mbStatRate, formatRate(calcSuccessRate(p1Stats)), formatRate(calcSuccessRate(p2Stats)));
-  setStat(el.mbStatSuccess, p1Stats.successCount, p2Stats.successCount);
-  setStat(el.mbStat10, p1Stats.sumCounts[10], p2Stats.sumCounts[10]);
-  setStat(el.mbStat20, p1Stats.sumCounts[20], p2Stats.sumCounts[20]);
-  setStat(el.mbStat30, p1Stats.sumCounts[30], p2Stats.sumCounts[30]);
-  setStat(el.mbStat40, p1Stats.sumCounts[40], p2Stats.sumCounts[40]);
-  setStat(el.mbStatSilver, p1Stats.silverFeverCount, p2Stats.silverFeverCount);
-  setStat(
+  setStatWithHighlight(el.mbStatScore, p1Score, p2Score);
+  setStatWithHighlight(el.mbStatNormal, p1Stats.normalScore, p2Stats.normalScore);
+  setStatWithHighlight(el.mbStatFeverScore, p1Stats.feverScore, p2Stats.feverScore);
+  const p1Rate = calcSuccessRate(p1Stats);
+  const p2Rate = calcSuccessRate(p2Stats);
+  setStatWithHighlight(el.mbStatRate, formatRate(p1Rate), formatRate(p2Rate), p1Rate, p2Rate);
+  setStatWithHighlight(el.mbStatSuccess, p1Stats.successCount, p2Stats.successCount);
+  setStatWithHighlight(el.mbStat10, p1Stats.sumCounts[10], p2Stats.sumCounts[10]);
+  setStatWithHighlight(el.mbStat20, p1Stats.sumCounts[20], p2Stats.sumCounts[20]);
+  setStatWithHighlight(el.mbStat30, p1Stats.sumCounts[30], p2Stats.sumCounts[30]);
+  setStatWithHighlight(el.mbStat40, p1Stats.sumCounts[40], p2Stats.sumCounts[40]);
+  setStatWithHighlight(el.mbStatSilver, p1Stats.silverFeverCount, p2Stats.silverFeverCount);
+  setStatWithHighlight(
     el.mbStatSwapDestroy,
     p1Stats.swapCount + p1Stats.destroyCount,
     p2Stats.swapCount + p2Stats.destroyCount
   );
-  setStat(el.mbStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
+  setStatWithHighlight(el.mbStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
 }
 
 // --- ごちゃまぜバトルCPU戦 ---------------------------------------------------
