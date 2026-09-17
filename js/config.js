@@ -156,10 +156,27 @@ export const CPU_LEVELS = {
     traceStepMs: 320,
     noMoveDestroyMs: 3000
   },
+  // 強さ4〜MAXを弱体化するため、旧レベルNのパラメータを新レベルN+1にずらしている
+  // （旧レベル4→新レベル5、旧レベル5→新MAX）。新レベル4は繰り上げ元がないため、
+  // 旧レベル3と旧レベル4の中間の数値を設定した。旧MAXの数値はどのレベルにも
+  // 引き継がれず、最強値そのものが下がる。ラベル・ニックネーム・説明文は
+  // 各枠の立ち位置（初心者向け〜最強）を表すため据え置き。
   4: {
     label: '強さ4',
     name: 'つよい',
     description: 'わりと高得点の組み合わせを探す',
+    thinkMinMs: 2100,
+    thinkMaxMs: 3200,
+    maxPathLength: 5,
+    bestMoveRate: 0.38,
+    mistakeRate: 0.08,
+    traceStepMs: 300,
+    noMoveDestroyMs: 2750
+  },
+  5: {
+    label: '強さ5',
+    name: 'めちゃつよ',
+    description: 'かなり速いスピードでパネルを消す',
     thinkMinMs: 1800,
     thinkMaxMs: 2800,
     maxPathLength: 5,
@@ -168,10 +185,10 @@ export const CPU_LEVELS = {
     traceStepMs: 280,
     noMoveDestroyMs: 2500
   },
-  5: {
-    label: '強さ5',
-    name: 'めちゃつよ',
-    description: 'かなり速いスピードでパネルを消す',
+  MAX: {
+    label: 'MAX',
+    name: '超速',
+    description: '最高得点を迷わず狙う最強CPU',
     thinkMinMs: 1300,
     thinkMaxMs: 2000,
     maxPathLength: 5,
@@ -179,17 +196,5 @@ export const CPU_LEVELS = {
     mistakeRate: 0.03,
     traceStepMs: 240,
     noMoveDestroyMs: 2000
-  },
-  MAX: {
-    label: 'MAX',
-    name: '超速',
-    description: '最高得点を迷わず狙う最強CPU',
-    thinkMinMs: 900,
-    thinkMaxMs: 1500,
-    maxPathLength: 5,
-    bestMoveRate: 0.90,
-    mistakeRate: 0.01,
-    traceStepMs: 180,
-    noMoveDestroyMs: 1600
   }
 };

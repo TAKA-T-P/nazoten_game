@@ -17,11 +17,29 @@ function initAudioOnce() {
   window.removeEventListener('keydown', initAudioOnce);
 }
 
+// ダブルタップズームの防止。body/各画面のtouch-actionだけでは、盤面が密集する
+// 2人対戦画面などで連続タップ操作（破壊操作など）を行った際に、ごくまれに
+// ブラウザ側のダブルタップズームが働いてしまう端末がある。最後のtouchendから
+// 一定時間内に次のtouchendが来た場合はブラウザ標準のズーム処理を確実に止める
+// （この判定はゲーム側の入力処理とは独立しており、なぞり・破壊操作は影響を
+// 受けない）。
+function preventDoubleTapZoom() {
+  let lastTouchEndAt = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEndAt <= 350) {
+      e.preventDefault();
+    }
+    lastTouchEndAt = now;
+  }, { passive: false });
+}
+
 function main() {
   // 起動のたびに必ず「効果音のみ」から始める（前回の選択は引き継がない）。
   storage.setSoundMode('bgmOff');
   ui.init();
   audio.setSoundMode(storage.getSoundMode());
+  preventDoubleTapZoom();
 
   // 最初のユーザー操作でAudioContextを開始する（モバイルの自動再生制限対策）。
   window.addEventListener('pointerdown', initAudioOnce, { once: true });
