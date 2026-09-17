@@ -69,6 +69,15 @@ body {
   display: none;
 }
 
+/* タイトル・あそびかたメニュー・説明ページは、bodyの暖色グラデーションより
+   彩度を抑えたやさしいパステルグラデーションにする。明度を高く保つことで、
+   濃い文字色（--color-text等）とのコントラストを損なわないようにする。 */
+#screen-title,
+#screen-howto-menu,
+#screen-help-page {
+  background: linear-gradient(160deg, #ffeaf1 0%, #fff6e6 35%, #eaf7f1 70%, #eaf0ff 100%);
+}
+
 .btn {
   font-family: inherit;
   font-size: 1.05rem;
