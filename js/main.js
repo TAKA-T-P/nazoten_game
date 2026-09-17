@@ -5,6 +5,7 @@ import * as audio from './audio.js';
 import * as ui from './ui.js';
 import { NazotenGame, STATUS } from './game.js';
 import { BattleController, STATUS as BATTLE_STATUS } from './battle.js';
+import { MixedCpuBattleController, STATUS as MCB_STATUS } from './mixed-cpu-battle.js';
 import { TwoPlayerController, STATUS as TP_STATUS } from './two-player.js';
 import { MixedBattleController, STATUS as MB_STATUS } from './mixed-battle.js';
 
@@ -170,15 +171,30 @@ function main() {
     ui.showScreen('battle-result');
   });
 
+  // 二重再生を避けるため、オジャマの警告音・解除音はeffectstart/effectendの
+  // イベントを受けたmain.js側だけで鳴らす（two-player.js/mixed-battle.jsと同じ方針）。
+  battle.ojama.addEventListener('effectstart', () => audio.playOjamaWarning());
+  battle.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
+  battle.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('battle', e.detail.actor));
+  battle.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('battle', e.detail.actor));
+  battle.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('battle', e.detail.targetActor, e.detail.type));
+  battle.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('battle', e.detail.targetActor));
+
+  document.getElementById('btn-ojama-battle-player').addEventListener('click', () => {
+    if (battle.useOjama('p1')) audio.playOjamaActivate();
+  });
+
   function startBattleCountdown(level) {
     ui.showScreen('battle');
-    battle.startBattle(level);
+    battle.startBattle(level, cpuOjamaEnabled);
   }
 
   function showCpuSelectScreen() {
     const level = storage.getSelectedCpuLevel();
     ui.updateCpuLevelSelection(level);
     ui.updateCpuLevelRecord(storage.getCpuRecord(level));
+    ui.updateCpuBattleFormatSelection(selectedCpuBattleFormat);
+    ui.updateCpuBattleOjamaToggle(cpuOjamaEnabled);
     ui.showScreen('cpu-select');
   }
 
@@ -193,8 +209,31 @@ function main() {
     ui.updateCpuLevelRecord(storage.getCpuRecord(level));
   });
 
+  // CPU戦のバトル形式（スコアバトル/ごちゃまぜバトル）・オジャマON/OFF。
+  // 2人バトル側のselectedBattleFormat/ojamaEnabledとは独立した状態として持つ
+  // （仕様：CPU戦にも同様の選択画面を用意するが、選択内容は別枠）。
+  let selectedCpuBattleFormat = 'score';
+  let cpuOjamaEnabled = CONFIG.ojama.defaultEnabled;
+
+  document.querySelectorAll('#screen-cpu-select .battle-format-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      selectedCpuBattleFormat = btn.dataset.format;
+      ui.updateCpuBattleFormatSelection(selectedCpuBattleFormat);
+    });
+  });
+
+  document.getElementById('btn-cpu-ojama-toggle').addEventListener('click', () => {
+    cpuOjamaEnabled = !cpuOjamaEnabled;
+    ui.updateCpuBattleOjamaToggle(cpuOjamaEnabled);
+  });
+
   document.getElementById('btn-cpu-start').addEventListener('click', () => {
-    startBattleCountdown(storage.getSelectedCpuLevel());
+    const level = storage.getSelectedCpuLevel();
+    if (selectedCpuBattleFormat === 'mixed') {
+      startMixedCpuBattleCountdown(level);
+    } else {
+      startBattleCountdown(level);
+    }
   });
 
   document.getElementById('btn-cpu-select-back').addEventListener('click', () => {
@@ -221,6 +260,97 @@ function main() {
 
   document.getElementById('btn-battle-result-title').addEventListener('click', () => {
     battle.backToTitle();
+    ui.showScreen('title');
+  });
+
+  // --- ごちゃまぜバトルCPU戦 ---------------------------------------------------
+  const mcbBoardEls = ui.getMixedCpuBattleBoardElements();
+  const mixedCpuBattle = new MixedCpuBattleController(mcbBoardEls.player, mcbBoardEls.cpu);
+
+  mixedCpuBattle.addEventListener('statechange', (e) => {
+    if (e.detail.status === MCB_STATUS.PLAYING) ui.hideMixedCpuTimeUp();
+  });
+  mixedCpuBattle.addEventListener('boardinit', (e) => {
+    ui.hideMixedCpuTimeUp();
+    ui.updateMixedCpuTimer(CONFIG.gameDurationMs);
+    ui.renderMixedCpuBattleBoards(e.detail.board);
+    ui.updateMixedCpuCpuLevelLabel(e.detail.level);
+  });
+  mixedCpuBattle.addEventListener('countdown', (e) => ui.showMixedCpuCountdown(e.detail.label));
+  mixedCpuBattle.addEventListener('feverstart', () => ui.setMixedCpuFeverActive(true));
+  mixedCpuBattle.addEventListener('p1silverfeverstart', () => ui.setMixedCpuSilverFeverActive('p1', true));
+  mixedCpuBattle.addEventListener('p1silverfeverend', () => ui.setMixedCpuSilverFeverActive('p1', false));
+  mixedCpuBattle.addEventListener('p2silverfeverstart', () => ui.setMixedCpuSilverFeverActive('p2', true));
+  mixedCpuBattle.addEventListener('p2silverfeverend', () => ui.setMixedCpuSilverFeverActive('p2', false));
+  mixedCpuBattle.addEventListener('timeupdate', (e) => ui.updateMixedCpuTimer(e.detail.remainingMs));
+  mixedCpuBattle.addEventListener('p1selectionupdate', (e) => ui.updateMixedCpuPlayerSelection(e.detail));
+  mixedCpuBattle.addEventListener('p2selectionupdate', (e) => ui.updateMixedCpuCpuSelection(e.detail.indices));
+  mixedCpuBattle.addEventListener('p1success', (e) => ui.playMixedCpuSuccessEffect('p1', e.detail));
+  mixedCpuBattle.addEventListener('p2success', () => {});
+  mixedCpuBattle.addEventListener('p1fail', (e) => ui.playMixedCpuFailEffect('p1', e.detail.indices));
+  mixedCpuBattle.addEventListener('p2fail', (e) => ui.playMixedCpuFailEffect('p2', e.detail.indices));
+  mixedCpuBattle.addEventListener('p1stolen', (e) => ui.playMixedCpuStolenEffect('p1', e.detail.indices));
+  mixedCpuBattle.addEventListener('p2stolen', () => {});
+  mixedCpuBattle.addEventListener('p1destroyblocked', (e) => ui.playMixedCpuBlockedEffect([e.detail.index]));
+  mixedCpuBattle.addEventListener('p1swapblocked', (e) => ui.playMixedCpuBlockedEffect(e.detail.indices));
+  mixedCpuBattle.addEventListener('sharedcellsclear', (e) => ui.clearMixedCpuCells(e.detail.indices));
+  mixedCpuBattle.addEventListener('sharedcellsrefill', (e) => ui.refillMixedCpuCells(e.detail.cells));
+  mixedCpuBattle.addEventListener('p1swapselectionupdate', (e) => ui.updateMixedCpuSwapSelection(e.detail.index));
+  mixedCpuBattle.addEventListener('sharedswap', (e) => ui.applyMixedCpuSwap(e.detail.indices, e.detail.values));
+  mixedCpuBattle.addEventListener('gaugeupdate', (e) => ui.updateMixedCpuGauge(e.detail));
+  mixedCpuBattle.addEventListener('timeup', () => ui.showMixedCpuTimeUp());
+  mixedCpuBattle.addEventListener('result', (e) => {
+    const { outcome, level, playerScore, cpuScore, playerStats, cpuStats, ojamaTotalUses } = e.detail;
+    const isNewBest = storage.submitMixedCpuBattleResult({
+      level,
+      outcome,
+      playerScore,
+      cpuScore,
+      ojamaUseCount: ojamaTotalUses
+    });
+    const record = storage.getMixedCpuRecord(level);
+    ui.renderMixedCpuBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, isNewBest, record });
+    ui.showScreen('mixed-cpu-battle-result');
+  });
+
+  mixedCpuBattle.ojama.addEventListener('effectstart', () => audio.playOjamaWarning());
+  mixedCpuBattle.ojama.addEventListener('effectend', () => audio.playOjamaEnd());
+  mixedCpuBattle.ojama.addEventListener('buttonshow', (e) => ui.showOjamaButton('mcb', e.detail.actor));
+  mixedCpuBattle.ojama.addEventListener('buttonhide', (e) => ui.hideOjamaButton('mcb', e.detail.actor));
+  mixedCpuBattle.ojama.addEventListener('effectstart', (e) => ui.startOjamaEffect('mcb', e.detail.targetActor, e.detail.type));
+  mixedCpuBattle.ojama.addEventListener('effectend', (e) => ui.clearOjamaEffect('mcb', e.detail.targetActor));
+
+  document.getElementById('btn-ojama-mcb-player').addEventListener('click', () => {
+    if (mixedCpuBattle.useOjama('p1')) audio.playOjamaActivate();
+  });
+
+  function startMixedCpuBattleCountdown(level) {
+    ui.showScreen('mixed-cpu-battle');
+    mixedCpuBattle.start(level, cpuOjamaEnabled);
+  }
+
+  function backToTitleFromMixedCpuBattle() {
+    mixedCpuBattle.backToTitle();
+    ui.showScreen('title');
+  }
+
+  document.getElementById('btn-mcb-back').addEventListener('click', backToTitleFromMixedCpuBattle);
+
+  document.getElementById('btn-mcb-retry').addEventListener('click', () => {
+    startMixedCpuBattleCountdown(mixedCpuBattle.level);
+  });
+
+  document.getElementById('btn-mcb-rematch').addEventListener('click', () => {
+    startMixedCpuBattleCountdown(mixedCpuBattle.level);
+  });
+
+  document.getElementById('btn-mcb-change-level').addEventListener('click', () => {
+    mixedCpuBattle.backToTitle();
+    showCpuSelectScreen();
+  });
+
+  document.getElementById('btn-mcb-result-title').addEventListener('click', () => {
+    mixedCpuBattle.backToTitle();
     ui.showScreen('title');
   });
 

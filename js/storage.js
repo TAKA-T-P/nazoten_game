@@ -31,6 +31,25 @@ function createCpuRecords() {
   return records;
 }
 
+// ごちゃまぜバトルCPU戦はスコアバトルCPU戦（cpuBattle）とは別枠でレベル別に記録する。
+function createMixedCpuRecord() {
+  return {
+    playCount: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    bestPlayerScore: 0,
+    bestWinningMargin: 0,
+    totalOjamaUses: 0
+  };
+}
+
+function createMixedCpuRecords() {
+  const records = {};
+  for (const level of CPU_LEVEL_ORDER) records[level] = createMixedCpuRecord();
+  return records;
+}
+
 function createTwoPlayerRecord() {
   return {
     playCount: 0,
@@ -58,7 +77,7 @@ function createMixedBattleRecord() {
 
 function defaultState() {
   return {
-    version: 5,
+    version: 6,
     soundMode: DEFAULT_SOUND_MODE,
     tutorialVersion: 0,
     cpuBattleTutorialVersion: 0,
@@ -67,6 +86,7 @@ function defaultState() {
     records: {
       [RECORD_KEY]: { bestScore: 0, playCount: 0 },
       cpuBattle: createCpuRecords(),
+      mixedCpuBattle: createMixedCpuRecords(),
       twoPlayerBattle: createTwoPlayerRecord(),
       mixedBattle: createMixedBattleRecord()
     },
@@ -114,6 +134,28 @@ function sanitizeCpuRecords(rawRecords) {
   return records;
 }
 
+function sanitizeMixedCpuRecord(raw) {
+  const d = createMixedCpuRecord();
+  if (!raw || typeof raw !== 'object') return d;
+  return {
+    playCount: asNumber(raw.playCount, 0),
+    wins: asNumber(raw.wins, 0),
+    losses: asNumber(raw.losses, 0),
+    draws: asNumber(raw.draws, 0),
+    bestPlayerScore: asNumber(raw.bestPlayerScore, 0),
+    bestWinningMargin: asNumber(raw.bestWinningMargin, 0),
+    totalOjamaUses: asNumber(raw.totalOjamaUses, 0)
+  };
+}
+
+function sanitizeMixedCpuRecords(rawRecords) {
+  const records = {};
+  for (const level of CPU_LEVEL_ORDER) {
+    records[level] = sanitizeMixedCpuRecord(rawRecords && rawRecords[level]);
+  }
+  return records;
+}
+
 function sanitizeTwoPlayerRecord(raw) {
   const d = createTwoPlayerRecord();
   if (!raw || typeof raw !== 'object') return d;
@@ -152,7 +194,7 @@ function sanitize(parsed) {
   const legacyRecord = parsed.legacyRecords && parsed.legacyRecords[LEGACY_RECORD_KEY];
 
   return {
-    version: 5,
+    version: 6,
     soundMode: normalizeSoundMode(parsed.soundMode, parsed.soundEnabled),
     tutorialVersion: asNumber(parsed.tutorialVersion, d.tutorialVersion),
     cpuBattleTutorialVersion: asNumber(parsed.cpuBattleTutorialVersion, d.cpuBattleTutorialVersion),
@@ -164,6 +206,7 @@ function sanitize(parsed) {
         playCount: asNumber(record && record.playCount, 0)
       },
       cpuBattle: sanitizeCpuRecords(parsed.records && parsed.records.cpuBattle),
+      mixedCpuBattle: sanitizeMixedCpuRecords(parsed.records && parsed.records.mixedCpuBattle),
       twoPlayerBattle: sanitizeTwoPlayerRecord(parsed.records && parsed.records.twoPlayerBattle),
       mixedBattle: sanitizeMixedBattleRecord(parsed.records && parsed.records.mixedBattle)
     },
@@ -237,9 +280,15 @@ function persistState(s) {
   }
 }
 
-// v3・v4(旧storageKey)は、そのまま新形状(sanitize)に通せば2人バトル・ごちゃまぜ分の
-// フィールドが初期値で補われ、そのままv5として扱える（Phase4実装指示書22.4章、
-// Phase5実装指示書22.4章）。旧キー自体は削除しない。
+// v3・v4・v5(旧storageKey)は、そのまま新形状(sanitize)に通せば2人バトル・ごちゃまぜ・
+// CPU戦の追加分フィールドが初期値で補われ、そのまま最新版として扱える
+// （Phase4実装指示書22.4章、Phase5実装指示書22.4章）。旧キー自体は削除しない。
+function migrateFromV5() {
+  const parsedV5 = readJson(CONFIG.legacyStorageKeyV5);
+  if (!parsedV5) return null;
+  return sanitize(parsedV5);
+}
+
 function migrateFromV4() {
   const parsedV4 = readJson(CONFIG.legacyStorageKeyV4);
   if (!parsedV4) return null;
@@ -254,12 +303,12 @@ function migrateFromV3() {
 
 function load() {
   try {
-    const rawV5 = localStorage.getItem(CONFIG.storageKey);
-    if (rawV5) {
-      return sanitize(JSON.parse(rawV5));
+    const rawV6 = localStorage.getItem(CONFIG.storageKey);
+    if (rawV6) {
+      return sanitize(JSON.parse(rawV6));
     }
-    // v5データがまだない場合のみ、v4（なければv3、v2、v1）からの一度きりの移行を行う。
-    const migrated = migrateFromV4() || migrateFromV3() || migrateFromV2() || migrateFromV1();
+    // v6データがまだない場合のみ、v5（なければv4、v3、v2、v1）からの一度きりの移行を行う。
+    const migrated = migrateFromV5() || migrateFromV4() || migrateFromV3() || migrateFromV2() || migrateFromV1();
     persistState(migrated);
     return migrated;
   } catch (e) {
@@ -374,6 +423,33 @@ export function submitCpuBattleResult({ level, outcome, playerScore, cpuScore })
   }
   const isNewBest = playerScore > record.bestPlayerScore;
   if (isNewBest) record.bestPlayerScore = playerScore;
+  persist();
+  return isNewBest;
+}
+
+export function getMixedCpuRecord(level) {
+  const key = normalizeCpuLevel(level);
+  return { ...state.records.mixedCpuBattle[key] };
+}
+
+// ごちゃまぜバトルCPU戦の結果を選択レベルの記録へ反映する。スコアバトルCPU戦の
+// 記録（cpuBattle）とは別枠で管理する。途中終了時は呼び出さないこと。
+export function submitMixedCpuBattleResult({ level, outcome, playerScore, cpuScore, ojamaUseCount }) {
+  const key = normalizeCpuLevel(level);
+  const record = state.records.mixedCpuBattle[key];
+  record.playCount += 1;
+  if (outcome === 'win') {
+    record.wins += 1;
+    const margin = playerScore - cpuScore;
+    if (margin > record.bestWinningMargin) record.bestWinningMargin = margin;
+  } else if (outcome === 'lose') {
+    record.losses += 1;
+  } else {
+    record.draws += 1;
+  }
+  const isNewBest = playerScore > record.bestPlayerScore;
+  if (isNewBest) record.bestPlayerScore = playerScore;
+  record.totalOjamaUses += asNumber(ojamaUseCount, 0);
   persist();
   return isNewBest;
 }

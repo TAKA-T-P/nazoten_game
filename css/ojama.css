@@ -125,7 +125,7 @@
 /* ハイド：盤面上部の数式表示（「3+3+4=10」など）を黒い矩形で完全に覆う
    （仕様書相当）。数式の要素自体は変更せず、::afterで上に重ねるだけなので
    計算式のテキストや当たり判定には影響しない。 */
-.tp-hud-row.hud-formula.ojama-formula-hide::after {
+.hud-formula.ojama-formula-hide::after {
   content: '';
   position: absolute;
   inset: 0;

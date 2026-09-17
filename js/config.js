@@ -34,7 +34,8 @@ export const CONFIG = {
   cpuBattleTutorialVersion: 1,
   // 2人バトル専用チュートリアルのバージョン（Phase4実装指示書23章）。
   twoPlayerTutorialVersion: 1,
-  storageKey: 'nazoten-save-v5',
+  storageKey: 'nazoten-save-v6',
+  legacyStorageKeyV5: 'nazoten-save-v5',
   legacyStorageKeyV4: 'nazoten-save-v4',
   legacyStorageKeyV3: 'nazoten-save-v3',
   legacyStorageKeyV2: 'nazoten-save-v2',
@@ -51,6 +52,10 @@ export const CONFIG = {
     types: ['turn', 'small', 'hidden', 'meteor', 'formulaHide'],
     smallScaleMin: 0.35,
     smallScaleMax: 0.75,
+    // CPU戦（スコアバトル・ごちゃまぜバトル共通）：1P側からCPU側へオジャマ攻撃が
+    // 成功した場合、見た目の種類にかかわらず、effectDurationMsの間だけCPUの
+    // 思考時間・なぞり操作時間をこの倍率にする（＝遅くする）。
+    cpuSlowMultiplier: 2,
     // 受けた側の残り時間表示の下に5秒間出す「オジャマ「〇〇」」表示用のラベル。
     typeLabels: {
       turn: 'ターン',

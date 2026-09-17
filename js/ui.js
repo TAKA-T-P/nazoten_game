@@ -56,12 +56,18 @@ function cacheDom() {
   el.cpuLevelCurrentName = document.getElementById('cpu-level-current-name');
   el.cpuLevelDescription = document.getElementById('cpu-level-description');
   el.cpuLevelRecord = document.getElementById('cpu-level-record');
+  // CPU戦のバトル形式選択（スコアバトル/ごちゃまぜバトル）とオジャマON/OFF。
+  // 2人バトルの形式選択（.battle-format-btn/#btn-ojama-toggle）とはIDが異なる
+  // 別要素のため、状態が混ざらないよう画面単位でクエリする。
+  el.cpuFormatButtons = document.querySelectorAll('#screen-cpu-select .battle-format-btn');
+  el.cpuOjamaToggleBtn = document.getElementById('btn-cpu-ojama-toggle');
 
   el.screenBattle = document.getElementById('screen-battle');
   el.cpuBoard = document.getElementById('cpu-board');
   el.playerBoard = document.getElementById('player-board');
   el.battleHudTime = document.getElementById('battle-hud-time');
   el.battleHudFormula = document.getElementById('battle-hud-formula');
+  el.battleHudFormulaRow = document.getElementById('battle-hud-formula-row');
   el.battleCpuLevelLabel = document.getElementById('battle-cpu-level-label');
   el.battleGaugePlayer = document.getElementById('battle-gauge-player');
   el.battleFloatingLayer = document.getElementById('battle-floating-layer');
@@ -90,6 +96,42 @@ function cacheDom() {
   el.battleStatSwapDestroy = { player: document.getElementById('battle-stat-swapdestroy-player'), cpu: document.getElementById('battle-stat-swapdestroy-cpu') };
   el.battleStatCleared = { player: document.getElementById('battle-stat-cleared-player'), cpu: document.getElementById('battle-stat-cleared-cpu') };
   el.battleRecordSummary = document.getElementById('battle-record-summary');
+
+  // ごちゃまぜバトルCPU戦（スコアバトルCPU戦=battle-*とは別画面）。p1=プレイヤー・
+  // p2=CPUとして扱い、オジャマ関連要素は既存の汎用マップにbattle同様'mcb'
+  // スコープとして統合する。
+  el.screenMixedCpuBattle = document.getElementById('screen-mixed-cpu-battle');
+  el.mcbBoardPlayer = document.getElementById('mcb-board-player');
+  el.mcbBoardCpu = document.getElementById('mcb-board-cpu');
+  el.mcbHudTime = document.getElementById('mcb-hud-time');
+  el.mcbHudFormula = document.getElementById('mcb-hud-formula');
+  el.mcbHudFormulaRow = document.getElementById('mcb-hud-formula-row');
+  el.mcbCpuLevelLabel = document.getElementById('mcb-cpu-level-label');
+  el.mcbGaugePlayer = document.getElementById('mcb-gauge-player');
+  el.mcbFloatingLayer = document.getElementById('mcb-floating-layer');
+  el.mcbCountdownOverlay = document.getElementById('mcb-countdown-overlay');
+  el.mcbCountdownLabel = document.getElementById('mcb-countdown-label');
+  el.mcbTimeupOverlay = document.getElementById('mcb-timeup-overlay');
+  el.mcbPlayerSilverBadge = document.getElementById('mcb-player-silver-badge');
+  el.mcbCpuSilverBadge = document.getElementById('mcb-cpu-silver-badge');
+
+  el.mcbOutcome = document.getElementById('mcb-outcome');
+  el.mcbPlayerScore = document.getElementById('mcb-player-score');
+  el.mcbCpuScore = document.getElementById('mcb-cpu-score');
+  el.mcbScoreDiff = document.getElementById('mcb-score-diff');
+  el.mcbResultLevelLabel = document.getElementById('mcb-result-level-label');
+  el.mcbRecordSummary = document.getElementById('mcb-record-summary');
+  el.mcbStatNormal = { player: document.getElementById('mcb-stat-normal-player'), cpu: document.getElementById('mcb-stat-normal-cpu') };
+  el.mcbStatFever = { player: document.getElementById('mcb-stat-fever-player'), cpu: document.getElementById('mcb-stat-fever-cpu') };
+  el.mcbStatRate = { player: document.getElementById('mcb-stat-rate-player'), cpu: document.getElementById('mcb-stat-rate-cpu') };
+  el.mcbStatSuccess = { player: document.getElementById('mcb-stat-success-player'), cpu: document.getElementById('mcb-stat-success-cpu') };
+  el.mcbStat10 = { player: document.getElementById('mcb-stat-10-player'), cpu: document.getElementById('mcb-stat-10-cpu') };
+  el.mcbStat20 = { player: document.getElementById('mcb-stat-20-player'), cpu: document.getElementById('mcb-stat-20-cpu') };
+  el.mcbStat30 = { player: document.getElementById('mcb-stat-30-player'), cpu: document.getElementById('mcb-stat-30-cpu') };
+  el.mcbStat40 = { player: document.getElementById('mcb-stat-40-player'), cpu: document.getElementById('mcb-stat-40-cpu') };
+  el.mcbStatSilver = { player: document.getElementById('mcb-stat-silver-player'), cpu: document.getElementById('mcb-stat-silver-cpu') };
+  el.mcbStatSwapDestroy = { player: document.getElementById('mcb-stat-swapdestroy-player'), cpu: document.getElementById('mcb-stat-swapdestroy-cpu') };
+  el.mcbStatCleared = { player: document.getElementById('mcb-stat-cleared-player'), cpu: document.getElementById('mcb-stat-cleared-cpu') };
 
   // 2人バトル関連
   el.btnTwoPlayer = document.getElementById('btn-two-player');
@@ -154,29 +196,45 @@ function cacheDom() {
 
   // オジャマボタン・ヒドゥン用オーバーレイ（スコアバトル=tp・ごちゃまぜ=mbの
   // 両方に用意する。仕様書15章）
+  // CPU戦（スコアバトルCPU=battle）はOjamaControllerをp1=プレイヤー・p2=CPUとして
+  // 再利用する。CPUは自動使用のため専用ボタンはなく、CPU側のオーバーレイ・
+  // 受信ラベルだけを用意する（オジャマ被弾表示・視覚効果のため）。
   el.ojamaButtons = {
     tp: { p1: document.getElementById('btn-ojama-tp-p1'), p2: document.getElementById('btn-ojama-tp-p2') },
-    mb: { p1: document.getElementById('btn-ojama-p1'), p2: document.getElementById('btn-ojama-p2') }
+    mb: { p1: document.getElementById('btn-ojama-p1'), p2: document.getElementById('btn-ojama-p2') },
+    battle: { p1: document.getElementById('btn-ojama-battle-player'), p2: null },
+    mcb: { p1: document.getElementById('btn-ojama-mcb-player'), p2: null }
   };
   el.ojamaOverlays = {
     tp: { p1: document.getElementById('tp-ojama-overlay-p1'), p2: document.getElementById('tp-ojama-overlay-p2') },
-    mb: { p1: document.getElementById('mb-ojama-overlay-p1'), p2: document.getElementById('mb-ojama-overlay-p2') }
+    mb: { p1: document.getElementById('mb-ojama-overlay-p1'), p2: document.getElementById('mb-ojama-overlay-p2') },
+    battle: { p1: document.getElementById('battle-ojama-overlay-player'), p2: document.getElementById('battle-ojama-overlay-cpu') },
+    mcb: { p1: document.getElementById('mcb-ojama-overlay-player'), p2: document.getElementById('mcb-ojama-overlay-cpu') }
   };
   el.ojamaMeteorOverlays = {
     tp: { p1: document.getElementById('tp-ojama-meteor-p1'), p2: document.getElementById('tp-ojama-meteor-p2') },
-    mb: { p1: document.getElementById('mb-ojama-meteor-p1'), p2: document.getElementById('mb-ojama-meteor-p2') }
+    mb: { p1: document.getElementById('mb-ojama-meteor-p1'), p2: document.getElementById('mb-ojama-meteor-p2') },
+    battle: { p1: document.getElementById('battle-ojama-meteor-player'), p2: document.getElementById('battle-ojama-meteor-cpu') },
+    mcb: { p1: document.getElementById('mcb-ojama-meteor-player'), p2: document.getElementById('mcb-ojama-meteor-cpu') }
   };
   el.hudFormulaRow = {
     tp: { p1: document.getElementById('tp-hud-formula-row-p1'), p2: document.getElementById('tp-hud-formula-row-p2') },
-    mb: { p1: document.getElementById('mb-hud-formula-row-p1'), p2: document.getElementById('mb-hud-formula-row-p2') }
+    mb: { p1: document.getElementById('mb-hud-formula-row-p1'), p2: document.getElementById('mb-hud-formula-row-p2') },
+    // CPU側には数式表示がそもそもないため、「ハイド」を受けても対象がなくnoopになる。
+    battle: { p1: document.getElementById('battle-hud-formula-row'), p2: null },
+    mcb: { p1: document.getElementById('mcb-hud-formula-row'), p2: null }
   };
   el.ojamaReceivedLabels = {
     tp: { p1: document.getElementById('tp-ojama-received-p1'), p2: document.getElementById('tp-ojama-received-p2') },
-    mb: { p1: document.getElementById('mb-ojama-received-p1'), p2: document.getElementById('mb-ojama-received-p2') }
+    mb: { p1: document.getElementById('mb-ojama-received-p1'), p2: document.getElementById('mb-ojama-received-p2') },
+    battle: { p1: document.getElementById('battle-ojama-received-player'), p2: document.getElementById('battle-ojama-received-cpu') },
+    mcb: { p1: document.getElementById('mcb-ojama-received-player'), p2: document.getElementById('mcb-ojama-received-cpu') }
   };
   el.ojamaReceivedType = {
     tp: { p1: document.getElementById('tp-ojama-received-type-p1'), p2: document.getElementById('tp-ojama-received-type-p2') },
-    mb: { p1: document.getElementById('mb-ojama-received-type-p1'), p2: document.getElementById('mb-ojama-received-type-p2') }
+    mb: { p1: document.getElementById('mb-ojama-received-type-p1'), p2: document.getElementById('mb-ojama-received-type-p2') },
+    battle: { p1: document.getElementById('battle-ojama-received-type-player'), p2: document.getElementById('battle-ojama-received-type-cpu') },
+    mcb: { p1: document.getElementById('mcb-ojama-received-type-player'), p2: document.getElementById('mcb-ojama-received-type-cpu') }
   };
 }
 
@@ -630,6 +688,9 @@ export function hideBattleTimeUp() {
   setBattleFeverActive(false);
   setBattlePlayerSilverFeverActive(false);
   setBattleCpuSilverFeverActive(false);
+  clearOjamaEffect('battle', 'p1');
+  clearOjamaEffect('battle', 'p2');
+  hideOjamaButton('battle', 'p1');
 }
 
 // 点差ベースのゲージ表示を更新する。非表示（フィーバー中）はCSS側の.feverクラスで
@@ -919,6 +980,20 @@ export function updateOjamaToggle(enabled) {
   el.ojamaToggleBtn.textContent = enabled ? 'ON' : 'OFF';
   el.ojamaToggleBtn.classList.toggle('is-on', enabled);
   el.ojamaToggleBtn.setAttribute('aria-pressed', String(enabled));
+}
+
+// CPU戦（バトル形式とCPUの強さを選ぶ画面）専用。2人バトルの形式選択とは別要素・
+// 別状態のため、同じCSSクラスを再利用しつつ関数だけを分ける。
+export function updateCpuBattleFormatSelection(format) {
+  el.cpuFormatButtons.forEach((btn) => {
+    btn.classList.toggle('selected', btn.dataset.format === format);
+  });
+}
+
+export function updateCpuBattleOjamaToggle(enabled) {
+  el.cpuOjamaToggleBtn.textContent = enabled ? 'ON' : 'OFF';
+  el.cpuOjamaToggleBtn.classList.toggle('is-on', enabled);
+  el.cpuOjamaToggleBtn.setAttribute('aria-pressed', String(enabled));
 }
 
 // --- ごちゃまぜバトル（Phase5実装指示書5〜14章） ------------------------------
@@ -1215,15 +1290,309 @@ export function renderMixedBattleResult({ outcome, p1Score, p2Score, p1Stats, p2
   setStat(el.mbStatCleared, p1Stats.clearedCellCount, p2Stats.clearedCellCount);
 }
 
+// --- ごちゃまぜバトルCPU戦 ---------------------------------------------------
+// レイアウトはCPUバトル（battleBoards/player・cpu）と同じ「上下2盤面・共通の
+// 残り時間表示」を再利用し、共有盤面の重ね表示（相手選択リング）だけをmixed-
+// battle.jsと同じ考え方で追加する。p1=プレイヤー・p2=CPUとして扱う。
+
+const mcbBoards = {
+  player: { boardEl: null, cellEls: [] },
+  cpu: { boardEl: null, cellEls: [] }
+};
+
+const mcbSelection = {
+  p1: { indices: [], values: [], sum: 0, isValid: false },
+  p2: { indices: [] }
+};
+
+export function getMixedCpuBattleBoardElements() {
+  return { player: el.mcbBoardPlayer, cpu: el.mcbBoardCpu };
+}
+
+export function renderMixedCpuBattleBoards(board) {
+  mcbBoards.player.boardEl = el.mcbBoardPlayer;
+  mcbBoards.cpu.boardEl = el.mcbBoardCpu;
+  renderCellsInto(mcbBoards.player, board);
+  renderCellsInto(mcbBoards.cpu, board);
+  mcbSelection.p1 = { indices: [], values: [], sum: 0, isValid: false };
+  mcbSelection.p2 = { indices: [] };
+  updateMixedCpuHudFormula([], [], 0, false);
+  updateMixedCpuHighlights();
+}
+
+export function updateMixedCpuCpuLevelLabel(level) {
+  el.mcbCpuLevelLabel.textContent = CPU_LEVELS[level].label;
+}
+
+function updateMixedCpuHudFormula(indices, values, sum, isValid) {
+  el.mcbHudFormula.classList.toggle('formula-valid', isValid && indices.length >= 2);
+  el.mcbHudFormula.textContent = indices.length === 0 ? ' ' : `${values.join(' + ')} = ${sum}`;
+}
+
+// プレイヤー盤面には自分の選択（強い枠）とCPUの現在経路（色つきリング）の
+// 両方を、CPU盤面にはCPU自身の選択だけを反映する（CPU盤面は正確な合計を
+// 表示しない既存方針を踏襲）。
+function updateMixedCpuHighlights() {
+  const p1 = mcbSelection.p1;
+  const p2Indices = mcbSelection.p2.indices;
+  const p1Set = new Set(p1.indices);
+  const p2Set = new Set(p2Indices);
+  const p1ShowValid = p1.isValid && p1.indices.length >= 2;
+
+  const playerTarget = mcbBoards.player;
+  playerTarget.cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('selected', p1Set.has(i));
+    cellEl.classList.toggle('selected-valid', p1Set.has(i) && p1ShowValid);
+    cellEl.classList.toggle('opp-selected-p2', p2Set.has(i));
+    const badge = cellEl.querySelector('.order-badge');
+    if (badge) badge.remove();
+  });
+  p1.indices.forEach((cellIndex, order) => {
+    const badge = document.createElement('span');
+    badge.className = 'order-badge';
+    badge.textContent = String(order + 1);
+    playerTarget.cellEls[cellIndex].appendChild(badge);
+  });
+
+  const cpuTarget = mcbBoards.cpu;
+  cpuTarget.cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('selected', p2Set.has(i));
+  });
+}
+
+export function updateMixedCpuPlayerSelection(detail) {
+  mcbSelection.p1 = { indices: detail.indices, values: detail.values, sum: detail.sum, isValid: detail.isValid };
+  updateMixedCpuHighlights();
+  updateMixedCpuHudFormula(detail.indices, detail.values, detail.sum, detail.isValid);
+}
+
+export function updateMixedCpuCpuSelection(indices) {
+  mcbSelection.p2 = { indices };
+  updateMixedCpuHighlights();
+}
+
+function flashMixedCpuCells(actor, indices) {
+  const target = actor === 'p2' ? mcbBoards.cpu : mcbBoards.player;
+  indices.forEach((i) => {
+    if (reduceMotion) return;
+    const cellEl = target.cellEls[i];
+    cellEl.classList.add('fail-shake');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('fail-shake'), { once: true });
+  });
+}
+
+export function playMixedCpuFailEffect(actor, indices) {
+  flashMixedCpuCells(actor, indices);
+}
+
+// 横取りされたときの中立フィードバックは、フローティング表示を持つ
+// プレイヤー側でのみ表示する（CPU盤面にはfloating-layerがない）。
+export function playMixedCpuStolenEffect(actor, indices) {
+  if (actor !== 'p1') return;
+  const target = mcbBoards.player;
+  const lastIndex = indices[indices.length - 1];
+  const cellEl = target.cellEls[lastIndex];
+  const boardRect = target.boardEl.getBoundingClientRect();
+  const cellRect = cellEl.getBoundingClientRect();
+
+  const floatEl = document.createElement('div');
+  floatEl.className = 'floating-score floating-stolen';
+  floatEl.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
+  floatEl.style.top = `${cellRect.top - boardRect.top}px`;
+  floatEl.innerHTML = '<span class="floating-label">先に取られた！</span>';
+
+  el.mcbFloatingLayer.appendChild(floatEl);
+  const remove = () => floatEl.remove();
+  floatEl.addEventListener('animationend', remove, { once: true });
+  setTimeout(remove, 1200);
+}
+
+export function playMixedCpuBlockedEffect(indices) {
+  flashMixedCpuCells('p1', indices);
+}
+
+function showMixedCpuFloatingScore(detail) {
+  const target = mcbBoards.player;
+  const lastIndex = detail.indices[detail.indices.length - 1];
+  const cellEl = target.cellEls[lastIndex];
+  const boardRect = target.boardEl.getBoundingClientRect();
+  const cellRect = cellEl.getBoundingClientRect();
+
+  const isSilver = !detail.isFever && detail.multiplier > 1;
+  const label = buildFloatingLabel(detail);
+
+  const floatEl = document.createElement('div');
+  const classes = ['floating-score'];
+  if (detail.isForty) classes.push('floating-forty');
+  if (detail.isFever) classes.push('floating-fever');
+  if (isSilver) classes.push('floating-silver');
+  floatEl.className = classes.join(' ');
+  floatEl.style.left = `${cellRect.left - boardRect.left + cellRect.width / 2}px`;
+  floatEl.style.top = `${cellRect.top - boardRect.top}px`;
+  floatEl.innerHTML = `${label ? `<span class="floating-label">${label}</span>` : ''}<span>+${detail.points}</span>`;
+
+  el.mcbFloatingLayer.appendChild(floatEl);
+  const remove = () => floatEl.remove();
+  floatEl.addEventListener('animationend', remove, { once: true });
+  setTimeout(remove, 1200);
+}
+
+// CPU側は既存のCPUバトル（battle.js）同様、フローティング得点表示を持たない。
+export function playMixedCpuSuccessEffect(actor, detail) {
+  if (actor === 'p1') showMixedCpuFloatingScore(detail);
+}
+
+export function clearMixedCpuCells(indices) {
+  ['player', 'cpu'].forEach((who) => {
+    const target = mcbBoards[who];
+    indices.forEach((i) => target.cellEls[i].classList.add('clearing'));
+  });
+  setTimeout(() => {
+    ['player', 'cpu'].forEach((who) => {
+      const target = mcbBoards[who];
+      indices.forEach((i) => {
+        const cellEl = target.cellEls[i];
+        cellEl.classList.remove('clearing');
+        cellEl.classList.add('empty');
+        cellEl.querySelector('.cell-value').textContent = '';
+      });
+    });
+  }, 220);
+}
+
+export function refillMixedCpuCells(cells) {
+  ['player', 'cpu'].forEach((who) => {
+    const target = mcbBoards[who];
+    cells.forEach(({ index, value }) => {
+      const cellEl = target.cellEls[index];
+      cellEl.classList.remove('empty');
+      cellEl.querySelector('.cell-value').textContent = String(value);
+      cellEl.classList.add('popping');
+      cellEl.addEventListener('animationend', () => cellEl.classList.remove('popping'), { once: true });
+    });
+  });
+  applyOjamaSmallToRefilledCells('mcb', cells);
+}
+
+// CPUは入れかえを行わないため、入れかえ選択の見た目はプレイヤー盤面だけに出す。
+export function updateMixedCpuSwapSelection(index) {
+  mcbBoards.player.cellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('swap-selected', i === index);
+  });
+}
+
+export function applyMixedCpuSwap(indices, values) {
+  ['player', 'cpu'].forEach((who) => {
+    const target = mcbBoards[who];
+    indices.forEach((index, i) => {
+      const cellEl = target.cellEls[index];
+      cellEl.classList.remove('swap-selected');
+      cellEl.querySelector('.cell-value').textContent = String(values[i]);
+      cellEl.classList.add('swapping');
+      cellEl.addEventListener('animationend', () => cellEl.classList.remove('swapping'), { once: true });
+    });
+  });
+}
+
+export function updateMixedCpuTimer(remainingMs) {
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  el.mcbHudTime.textContent = String(seconds);
+}
+
+export function showMixedCpuCountdown(label) {
+  el.mcbCountdownOverlay.hidden = false;
+  el.mcbCountdownLabel.textContent = label;
+  el.mcbCountdownLabel.classList.remove('countdown-pop');
+  void el.mcbCountdownLabel.offsetWidth;
+  el.mcbCountdownLabel.classList.add('countdown-pop');
+  if (label === 'BATTLE!') {
+    setTimeout(() => { el.mcbCountdownOverlay.hidden = true; }, 450);
+  }
+}
+
+export function setMixedCpuFeverActive(active) {
+  el.screenMixedCpuBattle.classList.toggle('fever', active);
+}
+
+export function setMixedCpuSilverFeverActive(actor, active) {
+  el.screenMixedCpuBattle.classList.toggle(`${actor}-silver-fever`, active);
+}
+
+export function showMixedCpuTimeUp() {
+  el.mcbTimeupOverlay.hidden = false;
+}
+
+export function hideMixedCpuTimeUp() {
+  el.mcbTimeupOverlay.hidden = true;
+  setMixedCpuFeverActive(false);
+  setMixedCpuSilverFeverActive('p1', false);
+  setMixedCpuSilverFeverActive('p2', false);
+  clearOjamaEffect('mcb', 'p1');
+  clearOjamaEffect('mcb', 'p2');
+  hideOjamaButton('mcb', 'p1');
+}
+
+export function updateMixedCpuGauge(detail) {
+  const pct = Math.max(0, Math.min(100, detail.p1Percent));
+  el.mcbGaugePlayer.style.width = `${pct}%`;
+}
+
+export function renderMixedCpuBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, record }) {
+  el.mcbOutcome.textContent = OUTCOME_LABELS[outcome] || '';
+  el.mcbOutcome.classList.remove('outcome-win', 'outcome-lose', 'outcome-draw');
+  el.mcbOutcome.classList.add(`outcome-${outcome}`);
+
+  el.mcbPlayerScore.textContent = String(playerScore);
+  el.mcbCpuScore.textContent = String(cpuScore);
+  el.mcbScoreDiff.textContent = String(Math.abs(playerScore - cpuScore));
+  el.mcbResultLevelLabel.textContent = CPU_LEVELS[level].label;
+  el.mcbRecordSummary.textContent = formatRecord(record);
+
+  const setStat = (pair, playerValue, cpuValue) => {
+    pair.player.textContent = String(playerValue);
+    pair.cpu.textContent = String(cpuValue);
+  };
+
+  setStat(el.mcbStatNormal, playerStats.normalScore, cpuStats.normalScore);
+  setStat(el.mcbStatFever, playerStats.feverScore, cpuStats.feverScore);
+  setStat(el.mcbStatRate, formatRate(calcSuccessRate(playerStats)), formatRate(calcSuccessRate(cpuStats)));
+  setStat(el.mcbStatSuccess, playerStats.successCount, cpuStats.successCount);
+  setStat(el.mcbStat10, playerStats.sumCounts[10], cpuStats.sumCounts[10]);
+  setStat(el.mcbStat20, playerStats.sumCounts[20], cpuStats.sumCounts[20]);
+  setStat(el.mcbStat30, playerStats.sumCounts[30], cpuStats.sumCounts[30]);
+  setStat(el.mcbStat40, playerStats.sumCounts[40], cpuStats.sumCounts[40]);
+  setStat(el.mcbStatSilver, playerStats.silverFeverCount, cpuStats.silverFeverCount);
+  setStat(el.mcbStatSwapDestroy, playerStats.swapCount + playerStats.destroyCount, cpuStats.swapCount + cpuStats.destroyCount);
+  setStat(el.mcbStatCleared, playerStats.clearedCellCount, cpuStats.clearedCellCount);
+}
+
 // --- オジャマ（Phase5実装指示書16〜20章） -------------------------------------
 // scope: 'tp'（スコアバトル）または'mb'（ごちゃまぜバトル）。両モードで同じ
 // 見た目・処理を再利用する。
 
 // スモール効果中に新しく補充された数字にも縮小率を割り当てる（仕様書18.3章）。
-const ojamaSmallActive = { tp: { p1: false, p2: false }, mb: { p1: false, p2: false } };
+const ojamaSmallActive = {
+  tp: { p1: false, p2: false },
+  mb: { p1: false, p2: false },
+  battle: { p1: false, p2: false },
+  mcb: { p1: false, p2: false }
+};
 
+// battle・mcb（CPU戦の2形式）はp1=プレイヤー・p2=CPUとして扱う（既存の
+// battleBoards/el.playerBoard・el.cpuBoardや、mcbBoards/el.mcbBoardPlayer・
+// el.mcbBoardCpuをそのまま再利用する）。
 function getBoardTarget(scope, actor) {
-  return scope === 'mb' ? mixedBoards[actor] : twoPlayerBoards[actor];
+  if (scope === 'mb') return mixedBoards[actor];
+  if (scope === 'battle') return actor === 'p2' ? battleBoards.cpu : battleBoards.player;
+  if (scope === 'mcb') return actor === 'p2' ? mcbBoards.cpu : mcbBoards.player;
+  return twoPlayerBoards[actor];
+}
+
+function getOjamaBoardEl(scope, actor) {
+  if (scope === 'mb') return el.mbBoard[actor];
+  if (scope === 'battle') return actor === 'p2' ? el.cpuBoard : el.playerBoard;
+  if (scope === 'mcb') return actor === 'p2' ? el.mcbBoardCpu : el.mcbBoardPlayer;
+  return el.tpBoard[actor];
 }
 
 export function showOjamaButton(scope, actor) {
@@ -1270,7 +1639,7 @@ function clearOjamaScale(scope, actor) {
 }
 
 export function startOjamaEffect(scope, actor, type) {
-  const boardEl = scope === 'mb' ? el.mbBoard[actor] : el.tpBoard[actor];
+  const boardEl = getOjamaBoardEl(scope, actor);
   if (type === 'turn') {
     boardEl.classList.add('ojama-turn');
   } else if (type === 'small') {
@@ -1307,7 +1676,7 @@ export function startOjamaEffect(scope, actor, type) {
 }
 
 export function clearOjamaEffect(scope, actor) {
-  const boardEl = scope === 'mb' ? el.mbBoard[actor] : el.tpBoard[actor];
+  const boardEl = getOjamaBoardEl(scope, actor);
   boardEl.classList.remove('ojama-turn', 'ojama-small');
   ojamaSmallActive[scope][actor] = false;
   clearOjamaScale(scope, actor);

@@ -343,6 +343,8 @@
 .hud-formula {
   justify-content: center;
   min-height: 1.6em;
+  /* オジャマ「ハイド」の黒い矩形（::after）をこの行の上に重ねるための基準。 */
+  position: relative;
 }
 
 .hud-formula-text {

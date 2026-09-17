@@ -80,14 +80,25 @@
   <section id="screen-battle-rules" class="screen" data-screen="battle-rules" hidden>
     <div class="howto-inner">
       <h2>対戦ルール</h2>
-      <h3 class="howto-subheading">CPU戦</h3>
+      <h3 class="howto-subheading">CPU戦：スコアバトル</h3>
       <ol class="howto-steps">
+        <li>「CPUバトル」を押すと、まず対戦形式（スコアバトル／ごちゃまぜバトル）とオジャマの
+          ON／OFFを選んでから、CPUの強さを選ぶ。</li>
         <li>同じ数字の並びからCPUと同時にスタートする。</li>
         <li>開始後の消去・補充は、プレイヤーとCPUでそれぞれ独立している。</li>
         <li>プレイ中は正確な点数を表示しない。中央のゲージで優勢を確認する。</li>
         <li>ラスト10秒は両者とも得点3倍。ゲージが消えるため最後まで勝敗は分からない。</li>
         <li>5マスで合計10を作るとシルバー・フィーバーが発動し、発動した側だけ10秒間得点2倍。</li>
         <li>60秒後に両者の得点と勝敗を発表する。</li>
+      </ol>
+      <h3 class="howto-subheading">CPU戦：ごちゃまぜバトル</h3>
+      <ol class="howto-steps">
+        <li>プレイヤーとCPUが同じ盤面を共有する。</li>
+        <li>CPUがなぞっている数字は、CPUの色で表示される。</li>
+        <li>同じ数字をどちらも狙えるが、先に正解を完成させた側が得点する。</li>
+        <li>CPUに先に消された選択は、失敗扱いにならない。</li>
+        <li>CPUが選択中の数字は、入れかえ・破壊できない。</li>
+        <li>結果画面では得点と勝敗を表示し、称号は表示しない。</li>
       </ol>
       <h3 class="howto-subheading">2人バトル：スコアバトル</h3>
       <ol class="howto-steps">
@@ -110,11 +121,15 @@
         <li>シルバーは各プレイヤー別、ミリオンは両者共通。</li>
         <li>結果画面では得点と勝敗を表示し、称号は表示しない。</li>
       </ol>
-      <h3 class="howto-subheading">オジャマ（スコアバトル・ごちゃまぜバトル共通）</h3>
+      <h3 class="howto-subheading">オジャマ（CPU戦・2人バトルの両方共通）</h3>
       <ol class="howto-steps">
         <li>対戦前にオジャマのON／OFFを選べる（初期値はON）。</li>
-        <li>残り40秒と20秒で、負けている側にオジャマボタンが5秒間だけ表示される。</li>
-        <li>押すと相手へ5秒間、ランダムな視覚妨害（数字が逆さ・小さい・見えにくいの3種類）が発生する。</li>
+        <li>残り40秒と20秒で、負けている側にオジャマボタンが5秒間だけ表示される
+          （CPU戦でCPUが劣勢のときは、CPUが自動でオジャマを使ってくる）。</li>
+        <li>押すと相手へ5秒間、ランダムな視覚妨害（数字が逆さ・小さい・見えにくい・星が降る・
+          数式が隠れるの5種類）が発生する。受けた側には受けた種類が5秒間表示される。</li>
+        <li>CPU戦でプレイヤーからCPUへの攻撃が成功すると、見た目の種類にかかわらず5秒間
+          CPUの思考・操作が遅くなる。</li>
         <li>オジャマは操作や数字そのものを変えない。</li>
         <li>ラスト10秒のミリオン・フィーバーとは重ならない。</li>
       </ol>
@@ -193,7 +208,21 @@
 
   <section id="screen-cpu-select" class="screen" data-screen="cpu-select" hidden>
     <div class="cpu-select-inner">
-      <h2>CPUの強さを選ぶ</h2>
+      <h2>バトル形式とCPUの強さを選ぶ</h2>
+      <div class="battle-format-options">
+        <button id="btn-cpu-format-score" class="battle-format-btn selected" data-format="score" type="button">
+          <span class="battle-format-label">スコアバトル</span>
+          <span class="battle-format-desc">それぞれの盤面で得点を競う</span>
+        </button>
+        <button id="btn-cpu-format-mixed" class="battle-format-btn" data-format="mixed" type="button">
+          <span class="battle-format-label">ごちゃまぜバトル</span>
+          <span class="battle-format-desc">1つの盤面を早い者勝ちで奪い合う</span>
+        </button>
+      </div>
+      <div class="ojama-toggle-row">
+        <span class="ojama-toggle-label">オジャマ</span>
+        <button id="btn-cpu-ojama-toggle" class="ojama-toggle-btn" type="button" aria-pressed="true">ON</button>
+      </div>
       <div class="cpu-level-current">
         <span id="cpu-level-current-label" class="cpu-level-label">強さ1</span>
         <span id="cpu-level-current-name" class="cpu-level-name">ゆっくり</span>
@@ -223,9 +252,12 @@
     <div class="battle-side battle-side-cpu">
       <p class="battle-name">CPU（<span id="battle-cpu-level-label">強さ1</span>）
         <span id="battle-cpu-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
+        <span id="battle-ojama-received-cpu" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="battle-ojama-received-type-cpu"></span>」</span>
       </p>
       <div class="board-wrap battle-cpu-board-wrap">
         <div id="cpu-board" class="board battle-cpu-board" aria-hidden="true"></div>
+        <div id="battle-ojama-overlay-cpu" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+        <div id="battle-ojama-meteor-cpu" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
       </div>
     </div>
 
@@ -249,12 +281,14 @@
     </div>
 
     <div class="battle-side battle-side-player">
-      <div class="hud-row hud-formula">
+      <div id="battle-hud-formula-row" class="hud-row hud-formula">
         <span id="battle-hud-formula" class="hud-formula-text">&nbsp;</span>
       </div>
       <div class="board-wrap battle-player-board-wrap">
         <div id="player-board" class="board" role="grid" aria-label="自分の盤面"></div>
         <div id="battle-floating-layer" class="floating-layer" aria-hidden="true"></div>
+        <div id="battle-ojama-overlay-player" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+        <div id="battle-ojama-meteor-player" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
 
         <div id="battle-countdown-overlay" class="countdown-overlay" hidden>
           <span id="battle-countdown-label" class="countdown-label"></span>
@@ -266,6 +300,8 @@
       </div>
       <p class="battle-you-label">YOU
         <span id="battle-player-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
+        <span id="battle-ojama-received-player" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="battle-ojama-received-type-player"></span>」</span>
+        <button id="btn-ojama-battle-player" class="ojama-button" type="button" hidden>オジャマ！</button>
       </p>
     </div>
   </section>
@@ -321,6 +357,119 @@
           <tr><td>Sフィーバー突入回数</td><td id="battle-stat-silver-player">0</td><td id="battle-stat-silver-cpu">0</td></tr>
           <tr><td>入れ替え・破壊回数</td><td id="battle-stat-swapdestroy-player">0</td><td id="battle-stat-swapdestroy-cpu">0</td></tr>
           <tr><td>消したパネルの数</td><td id="battle-stat-cleared-player">0</td><td id="battle-stat-cleared-cpu">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="screen-mixed-cpu-battle" class="screen" data-screen="mixed-cpu-battle" hidden>
+    <button id="btn-mcb-back" class="btn-small btn-top-left" type="button">もどる</button>
+    <button id="btn-mcb-retry" class="btn-small btn-top-right" type="button">リトライ</button>
+
+    <div class="battle-side battle-side-cpu">
+      <p class="battle-name">CPU（<span id="mcb-cpu-level-label">強さ1</span>）
+        <span id="mcb-cpu-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
+        <span id="mcb-ojama-received-cpu" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mcb-ojama-received-type-cpu"></span>」</span>
+      </p>
+      <div class="board-wrap battle-cpu-board-wrap">
+        <div id="mcb-board-cpu" class="board battle-cpu-board" aria-label="共有盤面（CPU視点）" aria-hidden="true"></div>
+        <div id="mcb-ojama-overlay-cpu" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+        <div id="mcb-ojama-meteor-cpu" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
+      </div>
+    </div>
+
+    <div class="battle-center">
+      <div class="hud-row hud-time">
+        <span class="hud-label">のこり</span>
+        <span id="mcb-hud-time" class="hud-time-value">60</span>
+      </div>
+      <div class="battle-gauge-slot">
+        <div id="mcb-gauge" class="battle-gauge">
+          <div id="mcb-gauge-player" class="battle-gauge-player"></div>
+          <div id="mcb-gauge-cpu" class="battle-gauge-cpu"></div>
+          <div class="battle-gauge-marker"></div>
+        </div>
+        <div id="mcb-fever-label" class="battle-fever-label">MILLION FEVER!<br>SCORE ×3</div>
+      </div>
+      <div class="battle-gauge-labels">
+        <span class="battle-gauge-label-you">YOU</span>
+        <span class="battle-gauge-label-cpu">CPU</span>
+      </div>
+    </div>
+
+    <div class="battle-side battle-side-player">
+      <div id="mcb-hud-formula-row" class="hud-row hud-formula">
+        <span id="mcb-hud-formula" class="hud-formula-text">&nbsp;</span>
+      </div>
+      <div class="board-wrap battle-player-board-wrap">
+        <div id="mcb-board-player" class="board" role="grid" aria-label="共有盤面（自分視点）"></div>
+        <div id="mcb-floating-layer" class="floating-layer" aria-hidden="true"></div>
+        <div id="mcb-ojama-overlay-player" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
+        <div id="mcb-ojama-meteor-player" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
+
+        <div id="mcb-countdown-overlay" class="countdown-overlay" hidden>
+          <span id="mcb-countdown-label" class="countdown-label"></span>
+        </div>
+
+        <div id="mcb-timeup-overlay" class="timeup-overlay" hidden>
+          <span class="timeup-label">TIME UP!</span>
+        </div>
+      </div>
+      <p class="battle-you-label">YOU
+        <span id="mcb-player-silver-badge" class="silver-badge silver-badge-small">SILVER ×2</span>
+        <span id="mcb-ojama-received-player" class="ojama-received-label" aria-hidden="true">オジャマ<br>「<span id="mcb-ojama-received-type-player"></span>」</span>
+        <button id="btn-ojama-mcb-player" class="ojama-button" type="button" hidden>オジャマ！</button>
+      </p>
+    </div>
+  </section>
+
+  <section id="screen-mixed-cpu-battle-result" class="screen" data-screen="mixed-cpu-battle-result" hidden>
+    <div class="result-inner">
+      <p id="mcb-outcome" class="battle-outcome">YOU WIN!</p>
+
+      <table class="battle-score-compare">
+        <tbody>
+          <tr class="battle-compare-you">
+            <td class="battle-compare-label">YOU</td>
+            <td id="mcb-player-score" class="battle-compare-score">0</td>
+          </tr>
+          <tr class="battle-compare-cpu">
+            <td class="battle-compare-label">CPU（<span id="mcb-result-level-label">強さ1</span>）</td>
+            <td id="mcb-cpu-score" class="battle-compare-score">0</td>
+          </tr>
+          <tr class="battle-compare-diff">
+            <td>点差</td>
+            <td id="mcb-score-diff">0</td>
+          </tr>
+          <tr class="battle-compare-record">
+            <td>この強さの通算成績</td>
+            <td id="mcb-record-summary">0勝</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="result-buttons">
+        <button id="btn-mcb-rematch" class="btn btn-primary" type="button">もう一度</button>
+        <button id="btn-mcb-change-level" class="btn btn-secondary" type="button">強さ変更</button>
+      </div>
+      <button id="btn-mcb-result-title" class="btn btn-secondary battle-title-btn" type="button">タイトルへ</button>
+
+      <table class="battle-stats-compare">
+        <thead>
+          <tr><th></th><th>1P</th><th>CPU</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>通常タイムスコア</td><td id="mcb-stat-normal-player">0</td><td id="mcb-stat-normal-cpu">0</td></tr>
+          <tr><td>Mフィーバースコア</td><td id="mcb-stat-fever-player">0</td><td id="mcb-stat-fever-cpu">0</td></tr>
+          <tr><td>成功率</td><td id="mcb-stat-rate-player">—</td><td id="mcb-stat-rate-cpu">—</td></tr>
+          <tr><td>パネルを消した回数</td><td id="mcb-stat-success-player">0</td><td id="mcb-stat-success-cpu">0</td></tr>
+          <tr><td>10を作った回数</td><td id="mcb-stat-10-player">0</td><td id="mcb-stat-10-cpu">0</td></tr>
+          <tr><td>20を作った回数</td><td id="mcb-stat-20-player">0</td><td id="mcb-stat-20-cpu">0</td></tr>
+          <tr><td>30を作った回数</td><td id="mcb-stat-30-player">0</td><td id="mcb-stat-30-cpu">0</td></tr>
+          <tr><td>40を作った回数</td><td id="mcb-stat-40-player">0</td><td id="mcb-stat-40-cpu">0</td></tr>
+          <tr><td>Sフィーバー突入回数</td><td id="mcb-stat-silver-player">0</td><td id="mcb-stat-silver-cpu">0</td></tr>
+          <tr><td>入れ替え・破壊回数</td><td id="mcb-stat-swapdestroy-player">0</td><td id="mcb-stat-swapdestroy-cpu">0</td></tr>
+          <tr><td>消したパネルの数</td><td id="mcb-stat-cleared-player">0</td><td id="mcb-stat-cleared-cpu">0</td></tr>
         </tbody>
       </table>
     </div>

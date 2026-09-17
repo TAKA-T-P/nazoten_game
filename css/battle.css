@@ -337,6 +337,91 @@
   box-shadow: 0 0 0 3px #94a3b8, 0 0 16px 4px rgba(148, 163, 184, 0.55);
 }
 
+/* --- ごちゃまぜバトルCPU戦 -------------------------------------------------- */
+/* レイアウトは#screen-battleと同じ.battle-side/.battle-center/.board-wrap等の
+   クラスをそのまま再利用するため、#screen-battle向けのフィーバー・シルバー・
+   フィーバー演出（同じクラス名・同じ考え方）を#screen-mixed-cpu-battle用にも
+   個別に用意する（#screen-two-playerと#screen-mixed-battleの関係と同じパターン）。 */
+#screen-mixed-cpu-battle.fever .battle-gauge {
+  visibility: hidden;
+}
+
+#screen-mixed-cpu-battle.fever .battle-fever-label {
+  visibility: visible;
+}
+
+#screen-mixed-cpu-battle.fever .cell {
+  background: linear-gradient(160deg, #fff6d9 0%, #ffdf7d 100%);
+  border-color: #e6a800;
+  color: #5b3d00;
+}
+
+#screen-mixed-cpu-battle.fever .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-mixed-cpu-battle.fever .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-mixed-cpu-battle.fever .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-mixed-cpu-battle.fever .board-wrap {
+  box-shadow: 0 0 0 3px #ffd54d, 0 0 16px 4px rgba(255, 213, 77, 0.55);
+}
+
+#screen-mixed-cpu-battle.fever #mcb-hud-time {
+  color: var(--color-forty);
+}
+
+#screen-mixed-cpu-battle.p1-silver-fever:not(.fever) #mcb-player-silver-badge,
+#screen-mixed-cpu-battle.p2-silver-fever:not(.fever) #mcb-cpu-silver-badge {
+  visibility: visible;
+}
+
+#screen-mixed-cpu-battle.p1-silver-fever:not(.fever) #mcb-board-player .cell,
+#screen-mixed-cpu-battle.p2-silver-fever:not(.fever) #mcb-board-cpu .cell {
+  background: linear-gradient(160deg, #f1f5f9 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+#screen-mixed-cpu-battle.p1-silver-fever:not(.fever) #mcb-board-player .cell.selected,
+#screen-mixed-cpu-battle.p2-silver-fever:not(.fever) #mcb-board-cpu .cell.selected {
+  border-color: var(--color-secondary);
+  background: #e6fbf9;
+  color: var(--color-text);
+}
+
+#screen-mixed-cpu-battle.p1-silver-fever:not(.fever) #mcb-board-player .cell.selected-valid {
+  border-color: var(--color-success);
+  background: #e4fbee;
+  color: var(--color-success);
+}
+
+#screen-mixed-cpu-battle.p1-silver-fever:not(.fever) #mcb-board-player .cell.swap-selected {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.35);
+}
+
+#screen-mixed-cpu-battle.p1-silver-fever:not(.fever) .battle-player-board-wrap {
+  box-shadow: 0 0 0 3px #94a3b8, 0 0 16px 4px rgba(148, 163, 184, 0.55);
+}
+
+#screen-mixed-cpu-battle.p2-silver-fever:not(.fever) .battle-cpu-board-wrap {
+  box-shadow: 0 0 0 3px #94a3b8, 0 0 16px 4px rgba(148, 163, 184, 0.55);
+}
+
+/* 共有盤面のため、相手（CPU）が現在なぞっている経路を自分の盤面にだけ色つき
+   リングで重ねる（mixed-battle.cssの.opp-selected-p1/p2をそのまま再利用）。 */
+
 /* バトル結果画面 */
 .battle-outcome {
   font-size: 1.8rem;

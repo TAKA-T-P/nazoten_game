@@ -15,7 +15,8 @@ export class CpuController {
    *   onFail?: (indices: number[]) => void,
    *   onDestroy?: (index: number) => void,
    *   onCellsClear?: (indices: number[]) => void,
-   *   onCellsRefill?: (cells: {index:number, value:number}[]) => void
+   *   onCellsRefill?: (cells: {index:number, value:number}[]) => void,
+   *   onStolen?: (indices: number[]) => void
    * }} options
    */
   constructor({
@@ -27,7 +28,10 @@ export class CpuController {
     onFail = () => {},
     onDestroy = () => {},
     onCellsClear = () => {},
-    onCellsRefill = () => {}
+    onCellsRefill = () => {},
+    // 共有盤面（ごちゃまぜバトルCPU戦）で、なぞり終えた時点で相手に先に消されて
+    // いた場合に呼ばれる。既定は何もしない（独立盤面のCPU戦では発生しない）。
+    onStolen = () => {}
   }) {
     this.board = board;
     this.levelConfig = levelConfig;
@@ -38,12 +42,17 @@ export class CpuController {
     this.onDestroy = onDestroy;
     this.onCellsClear = onCellsClear;
     this.onCellsRefill = onCellsRefill;
+    this.onStolen = onStolen;
 
     this.running = false;
     this.getScoringContext = () => ({ isFever: false, multiplier: 1 });
     this.timers = new Set();
     this.currentSelection = [];
     this.stuckSince = null;
+    // オジャマを受けた際の減速倍率（思考時間・なぞり操作時間の両方に掛かる）。
+    // 通常時は1で、setSpeedMultiplier()で一定時間だけ変更される。
+    this.speedMultiplier = 1;
+    this.speedRevertTimerId = null;
   }
 
   // getScoringContext()は { isFever, multiplier } を返す。成功確定時点の最新の
@@ -53,6 +62,8 @@ export class CpuController {
     this.running = true;
     this.getScoringContext = getScoringContext;
     this.stuckSince = null;
+    this.speedMultiplier = 1;
+    this.speedRevertTimerId = null;
     this._scheduleThink();
   }
 
@@ -60,10 +71,28 @@ export class CpuController {
     this.running = false;
     for (const id of this.timers) clearTimeout(id);
     this.timers.clear();
+    this.speedMultiplier = 1;
+    this.speedRevertTimerId = null;
     if (this.currentSelection.length > 0) {
       this.currentSelection = [];
       this.onSelectionChange([]);
     }
+  }
+
+  // オジャマ攻撃を受けた際に呼ぶ。見た目のオジャマ種類にかかわらず、durationMsの
+  // 間だけ思考時間（_scheduleThink）となぞり操作時間（_traceAndResolve）の両方を
+  // multiplier倍にする（＝遅くする）。既に効果中なら残り時間を上書きする。
+  setSpeedMultiplier(multiplier, durationMs) {
+    if (!this.running) return;
+    if (this.speedRevertTimerId !== null) {
+      this.timers.delete(this.speedRevertTimerId);
+      clearTimeout(this.speedRevertTimerId);
+    }
+    this.speedMultiplier = multiplier;
+    this.speedRevertTimerId = this._setTimeout(() => {
+      this.speedMultiplier = 1;
+      this.speedRevertTimerId = null;
+    }, durationMs);
   }
 
   _setTimeout(fn, ms) {
@@ -159,7 +188,7 @@ export class CpuController {
   _scheduleThink() {
     if (!this.running) return;
     const { thinkMinMs, thinkMaxMs } = this.levelConfig;
-    const delay = thinkMinMs + this.rng() * (thinkMaxMs - thinkMinMs);
+    const delay = (thinkMinMs + this.rng() * (thinkMaxMs - thinkMinMs)) * this.speedMultiplier;
     this._setTimeout(() => this._think(), delay);
   }
 
@@ -217,7 +246,7 @@ export class CpuController {
 
   _traceAndResolve(path, isMistake) {
     this.currentSelection = [];
-    const stepMs = this.levelConfig.traceStepMs;
+    const stepMs = this.levelConfig.traceStepMs * this.speedMultiplier;
     path.forEach((cellIndex, i) => {
       this._setTimeout(() => {
         this.currentSelection.push(cellIndex);
@@ -237,6 +266,7 @@ export class CpuController {
     this.onSelectionChange([]);
 
     if (!stillValid) {
+      if (!isMistake) this.onStolen(path);
       this._scheduleThink();
       return;
     }
