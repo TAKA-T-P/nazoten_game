@@ -76,7 +76,20 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 280px;
+  max-width: 320px;
+}
+
+/* スコアアタック・じっくり・CPUバトル・2人バトルの4つを横2列×2行で並べる。 */
+.title-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.title-buttons-grid .btn {
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: 0.95rem;
 }
 
 .best-score {

@@ -91,7 +91,13 @@ export class PuzzleController extends EventTarget {
       onSelectionEnd: (sel) => this.commitPath(sel),
       onSelectionCancel: () => this._emitSelectionUpdate([]),
       // 破壊は確定仕様として完全に不使用（Phase6実装指示書 2章・12.3章）。
-      onDoubleTap: () => {},
+      // 同じマスへの2回目のタップがdoubleTapThresholdMs以内だと、
+      // SelectionController側でダブルタップ（本来は破壊用）と判定され
+      // onTapではなくこちらが呼ばれる。じっくりモードには破壊の概念がなく、
+      // 「同じマスをもう一度タップ」という意味では通常のタップと同じ操作
+      // なので、_handleTapへそのまま委譲する（入れかえ選択の解除・交換
+      // 確定が正しく行われるようにする）。
+      onDoubleTap: (index) => this._handleTap(index),
       onTap: (index) => this._handleTap(index),
       onLongPress: () => this._clearSwapSelection()
     });
@@ -146,6 +152,10 @@ export class PuzzleController extends EventTarget {
 
   _handleTap(index) {
     if (this.status !== STATUS.PLAYING || this.hintAnimating) return;
+    // タップ確定時（なぞり選択が1マスまで戻ってから指を離した場合を含む）は、
+    // なぞり選択のハイライト・順番バッジを必ず消す。allowSwapの判定より前に
+    // 行うことで、入れかえ不可のステージでも残留しないようにする。
+    this._emitSelectionUpdate([]);
     if (!this.stage.allowSwap) return;
     if (this.state.cells[index] == null) return;
     if (this.swapSelection === null) {
