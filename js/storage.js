@@ -106,18 +106,48 @@ function createEasyScoreAttackRecord() {
   };
 }
 
+// じっくり ランダム生成問題（Phase 6ランダム生成問題実装指示書 23〜24章）。
+// 解放フラグ自体は持たず、Stage 6クリア記録から毎回導出する（4.1章）。
+// randomUnlockSeenは解放演出をエリアごとに1回だけ出すための既読フラグ。
+function createRandomAreaRecord() {
+  return {
+    playCount: 0,
+    clearCount: 0,
+    noHintClearCount: 0,
+    perfectClearCount: 0,
+    currentClearStreak: 0,
+    bestClearStreak: 0,
+    lastPlayedSeed: null
+  };
+}
+
+function createRandomRecords() {
+  const records = {};
+  for (let i = 1; i <= CONFIG.puzzle.areas; i++) records[`area${i}`] = createRandomAreaRecord();
+  return records;
+}
+
+function createRandomUnlockSeen() {
+  const seen = {};
+  for (let i = 1; i <= CONFIG.puzzle.areas; i++) seen[`area${i}`] = false;
+  return seen;
+}
+
 function createPuzzleProgress() {
   return {
     tutorialVersion: 0,
     swapTutorialSeen: false,
     lastStageId: 'area1-stage01',
-    stages: {}
+    stages: {},
+    randomUnlockSeen: createRandomUnlockSeen(),
+    randomRecords: createRandomRecords(),
+    activeRandomAttempt: null
   };
 }
 
 function defaultState() {
   return {
-    version: 6,
+    version: 7,
     soundMode: DEFAULT_SOUND_MODE,
     tutorialVersion: 0,
     cpuBattleTutorialVersion: 0,
@@ -261,6 +291,44 @@ function sanitizePuzzleStageRecord(raw) {
   };
 }
 
+function sanitizeRandomAreaRecord(raw) {
+  const d = createRandomAreaRecord();
+  if (!raw || typeof raw !== 'object') return d;
+  return {
+    playCount: asNumber(raw.playCount, 0),
+    clearCount: asNumber(raw.clearCount, 0),
+    noHintClearCount: asNumber(raw.noHintClearCount, 0),
+    perfectClearCount: asNumber(raw.perfectClearCount, 0),
+    currentClearStreak: asNumber(raw.currentClearStreak, 0),
+    bestClearStreak: asNumber(raw.bestClearStreak, 0),
+    lastPlayedSeed: typeof raw.lastPlayedSeed === 'number' ? raw.lastPlayedSeed : null
+  };
+}
+
+function sanitizeRandomRecords(raw) {
+  const records = {};
+  for (let i = 1; i <= CONFIG.puzzle.areas; i++) {
+    const key = `area${i}`;
+    records[key] = sanitizeRandomAreaRecord(raw && raw[key]);
+  }
+  return records;
+}
+
+function sanitizeRandomUnlockSeen(raw) {
+  const seen = {};
+  for (let i = 1; i <= CONFIG.puzzle.areas; i++) {
+    const key = `area${i}`;
+    seen[key] = Boolean(raw && raw[key]);
+  }
+  return seen;
+}
+
+function sanitizeActiveRandomAttempt(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  if (typeof raw.areaId !== 'string' || typeof raw.problemId !== 'string') return null;
+  return { areaId: raw.areaId, problemId: raw.problemId, completed: Boolean(raw.completed) };
+}
+
 // puzzleProgressだけが破損していても、既存のベストスコアや対戦記録には
 // 影響させない（他フィールドと独立にsanitizeする、23.4章）。
 function sanitizePuzzleProgress(raw) {
@@ -276,7 +344,10 @@ function sanitizePuzzleProgress(raw) {
     tutorialVersion: asNumber(raw.tutorialVersion, 0),
     swapTutorialSeen: Boolean(raw.swapTutorialSeen),
     lastStageId: typeof raw.lastStageId === 'string' ? raw.lastStageId : d.lastStageId,
-    stages
+    stages,
+    randomUnlockSeen: sanitizeRandomUnlockSeen(raw.randomUnlockSeen),
+    randomRecords: sanitizeRandomRecords(raw.randomRecords),
+    activeRandomAttempt: sanitizeActiveRandomAttempt(raw.activeRandomAttempt)
   };
 }
 
@@ -289,7 +360,7 @@ function sanitize(parsed) {
   const legacyRecord = parsed.legacyRecords && parsed.legacyRecords[LEGACY_RECORD_KEY];
 
   return {
-    version: 6,
+    version: 7,
     soundMode: normalizeSoundMode(parsed.soundMode, parsed.soundEnabled),
     tutorialVersion: asNumber(parsed.tutorialVersion, d.tutorialVersion),
     cpuBattleTutorialVersion: asNumber(parsed.cpuBattleTutorialVersion, d.cpuBattleTutorialVersion),
@@ -378,9 +449,16 @@ function persistState(s) {
   }
 }
 
-// v3・v4・v5(旧storageKey)は、そのまま新形状(sanitize)に通せば2人バトル・ごちゃまぜ・
-// CPU戦の追加分フィールドが初期値で補われ、そのまま最新版として扱える
-// （Phase4実装指示書22.4章、Phase5実装指示書22.4章）。旧キー自体は削除しない。
+// v3〜v6(旧storageKey)は、そのまま新形状(sanitize)に通せば2人バトル・ごちゃまぜ・
+// CPU戦・じっくりランダム問題等の追加分フィールドが初期値で補われ、そのまま
+// 最新版として扱える（Phase4実装指示書22.4章、Phase5実装指示書22.4章、
+// Phase6ランダム生成問題実装指示書24.2章）。旧キー自体は削除しない。
+function migrateFromV6() {
+  const parsedV6 = readJson(CONFIG.legacyStorageKeyV6);
+  if (!parsedV6) return null;
+  return sanitize(parsedV6);
+}
+
 function migrateFromV5() {
   const parsedV5 = readJson(CONFIG.legacyStorageKeyV5);
   if (!parsedV5) return null;
@@ -401,12 +479,12 @@ function migrateFromV3() {
 
 function load() {
   try {
-    const rawV6 = localStorage.getItem(CONFIG.storageKey);
-    if (rawV6) {
-      return sanitize(JSON.parse(rawV6));
+    const rawV7 = localStorage.getItem(CONFIG.storageKey);
+    if (rawV7) {
+      return sanitize(JSON.parse(rawV7));
     }
-    // v6データがまだない場合のみ、v5（なければv4、v3、v2、v1）からの一度きりの移行を行う。
-    const migrated = migrateFromV5() || migrateFromV4() || migrateFromV3() || migrateFromV2() || migrateFromV1();
+    // v7データがまだない場合のみ、v6（なければv5、v4、v3、v2、v1）からの一度きりの移行を行う。
+    const migrated = migrateFromV6() || migrateFromV5() || migrateFromV4() || migrateFromV3() || migrateFromV2() || migrateFromV1();
     persistState(migrated);
     return migrated;
   } catch (e) {
@@ -415,6 +493,21 @@ function load() {
 }
 
 let state = load();
+
+// 前回終了時に未完了のランダム試行が残っていれば、連勝を0へ戻して破棄する
+// （Phase6ランダム生成問題実装指示書23.3章）。「やり直す」「1手戻す」は
+// activeRandomAttemptを変更しないため、ここで消えるのは本当に未完了で
+// 終わった試行だけ。
+(function resolveStaleRandomAttemptOnBoot() {
+  const attempt = state.puzzleProgress.activeRandomAttempt;
+  if (!attempt) return;
+  if (!attempt.completed) {
+    const record = state.puzzleProgress.randomRecords[attempt.areaId];
+    if (record) record.currentClearStreak = 0;
+  }
+  state.puzzleProgress.activeRandomAttempt = null;
+  persistState(state);
+})();
 
 function persist() {
   persistState(state);
@@ -693,4 +786,67 @@ export function submitPuzzleStageClear({ stageId, stars, movesUsed, hintUsed }) 
   };
   persist();
   return { isNewBestStars, isNewBestMoves };
+}
+
+// --- じっくり ランダム生成問題（Phase 6ランダム生成問題実装指示書） -----------
+
+// 解放状態はランダム専用フラグを持たず、毎回Stage 6のクリア記録から導出する
+// （4.1章）。機能追加前にStage 6をクリア済みの端末でも自動的に解放される。
+export function isRandomAreaUnlocked(areaId) {
+  const stage6Id = `${areaId}-stage06`;
+  return Boolean(state.puzzleProgress.stages[stage6Id] && state.puzzleProgress.stages[stage6Id].cleared);
+}
+
+export function hasSeenRandomUnlock(areaId) {
+  return Boolean(state.puzzleProgress.randomUnlockSeen[areaId]);
+}
+
+export function markRandomUnlockSeen(areaId) {
+  state.puzzleProgress.randomUnlockSeen[areaId] = true;
+  persist();
+}
+
+export function getRandomAreaRecord(areaId) {
+  return { ...(state.puzzleProgress.randomRecords[areaId] || createRandomAreaRecord()) };
+}
+
+// 問題の盤面表示が完了した時点で呼ぶ（23.2章）。playCountを増やし、途中で
+// 放棄された場合に連勝を切るための未完了試行を記録する。
+export function startRandomAttempt({ areaId, problemId, seed }) {
+  const record = state.puzzleProgress.randomRecords[areaId];
+  if (!record) return;
+  record.playCount += 1;
+  record.lastPlayedSeed = typeof seed === 'number' ? seed : record.lastPlayedSeed;
+  state.puzzleProgress.activeRandomAttempt = { areaId, problemId, completed: false };
+  persist();
+}
+
+// クリア確定時に呼ぶ（23.2章）。戻り値：パーフェクト判定と最新の連勝数。
+export function submitRandomClear({ areaId, movesUsed, parMoves, hintUsed }) {
+  const record = state.puzzleProgress.randomRecords[areaId];
+  if (!record) return { isPerfect: false, currentClearStreak: 0, bestClearStreak: 0 };
+
+  record.clearCount += 1;
+  if (!hintUsed) record.noHintClearCount += 1;
+  const isPerfect = movesUsed <= parMoves && !hintUsed;
+  if (isPerfect) record.perfectClearCount += 1;
+  record.currentClearStreak += 1;
+  if (record.currentClearStreak > record.bestClearStreak) {
+    record.bestClearStreak = record.currentClearStreak;
+  }
+  state.puzzleProgress.activeRandomAttempt = null;
+  persist();
+  return { isPerfect, currentClearStreak: record.currentClearStreak, bestClearStreak: record.bestClearStreak };
+}
+
+// 問題をクリアせずステージ選択・タイトルへ戻った場合に呼ぶ（23.3章）。
+// 「やり直す」「1手戻す」は同一試行の継続のため、この関数を呼ばないこと。
+export function abandonActiveRandomAttempt() {
+  const attempt = state.puzzleProgress.activeRandomAttempt;
+  if (attempt && !attempt.completed) {
+    const record = state.puzzleProgress.randomRecords[attempt.areaId];
+    if (record) record.currentClearStreak = 0;
+  }
+  state.puzzleProgress.activeRandomAttempt = null;
+  persist();
 }

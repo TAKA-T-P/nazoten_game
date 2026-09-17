@@ -791,11 +791,33 @@
     </div>
   </section>
 
+  <section id="screen-puzzle-generating" class="screen" data-screen="puzzle-generating" hidden>
+    <div class="puzzle-generating-inner">
+      <div id="puzzle-generating-loading" class="puzzle-generating-state">
+        <div class="puzzle-generating-spinner" aria-hidden="true"></div>
+        <p class="puzzle-generating-text">問題を作っています…</p>
+        <button id="btn-puzzle-generating-cancel" class="btn btn-secondary" type="button">ステージ選択へ</button>
+      </div>
+      <div id="puzzle-generating-error" class="puzzle-generating-state" hidden>
+        <p class="puzzle-generating-text">問題を作れませんでした。<br>もう一度お試しください。</p>
+        <div class="result-buttons">
+          <button id="btn-puzzle-generating-retry" class="btn btn-primary" type="button">もう一度</button>
+          <button id="btn-puzzle-generating-select" class="btn btn-secondary" type="button">ステージ選択へ</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="screen-puzzle" class="screen" data-screen="puzzle" hidden>
     <div class="puzzle-play-inner">
       <div class="puzzle-play-top">
         <button id="btn-puzzle-back" class="btn-small btn-top-left" type="button">ステージ選択へ</button>
         <p id="puzzle-stage-label" class="puzzle-stage-label"></p>
+      </div>
+
+      <div id="puzzle-random-info" class="puzzle-random-info" hidden>
+        <span id="puzzle-random-difficulty" class="puzzle-random-difficulty"></span>
+        <span id="puzzle-random-problem-id" class="puzzle-random-problem-id"></span>
       </div>
 
       <div class="puzzle-mission-card">
@@ -862,16 +884,31 @@
 
   <section id="screen-puzzle-clear" class="screen" data-screen="puzzle-clear" hidden>
     <div class="puzzle-clear-inner">
+      <div id="puzzle-random-unlock-banner" class="puzzle-random-unlock-banner" hidden>
+        <p class="puzzle-random-unlock-title">ランダム問題 解放！</p>
+        <p class="puzzle-random-unlock-text">このエリアの新しい問題に何度でも挑戦できます。</p>
+      </div>
       <p id="puzzle-clear-title" class="puzzle-clear-title">STAGE CLEAR!</p>
+      <p id="puzzle-clear-random-meta" class="puzzle-clear-random-meta" hidden></p>
       <div id="puzzle-clear-stars" class="puzzle-clear-stars" aria-hidden="true"></div>
       <p id="puzzle-clear-moves" class="puzzle-clear-moves"></p>
       <p id="puzzle-clear-hint" class="puzzle-clear-hint"></p>
+      <p id="puzzle-clear-perfect" class="puzzle-clear-perfect" hidden>PERFECT!</p>
+      <p id="puzzle-clear-streak" class="puzzle-clear-streak" hidden></p>
       <p id="puzzle-clear-best" class="puzzle-clear-best" hidden>ベスト更新！</p>
-      <div class="result-buttons">
+      <p id="puzzle-clear-problem-id" class="puzzle-clear-problem-id" hidden></p>
+
+      <div id="puzzle-clear-fixed-buttons" class="result-buttons">
         <button id="btn-puzzle-clear-next" class="btn btn-primary" type="button">次のステージ</button>
         <button id="btn-puzzle-clear-retry" class="btn btn-secondary" type="button">もう一度</button>
       </div>
       <button id="btn-puzzle-clear-select" class="btn btn-secondary puzzle-clear-select-btn" type="button">ステージ選択へ</button>
+
+      <div id="puzzle-clear-random-buttons" class="result-buttons" hidden>
+        <button id="btn-puzzle-clear-random-next" class="btn btn-primary" type="button">次のランダム</button>
+        <button id="btn-puzzle-clear-random-retry" class="btn btn-secondary" type="button">同じ問題</button>
+      </div>
+      <button id="btn-puzzle-clear-random-select" class="btn btn-secondary puzzle-clear-select-btn" type="button" hidden>ステージ選択へ</button>
     </div>
   </section>
 

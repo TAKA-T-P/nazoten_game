@@ -124,6 +124,131 @@
   max-width: 280px;
 }
 
+/* --- ランダム生成問題（Phase 6ランダム生成問題実装指示書） ------------------- */
+.puzzle-random-card {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fff4cf 0%, var(--color-surface) 70%);
+}
+
+.puzzle-random-card .puzzle-random-card-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--color-secondary);
+}
+
+.puzzle-random-card .puzzle-random-card-sub {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.puzzle-random-card.is-locked {
+  background: var(--color-surface);
+}
+
+.puzzle-generating-inner {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.puzzle-generating-state {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.puzzle-generating-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 5px solid var(--color-cell-border);
+  border-top-color: var(--color-secondary);
+  animation: puzzle-generating-spin 0.8s linear infinite;
+}
+
+@keyframes puzzle-generating-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-generating-spinner {
+    animation: none;
+  }
+}
+
+.puzzle-generating-text {
+  margin: 0;
+  font-weight: 700;
+}
+
+.puzzle-random-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.puzzle-random-difficulty {
+  color: var(--color-forty);
+  letter-spacing: 1px;
+}
+
+.puzzle-random-unlock-banner {
+  width: 100%;
+  background: #fff4cf;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  text-align: center;
+}
+
+.puzzle-random-unlock-title {
+  margin: 0;
+  font-weight: 900;
+  color: var(--color-forty);
+}
+
+.puzzle-random-unlock-text {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+}
+
+.puzzle-clear-random-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.puzzle-clear-perfect {
+  margin: 0;
+  font-weight: 900;
+  color: var(--color-forty);
+}
+
+.puzzle-clear-streak {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.puzzle-clear-problem-id {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
 /* --- プレイ画面 ------------------------------------------------------------ */
 .puzzle-play-inner {
   width: 100%;

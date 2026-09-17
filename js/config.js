@@ -34,7 +34,8 @@ export const CONFIG = {
   cpuBattleTutorialVersion: 1,
   // 2人バトル専用チュートリアルのバージョン（Phase4実装指示書23章）。
   twoPlayerTutorialVersion: 1,
-  storageKey: 'nazoten-save-v6',
+  storageKey: 'nazoten-save-v7',
+  legacyStorageKeyV6: 'nazoten-save-v6',
   legacyStorageKeyV5: 'nazoten-save-v5',
   legacyStorageKeyV4: 'nazoten-save-v4',
   legacyStorageKeyV3: 'nazoten-save-v3',
@@ -116,11 +117,32 @@ export const CONFIG = {
     maxPathLength: 5,
     tutorialVersion: 1,
     // ノーミス・入れかえなしで正解した問題1問につき加算するボーナス点。
-    noMissNoSwapBonus: 20,
-    // 結果画面のLV・称号は、スコアをこの倍率した値をscoring.getTitleForScore()の
-    // 計算式（floor(sqrt(score/10))）にそのまま当てはめて決める
-    // （例：1200点 → 1200×2.5=3000点として計算しLV.17）。
-    titleScoreMultiplier: 2.5
+    noMissNoSwapBonus: 20
+  },
+  // じっくりモードのランダム生成問題（Phase 6ランダム生成問題実装指示書）。
+  // 各エリアのStage 6クリアで解放される、無限に遊べる生成問題。3×3・4×4のみで
+  // 5×5は生成しない。正解手順を先に作り、盤面を逆算してから解法検証する。
+  randomPuzzle: {
+    generatorVersion: 1,
+    allowedBoardSizes: ['3x3', '4x4'],
+    maxGenerateAttempts: 60,
+    generationTimeBudgetMs: 1_500,
+    solverNodeLimit: 100_000,
+    fallbackSeedCountPerArea: 10,
+    difficultyWeights: {
+      easy: 0.25,
+      normal: 0.55,
+      challenge: 0.20
+    },
+    // 通常生成が失敗した場合に使う検証済みseed（各エリア最低10個）。
+    // scratch_find_fallback_seeds.mjs相当のツールで、実際にgenerateFromSeed()を
+    // 通して合格することを確認したうえで登録している。
+    fallbackSeeds: {
+      area1: [0xc408fbc8, 0xe9ef4e3e, 0x75a89572, 0x36615114, 0x23cfc79d, 0x8f4b9db4, 0xf06b56ed, 0xef0fbf1f, 0x3281775c, 0x21ac7eee],
+      area2: [0x37414ca1, 0x245a5e20, 0xfe31e514, 0xc37f42bb, 0x0bc79488, 0x50d6964c, 0x721d44fe, 0x62c43a9a, 0x770f97f3, 0x7fd1b7ec],
+      area3: [0xf7900026, 0x92e8f063, 0x78110de9, 0x00fd387c, 0x92207578, 0xc0276769, 0xb9baceb6, 0x118655ce, 0x50c78b0b, 0x2bbb6dec],
+      area4: [0x05070460, 0x64e13398, 0x04ffef84, 0xeefb1b81, 0xa259d36d, 0xb2a7d8bf, 0xbb134730, 0x292eb698, 0x488da9da, 0xef4c4a13]
+    }
   }
 };
 

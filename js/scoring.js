@@ -108,14 +108,29 @@ export function getTitleLevel(score) {
 
 // LV.1〜LV.20はCONFIG.titleLevelsの固有称号、LV.21以降は
 // 「超速ナゾテン王+N」（N = 称号レベル - 20）として上限なく続く。
-export function getTitleNameForScore(score) {
-  const level = getTitleLevel(score);
+export function getTitleNameForLevel(level) {
   const maxNamedLevel = CONFIG.titleLevels.length;
   return level <= maxNamedLevel
     ? CONFIG.titleLevels[level - 1]
     : `${CONFIG.titleLevels[maxNamedLevel - 1]}+${level - maxNamedLevel}`;
 }
 
+export function getTitleForLevel(level) {
+  return `LV.${level}　${getTitleNameForLevel(level)}`;
+}
+
+export function getTitleNameForScore(score) {
+  return getTitleNameForLevel(getTitleLevel(score));
+}
+
 export function getTitleForScore(score) {
-  return `LV.${getTitleLevel(score)}　${getTitleNameForScore(score)}`;
+  return getTitleForLevel(getTitleLevel(score));
+}
+
+// おてがるスコアアタック専用の称号レベル判定。
+// LV = floor(正解数 + √連続正解数)（下限1）。
+// 例：正解数12・連続正解数5 → 12 + √5 ≒ 14.236 → LV.14。
+export function getEasyTitleLevel({ correctCount, bestStreak }) {
+  const raw = Math.floor(correctCount + Math.sqrt(Math.max(bestStreak, 0)));
+  return Math.max(raw, 1);
 }

@@ -12,6 +12,8 @@ import * as help from './help.js';
 import { PuzzleController } from './puzzle.js';
 import { PUZZLE_AREAS, PUZZLE_STAGES } from './puzzle-stages.js';
 import { EasyScoreAttackController } from './easy-score-attack.js';
+import { RandomPuzzleController } from './random-puzzle.js';
+import { formatProblemId } from './puzzle-generator.js';
 
 function initAudioOnce() {
   audio.init();
@@ -595,6 +597,7 @@ function main() {
 
   // --- じっくりモード（Phase 6実装指示書） -----------------------------------
   const puzzle = new PuzzleController(ui.getPuzzleBoardElement());
+  const randomPuzzle = new RandomPuzzleController();
   let currentPuzzleAreaIndex = 0;
 
   function isPuzzleStageCleared(stageId) {
@@ -638,11 +641,17 @@ function main() {
       };
     });
     const areaStars = stagesInArea.reduce((sum, s) => sum + storage.getPuzzleStageRecord(s.id).bestStars, 0);
+    const randomLocked = !storage.isRandomAreaUnlocked(area.id);
     ui.renderPuzzleStageSelect({
       area,
       stageViewModels,
       areaStars,
-      areaStarsMax: stagesInArea.length * 3
+      areaStarsMax: stagesInArea.length * 3,
+      randomViewModel: {
+        areaId: area.id,
+        locked: randomLocked,
+        clearCount: storage.getRandomAreaRecord(area.id).clearCount
+      }
     });
   }
 
@@ -663,9 +672,33 @@ function main() {
     startPuzzleStageFlow(stageId);
   }
 
+  // --- じっくり ランダム生成問題（Phase 6ランダム生成問題実装指示書） ---------
+  function requestStartRandomPuzzle(areaId) {
+    currentPuzzleAreaIndex = Math.max(0, PUZZLE_AREAS.findIndex((a) => a.id === areaId));
+    ui.showPuzzleGeneratingLoading();
+    ui.showScreen('puzzle-generating');
+    randomPuzzle.requestGenerate(areaId);
+  }
+
+  randomPuzzle.addEventListener('generated', () => {
+    randomPuzzle.startGeneratedPuzzle(puzzle);
+    ui.showScreen('puzzle');
+  });
+
+  randomPuzzle.addEventListener('generatefailed', () => {
+    ui.showPuzzleGeneratingError();
+  });
+
   function leavePuzzleToSelect() {
-    const stageId = puzzle.stage ? puzzle.stage.id : storage.getPuzzleLastStageId();
-    currentPuzzleAreaIndex = areaIndexForStageId(stageId);
+    // ランダム問題のステージIDはPUZZLE_STAGESに含まれないため、areaIdは
+    // puzzle.stage.areaId（固定・ランダムどちらも実在のエリアIDを持つ）から
+    // 直接求める。クリアせず離れる場合は連勝を切る（23.3章）。
+    if (puzzle.stage) {
+      if (puzzle.stage.isRandom) randomPuzzle.abandonCurrentAttempt();
+      currentPuzzleAreaIndex = Math.max(0, PUZZLE_AREAS.findIndex((a) => a.id === puzzle.stage.areaId));
+    } else {
+      currentPuzzleAreaIndex = areaIndexForStageId(storage.getPuzzleLastStageId());
+    }
     puzzle.leaveStage();
     renderCurrentPuzzleArea();
     ui.showScreen('puzzle-select');
@@ -699,6 +732,11 @@ function main() {
     ui.updatePuzzleMoves(stage, { movesUsed: 0, swapsUsed: 0, sequenceIndex: 0 });
     if (stage.allowSwap && !storage.hasSeenPuzzleSwapTutorial()) {
       ui.showPuzzleSwapTutorial();
+    }
+    if (stage.isRandom) {
+      ui.showPuzzleRandomInfo({ difficulty: stage.difficulty, problemId: formatProblemId(stage) });
+    } else {
+      ui.hidePuzzleRandomInfo();
     }
   });
 
@@ -761,6 +799,26 @@ function main() {
 
   puzzle.addEventListener('cleared', (e) => {
     const { stageId, stars, movesUsed, parMoves, hintUsed } = e.detail;
+
+    if (puzzle.stage.isRandom) {
+      const area = PUZZLE_AREAS.find((a) => a.id === puzzle.stage.areaId);
+      const { isPerfect, currentClearStreak } = randomPuzzle.recordClear({ movesUsed, parMoves, hintUsed });
+      audio.playPuzzleStageClear();
+      ui.hidePuzzleRandomUnlockBanner();
+      ui.renderPuzzleRandomClear({
+        areaName: area.name,
+        difficulty: puzzle.stage.difficulty,
+        movesUsed,
+        parMoves,
+        hintUsed,
+        isPerfect,
+        currentClearStreak,
+        problemId: formatProblemId(puzzle.stage)
+      });
+      ui.showScreen('puzzle-clear');
+      return;
+    }
+
     const { isNewBestStars, isNewBestMoves } = storage.submitPuzzleStageClear({ stageId, stars, movesUsed, hintUsed });
     const idx = PUZZLE_STAGES.findIndex((s) => s.id === stageId);
     const stage = PUZZLE_STAGES[idx];
@@ -777,6 +835,14 @@ function main() {
       isLastStage,
       isNewBest: isNewBestStars || isNewBestMoves
     });
+    // Stage 6クリアで、そのエリアのランダム問題が初めて解放された場合は、
+    // 解放演出をクリア画面に重ねて1回だけ表示する（4.2章）。
+    if (isLastOfArea && !storage.hasSeenRandomUnlock(stage.areaId)) {
+      storage.markRandomUnlockSeen(stage.areaId);
+      ui.showPuzzleRandomUnlockBanner();
+    } else {
+      ui.hidePuzzleRandomUnlockBanner();
+    }
     ui.showScreen('puzzle-clear');
   });
 
@@ -804,7 +870,26 @@ function main() {
   ui.getPuzzleStageGridElement().addEventListener('click', (e) => {
     const card = e.target.closest('.puzzle-stage-card');
     if (!card || card.disabled) return;
+    if (card.dataset.randomArea) {
+      requestStartRandomPuzzle(card.dataset.randomArea);
+      return;
+    }
     requestStartPuzzleStage(card.dataset.stageId);
+  });
+
+  document.getElementById('btn-puzzle-generating-cancel').addEventListener('click', () => {
+    randomPuzzle.cancelGeneration();
+    renderCurrentPuzzleArea();
+    ui.showScreen('puzzle-select');
+  });
+  document.getElementById('btn-puzzle-generating-select').addEventListener('click', () => {
+    randomPuzzle.cancelGeneration();
+    renderCurrentPuzzleArea();
+    ui.showScreen('puzzle-select');
+  });
+  document.getElementById('btn-puzzle-generating-retry').addEventListener('click', () => {
+    ui.showPuzzleGeneratingLoading();
+    randomPuzzle.requestGenerate(randomPuzzle.currentAreaId);
   });
 
   document.getElementById('btn-puzzle-continue').addEventListener('click', () => {
@@ -874,6 +959,21 @@ function main() {
   });
   document.getElementById('btn-puzzle-clear-select').addEventListener('click', () => {
     currentPuzzleAreaIndex = areaIndexForStageId(puzzle.stage.id);
+    renderCurrentPuzzleArea();
+    ui.showScreen('puzzle-select');
+  });
+
+  document.getElementById('btn-puzzle-clear-random-next').addEventListener('click', () => {
+    ui.showPuzzleGeneratingLoading();
+    ui.showScreen('puzzle-generating');
+    randomPuzzle.generateNextPuzzle();
+  });
+  document.getElementById('btn-puzzle-clear-random-retry').addEventListener('click', () => {
+    randomPuzzle.retrySamePuzzle(puzzle);
+    ui.showScreen('puzzle');
+  });
+  document.getElementById('btn-puzzle-clear-random-select').addEventListener('click', () => {
+    currentPuzzleAreaIndex = Math.max(0, PUZZLE_AREAS.findIndex((a) => a.id === puzzle.stage.areaId));
     renderCurrentPuzzleArea();
     ui.showScreen('puzzle-select');
   });

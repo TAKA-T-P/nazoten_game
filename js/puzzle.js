@@ -54,8 +54,12 @@ export class PuzzleController extends EventTarget {
     this.selectionController = null;
   }
 
-  startStage(stageId) {
-    const stage = getStageById(stageId);
+  // stageIdOrStage: 固定ステージのID文字列、またはランダム生成問題の
+  // ステージオブジェクトそのもの（isRandom: true、Phase 6ランダム生成問題
+  // 実装指示書 20章）。どちらも同じプレイ進行（なぞり・手数・入れかえ・
+  // 1手戻す・ヒント・やり直す）で扱う。
+  startStage(stageIdOrStage) {
+    const stage = typeof stageIdOrStage === 'string' ? getStageById(stageIdOrStage) : stageIdOrStage;
     if (!stage) return false;
     this._cancelHint();
     if (this.selectionController) this.selectionController.destroy();

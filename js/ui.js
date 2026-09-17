@@ -1,7 +1,7 @@
 // 画面切替、表示更新、演出呼出（仕様書 8章・12章、Phase2実装指示書 6・8章、Phase3実装指示書 6・9・15章）。
 import * as storage from './storage.js';
 import { CONFIG, CPU_LEVELS, CPU_LEVEL_ORDER } from './config.js';
-import { getTitleForScore, getTitleLevel, getTitleNameForScore, calcSuccessRate } from './scoring.js';
+import { getTitleForScore, getTitleForLevel, getTitleLevel, getTitleNameForScore, getEasyTitleLevel, calcSuccessRate } from './scoring.js';
 
 const el = {};
 let cellEls = [];
@@ -263,6 +263,22 @@ function cacheDom() {
   el.puzzleClearHint = document.getElementById('puzzle-clear-hint');
   el.puzzleClearBest = document.getElementById('puzzle-clear-best');
   el.btnPuzzleClearNext = document.getElementById('btn-puzzle-clear-next');
+
+  // じっくり ランダム生成問題（Phase 6ランダム生成問題実装指示書）
+  el.puzzleGeneratingLoading = document.getElementById('puzzle-generating-loading');
+  el.puzzleGeneratingError = document.getElementById('puzzle-generating-error');
+  el.puzzleRandomInfo = document.getElementById('puzzle-random-info');
+  el.puzzleRandomDifficulty = document.getElementById('puzzle-random-difficulty');
+  el.puzzleRandomProblemId = document.getElementById('puzzle-random-problem-id');
+  el.puzzleRandomUnlockBanner = document.getElementById('puzzle-random-unlock-banner');
+  el.puzzleClearRandomMeta = document.getElementById('puzzle-clear-random-meta');
+  el.puzzleClearPerfect = document.getElementById('puzzle-clear-perfect');
+  el.puzzleClearStreak = document.getElementById('puzzle-clear-streak');
+  el.puzzleClearProblemId = document.getElementById('puzzle-clear-problem-id');
+  el.puzzleClearFixedButtons = document.getElementById('puzzle-clear-fixed-buttons');
+  el.btnPuzzleClearSelect = document.getElementById('btn-puzzle-clear-select');
+  el.puzzleClearRandomButtons = document.getElementById('puzzle-clear-random-buttons');
+  el.btnPuzzleClearRandomSelect = document.getElementById('btn-puzzle-clear-random-select');
 
   // おてがるスコアアタック（おてがるモード実装指示書）
   el.easyBoard = document.getElementById('easy-board');
@@ -1767,7 +1783,8 @@ function starGlyphs(count, max = 3) {
 }
 
 // stageViewModels: [{ id, stageNumber, rows, cols, locked, bestStars, isCurrent }]
-export function renderPuzzleStageSelect({ area, stageViewModels, areaStars, areaStarsMax }) {
+// randomViewModel: { areaId, locked, clearCount } | null（じっくりランダム生成問題実装指示書 5.1章）。
+export function renderPuzzleStageSelect({ area, stageViewModels, areaStars, areaStarsMax, randomViewModel = null }) {
   el.puzzleAreaName.textContent = area.name;
   el.puzzleAreaStars.textContent = `★${areaStars} / ${areaStarsMax}`;
   el.puzzleStageGrid.innerHTML = '';
@@ -1793,6 +1810,25 @@ export function renderPuzzleStageSelect({ area, stageViewModels, areaStars, area
     card.append(numberLabel, sizeLabel, starsLabel);
     el.puzzleStageGrid.appendChild(card);
   });
+
+  if (randomViewModel) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'puzzle-stage-card puzzle-random-card' + (randomViewModel.locked ? ' is-locked' : '');
+    card.disabled = randomViewModel.locked;
+    card.dataset.randomArea = randomViewModel.areaId;
+    card.setAttribute('aria-disabled', randomViewModel.locked ? 'true' : 'false');
+    const title = document.createElement('span');
+    title.className = 'puzzle-random-card-title';
+    title.textContent = 'ランダム ∞';
+    const sub = document.createElement('span');
+    sub.className = 'puzzle-random-card-sub';
+    sub.textContent = randomViewModel.locked
+      ? 'Stage 6クリアで解放'
+      : `クリア回数：${randomViewModel.clearCount}`;
+    card.append(title, sub);
+    el.puzzleStageGrid.appendChild(card);
+  }
 }
 
 export function renderPuzzleBoard(stage, cells) {
@@ -1898,7 +1934,7 @@ export function renderPuzzleMission(stage, sequenceIndex) {
 }
 
 export function renderPuzzleStageLabel(area, stage) {
-  el.puzzleStageLabel.textContent = `${area.name} - ${stage.stageNumber}`;
+  el.puzzleStageLabel.textContent = stage.isRandom ? `${area.name} - ランダム` : `${area.name} - ${stage.stageNumber}`;
 }
 
 export function updatePuzzleMoves(stage, detail) {
@@ -2003,12 +2039,79 @@ function starsMarkup(count) {
 }
 
 export function renderPuzzleClear({ stars, movesUsed, parMoves, hintUsed, isLastStage, isNewBest }) {
+  el.puzzleClearStars.hidden = false;
+  el.puzzleClearRandomMeta.hidden = true;
+  el.puzzleClearPerfect.hidden = true;
+  el.puzzleClearStreak.hidden = true;
+  el.puzzleClearProblemId.hidden = true;
+  el.puzzleClearFixedButtons.hidden = false;
+  el.btnPuzzleClearSelect.hidden = false;
+  el.puzzleClearRandomButtons.hidden = true;
+  el.btnPuzzleClearRandomSelect.hidden = true;
+
   el.puzzleClearTitle.textContent = isLastStage ? '全ステージクリア！' : 'STAGE CLEAR!';
   el.puzzleClearStars.innerHTML = starsMarkup(stars);
   el.puzzleClearMoves.textContent = `使用手数：${movesUsed} / 目標${parMoves}`;
   el.puzzleClearHint.textContent = hintUsed ? 'ヒント使用' : 'ノーヒント！';
   el.puzzleClearBest.hidden = !isNewBest;
   el.btnPuzzleClearNext.textContent = isLastStage ? 'ステージ選択へ' : '次のステージ';
+}
+
+function difficultyStars(difficulty) {
+  const filled = difficulty === 'easy' ? 1 : difficulty === 'challenge' ? 3 : 2;
+  return '★'.repeat(filled) + '☆'.repeat(3 - filled);
+}
+
+// じっくり ランダム生成問題のクリア画面（22章）。固定ステージ用のスターは
+// 一切付与しない。
+export function renderPuzzleRandomClear({ areaName, difficulty, movesUsed, parMoves, hintUsed, isPerfect, currentClearStreak, problemId }) {
+  el.puzzleClearStars.hidden = true;
+  el.puzzleClearBest.hidden = true;
+  el.puzzleClearFixedButtons.hidden = true;
+  el.btnPuzzleClearSelect.hidden = true;
+  el.puzzleClearRandomButtons.hidden = false;
+  el.btnPuzzleClearRandomSelect.hidden = false;
+
+  el.puzzleClearTitle.textContent = 'RANDOM CLEAR!';
+  el.puzzleClearRandomMeta.hidden = false;
+  el.puzzleClearRandomMeta.textContent = `${areaName}　難易度${difficultyStars(difficulty)}`;
+  el.puzzleClearMoves.textContent = `使用手数：${movesUsed} / 目標${parMoves}`;
+  el.puzzleClearHint.textContent = hintUsed ? 'ヒント使用' : 'ノーヒント！';
+  el.puzzleClearPerfect.hidden = !isPerfect;
+  el.puzzleClearStreak.hidden = false;
+  el.puzzleClearStreak.textContent = `連続クリア：${currentClearStreak}`;
+  el.puzzleClearProblemId.hidden = false;
+  el.puzzleClearProblemId.textContent = `問題ID：${problemId}`;
+}
+
+export function showPuzzleRandomUnlockBanner() {
+  el.puzzleRandomUnlockBanner.hidden = false;
+}
+
+export function hidePuzzleRandomUnlockBanner() {
+  el.puzzleRandomUnlockBanner.hidden = true;
+}
+
+// --- じっくり ランダム生成問題：生成中画面・プレイ画面の補足表示 --------------
+
+export function showPuzzleGeneratingLoading() {
+  el.puzzleGeneratingLoading.hidden = false;
+  el.puzzleGeneratingError.hidden = true;
+}
+
+export function showPuzzleGeneratingError() {
+  el.puzzleGeneratingLoading.hidden = true;
+  el.puzzleGeneratingError.hidden = false;
+}
+
+export function showPuzzleRandomInfo({ difficulty, problemId }) {
+  el.puzzleRandomInfo.hidden = false;
+  el.puzzleRandomDifficulty.textContent = `難易度${difficultyStars(difficulty)}`;
+  el.puzzleRandomProblemId.textContent = problemId;
+}
+
+export function hidePuzzleRandomInfo() {
+  el.puzzleRandomInfo.hidden = true;
 }
 
 // --- おてがるスコアアタック（おてがるモード実装指示書） ----------------------
@@ -2138,7 +2241,8 @@ export function hideEasyTimeUp() {
 export function renderEasyResult({ score, stats, isNewBest, bestScore }) {
   el.easyResultScore.textContent = String(score);
   el.easyResultNewBest.hidden = !isNewBest;
-  el.easyResultTitle.textContent = getTitleForScore(score * CONFIG.easyScoreAttack.titleScoreMultiplier);
+  const easyLevel = getEasyTitleLevel({ correctCount: stats.correctCount, bestStreak: stats.bestStreak });
+  el.easyResultTitle.textContent = getTitleForLevel(easyLevel);
   el.easyResultBest.textContent = String(bestScore);
 
   el.easyStatCorrect.textContent = String(stats.correctCount);
