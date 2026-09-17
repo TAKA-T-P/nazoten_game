@@ -91,7 +91,20 @@ export const CONFIG = {
     'ナゾテンチャンピオン',
     '伝説のナゾリスト',
     '超速ナゾテン王'
-  ]
+  ],
+  // じっくりモード（Phase 6実装指示書）。制限時間なし・固定盤面・手数制限で
+  // お題を解く1人用ステージパズル。得点・フィーバー・LV称号は使用しない。
+  puzzle: {
+    areas: 4,
+    stagesPerArea: 6,
+    minPathLength: 2,
+    maxPathLength: 5,
+    allowedSums: [10, 20, 30, 40],
+    tutorialVersion: 1,
+    hintNodeLimit: 50_000,
+    hintTimeBudgetMs: 300,
+    hintAnimationMs: 1_800
+  }
 };
 
 // BGMの配置場所。ファイル名は日本語を含むため、参照時はencodeURI()で組み立てる。

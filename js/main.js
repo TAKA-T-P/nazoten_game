@@ -9,6 +9,8 @@ import { MixedCpuBattleController, STATUS as MCB_STATUS } from './mixed-cpu-batt
 import { TwoPlayerController, STATUS as TP_STATUS } from './two-player.js';
 import { MixedBattleController, STATUS as MB_STATUS } from './mixed-battle.js';
 import * as help from './help.js';
+import { PuzzleController } from './puzzle.js';
+import { PUZZLE_AREAS, PUZZLE_STAGES } from './puzzle-stages.js';
 
 function initAudioOnce() {
   audio.init();
@@ -109,6 +111,10 @@ function main() {
 
   document.getElementById('btn-howto-menu-mixed').addEventListener('click', (e) => {
     help.openSection('mixedBattle', e.currentTarget);
+  });
+
+  document.getElementById('btn-howto-menu-puzzle').addEventListener('click', (e) => {
+    help.openSection('puzzle', e.currentTarget);
   });
 
   document.getElementById('btn-howto-menu-back').addEventListener('click', () => {
@@ -565,6 +571,287 @@ function main() {
   document.getElementById('btn-mb-result-title').addEventListener('click', () => {
     mixedBattle.backToTitle();
     ui.showScreen('title');
+  });
+
+  // --- じっくりモード（Phase 6実装指示書） -----------------------------------
+  const puzzle = new PuzzleController(ui.getPuzzleBoardElement());
+  let currentPuzzleAreaIndex = 0;
+
+  function isPuzzleStageCleared(stageId) {
+    return storage.getPuzzleStageRecord(stageId).cleared;
+  }
+
+  function isPuzzleStageUnlocked(stageId) {
+    const idx = PUZZLE_STAGES.findIndex((s) => s.id === stageId);
+    if (idx <= 0) return true;
+    return isPuzzleStageCleared(PUZZLE_STAGES[idx - 1].id);
+  }
+
+  function areaIndexForStageId(stageId) {
+    const stage = PUZZLE_STAGES.find((s) => s.id === stageId);
+    const idx = stage ? PUZZLE_AREAS.findIndex((a) => a.id === stage.areaId) : 0;
+    return idx < 0 ? 0 : idx;
+  }
+
+  function computePuzzleContinueStageId() {
+    const lastId = storage.getPuzzleLastStageId();
+    if (isPuzzleStageUnlocked(lastId)) return lastId;
+    const firstUncleared = PUZZLE_STAGES.find((s) => !isPuzzleStageCleared(s.id) && isPuzzleStageUnlocked(s.id));
+    if (firstUncleared) return firstUncleared.id;
+    return PUZZLE_STAGES[PUZZLE_STAGES.length - 1].id;
+  }
+
+  function renderCurrentPuzzleArea() {
+    const area = PUZZLE_AREAS[currentPuzzleAreaIndex];
+    const lastStageId = storage.getPuzzleLastStageId();
+    const stagesInArea = PUZZLE_STAGES.filter((s) => s.areaId === area.id);
+    const stageViewModels = stagesInArea.map((stage) => {
+      const record = storage.getPuzzleStageRecord(stage.id);
+      return {
+        id: stage.id,
+        stageNumber: stage.stageNumber,
+        rows: stage.rows,
+        cols: stage.cols,
+        locked: !isPuzzleStageUnlocked(stage.id),
+        bestStars: record.bestStars,
+        isCurrent: stage.id === lastStageId
+      };
+    });
+    const areaStars = stagesInArea.reduce((sum, s) => sum + storage.getPuzzleStageRecord(s.id).bestStars, 0);
+    ui.renderPuzzleStageSelect({
+      area,
+      stageViewModels,
+      areaStars,
+      areaStarsMax: stagesInArea.length * 3
+    });
+  }
+
+  function startPuzzleStageFlow(stageId) {
+    audio.startPuzzleBgm();
+    storage.setPuzzleLastStageId(stageId);
+    puzzle.startStage(stageId);
+    ui.showScreen('puzzle');
+  }
+
+  function requestStartPuzzleStage(stageId) {
+    if (!storage.hasSeenPuzzleTutorial()) {
+      help.openSection('puzzle', null, () => {
+        storage.markPuzzleTutorialSeen();
+        startPuzzleStageFlow(stageId);
+      });
+      return;
+    }
+    startPuzzleStageFlow(stageId);
+  }
+
+  function leavePuzzleToSelect() {
+    const stageId = puzzle.stage ? puzzle.stage.id : storage.getPuzzleLastStageId();
+    currentPuzzleAreaIndex = areaIndexForStageId(stageId);
+    puzzle.leaveStage();
+    renderCurrentPuzzleArea();
+    ui.showScreen('puzzle-select');
+  }
+
+  function syncPuzzleBoardUi() {
+    ui.renderPuzzleBoard(puzzle.stage, puzzle.state.cells);
+    ui.updatePuzzleMoves(puzzle.stage, {
+      movesUsed: puzzle.state.movesUsed,
+      swapsUsed: puzzle.state.swapsUsed,
+      sequenceIndex: puzzle.state.sequenceIndex
+    });
+    ui.setPuzzleUndoEnabled(puzzle.history.length > 0);
+    ui.updatePuzzleFormula([], [], 0);
+    ui.hidePuzzleBlocked();
+    ui.hidePuzzleStuck();
+    ui.clearPuzzleSwapSelect();
+  }
+
+  puzzle.addEventListener('boardinit', (e) => {
+    const { stage, cells } = e.detail;
+    const area = PUZZLE_AREAS.find((a) => a.id === stage.areaId);
+    ui.renderPuzzleBoard(stage, cells);
+    ui.renderPuzzleStageLabel(area, stage);
+    ui.renderPuzzleMission(stage, 0);
+    ui.updatePuzzleFormula([], [], 0);
+    ui.setPuzzleUndoEnabled(false);
+    ui.hideAllPuzzleOverlays();
+    ui.updatePuzzleMoves(stage, { movesUsed: 0, swapsUsed: 0, sequenceIndex: 0 });
+    if (stage.allowSwap && !storage.hasSeenPuzzleSwapTutorial()) {
+      ui.showPuzzleSwapTutorial();
+    }
+  });
+
+  puzzle.addEventListener('selectionupdate', (e) => {
+    const indices = e.detail.indices;
+    const values = indices.map((i) => puzzle.state.cells[i]);
+    const sum = values.reduce((a, b) => a + b, 0);
+    ui.updatePuzzleFormula(indices, values, sum);
+  });
+
+  puzzle.addEventListener('cellsclear', (e) => {
+    ui.clearPuzzleCells(e.detail.indices);
+    ui.updatePuzzleFormula([], [], 0);
+    if (e.detail.sum === 40) audio.playForty(e.detail.indices.length);
+    else audio.playSuccess(e.detail.indices.length);
+  });
+
+  puzzle.addEventListener('fail', (e) => {
+    ui.flashPuzzleFail(e.detail.cells);
+    audio.playFail();
+  });
+
+  puzzle.addEventListener('swapselect', (e) => {
+    ui.updatePuzzleSwapSelect(e.detail.index);
+    audio.playSwapSelect();
+  });
+  puzzle.addEventListener('swapcancel', () => ui.clearPuzzleSwapSelect());
+  puzzle.addEventListener('swap', (e) => {
+    ui.applyPuzzleSwapVisual(e.detail.a, e.detail.b, e.detail.values);
+    audio.playSwap();
+  });
+  puzzle.addEventListener('swapblocked', () => audio.playBlocked());
+
+  puzzle.addEventListener('movesupdate', () => {
+    ui.updatePuzzleMoves(puzzle.stage, {
+      movesUsed: puzzle.state.movesUsed,
+      swapsUsed: puzzle.state.swapsUsed,
+      sequenceIndex: puzzle.state.sequenceIndex
+    });
+    ui.setPuzzleUndoEnabled(puzzle.history.length > 0);
+  });
+
+  puzzle.addEventListener('blocked', () => ui.showPuzzleBlocked());
+  puzzle.addEventListener('undo', syncPuzzleBoardUi);
+  puzzle.addEventListener('restart', syncPuzzleBoardUi);
+
+  puzzle.addEventListener('hintthinking', () => ui.setPuzzleHintMessage('ヒントを考え中…'));
+  puzzle.addEventListener('hintfound', (e) => {
+    ui.setPuzzleHintMessage('');
+    ui.showPuzzleHintHighlight(e.detail.action);
+    audio.playPuzzleHint();
+  });
+  puzzle.addEventListener('hintend', () => ui.clearPuzzleHintHighlight());
+  puzzle.addEventListener('hintstuck', () => {
+    ui.setPuzzleHintMessage('');
+    ui.showPuzzleStuck();
+  });
+
+  puzzle.addEventListener('cleared', (e) => {
+    const { stageId, stars, movesUsed, parMoves, hintUsed } = e.detail;
+    const { isNewBestStars, isNewBestMoves } = storage.submitPuzzleStageClear({ stageId, stars, movesUsed, hintUsed });
+    const idx = PUZZLE_STAGES.findIndex((s) => s.id === stageId);
+    const stage = PUZZLE_STAGES[idx];
+    const isLastStage = idx === PUZZLE_STAGES.length - 1;
+    const isLastOfArea = stage.stageNumber === CONFIG.puzzle.stagesPerArea;
+    if (isLastStage) audio.playPuzzleAllClear();
+    else if (isLastOfArea) audio.playPuzzleAreaClear();
+    else audio.playPuzzleStageClear();
+    ui.renderPuzzleClear({
+      stars,
+      movesUsed,
+      parMoves,
+      hintUsed,
+      isLastStage,
+      isNewBest: isNewBestStars || isNewBestMoves
+    });
+    ui.showScreen('puzzle-clear');
+  });
+
+  document.getElementById('btn-puzzle').addEventListener('click', () => {
+    currentPuzzleAreaIndex = areaIndexForStageId(storage.getPuzzleLastStageId());
+    renderCurrentPuzzleArea();
+    ui.showScreen('puzzle-select');
+  });
+
+  document.getElementById('btn-puzzle-select-title').addEventListener('click', () => {
+    audio.stopPuzzleBgm();
+    ui.showScreen('title');
+  });
+
+  document.getElementById('btn-puzzle-area-prev').addEventListener('click', () => {
+    currentPuzzleAreaIndex = (currentPuzzleAreaIndex - 1 + PUZZLE_AREAS.length) % PUZZLE_AREAS.length;
+    renderCurrentPuzzleArea();
+  });
+  document.getElementById('btn-puzzle-area-next').addEventListener('click', () => {
+    currentPuzzleAreaIndex = (currentPuzzleAreaIndex + 1) % PUZZLE_AREAS.length;
+    renderCurrentPuzzleArea();
+  });
+
+  ui.getPuzzleStageGridElement().addEventListener('click', (e) => {
+    const card = e.target.closest('.puzzle-stage-card');
+    if (!card || card.disabled) return;
+    requestStartPuzzleStage(card.dataset.stageId);
+  });
+
+  document.getElementById('btn-puzzle-continue').addEventListener('click', () => {
+    requestStartPuzzleStage(computePuzzleContinueStageId());
+  });
+
+  document.getElementById('btn-puzzle-back').addEventListener('click', () => {
+    if (puzzle.state && puzzle.state.movesUsed > 0) {
+      ui.showPuzzleLeaveConfirm();
+      return;
+    }
+    leavePuzzleToSelect();
+  });
+  document.getElementById('btn-puzzle-leave-yes').addEventListener('click', () => {
+    ui.hidePuzzleLeaveConfirm();
+    leavePuzzleToSelect();
+  });
+  document.getElementById('btn-puzzle-leave-no').addEventListener('click', () => ui.hidePuzzleLeaveConfirm());
+
+  document.getElementById('btn-puzzle-undo').addEventListener('click', () => {
+    if (puzzle.undo()) audio.playPuzzleUndo();
+  });
+  document.getElementById('btn-puzzle-hint').addEventListener('click', () => puzzle.requestHint());
+  document.getElementById('btn-puzzle-restart').addEventListener('click', () => puzzle.restart());
+
+  document.getElementById('btn-puzzle-blocked-undo').addEventListener('click', () => {
+    ui.hidePuzzleBlocked();
+    puzzle.undo();
+  });
+  document.getElementById('btn-puzzle-blocked-restart').addEventListener('click', () => {
+    ui.hidePuzzleBlocked();
+    puzzle.restart();
+  });
+  document.getElementById('btn-puzzle-blocked-select').addEventListener('click', () => {
+    ui.hidePuzzleBlocked();
+    leavePuzzleToSelect();
+  });
+
+  document.getElementById('btn-puzzle-stuck-undo').addEventListener('click', () => {
+    ui.hidePuzzleStuck();
+    puzzle.undo();
+  });
+  document.getElementById('btn-puzzle-stuck-restart').addEventListener('click', () => {
+    ui.hidePuzzleStuck();
+    puzzle.restart();
+  });
+  document.getElementById('btn-puzzle-stuck-close').addEventListener('click', () => ui.hidePuzzleStuck());
+
+  document.getElementById('btn-puzzle-swap-tutorial-ok').addEventListener('click', () => {
+    storage.markPuzzleSwapTutorialSeen();
+    ui.hidePuzzleSwapTutorial();
+  });
+
+  document.getElementById('btn-puzzle-clear-next').addEventListener('click', () => {
+    const idx = PUZZLE_STAGES.findIndex((s) => s.id === puzzle.stage.id);
+    const next = PUZZLE_STAGES[idx + 1];
+    if (next) {
+      requestStartPuzzleStage(next.id);
+    } else {
+      currentPuzzleAreaIndex = areaIndexForStageId(puzzle.stage.id);
+      renderCurrentPuzzleArea();
+      ui.showScreen('puzzle-select');
+    }
+  });
+  document.getElementById('btn-puzzle-clear-retry').addEventListener('click', () => {
+    requestStartPuzzleStage(puzzle.stage.id);
+  });
+  document.getElementById('btn-puzzle-clear-select').addEventListener('click', () => {
+    currentPuzzleAreaIndex = areaIndexForStageId(puzzle.stage.id);
+    renderCurrentPuzzleArea();
+    ui.showScreen('puzzle-select');
   });
 
   ui.updateBestScoreDisplays();

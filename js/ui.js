@@ -235,6 +235,32 @@ function cacheDom() {
     battle: { p1: document.getElementById('battle-ojama-received-type-player'), p2: document.getElementById('battle-ojama-received-type-cpu') },
     mcb: { p1: document.getElementById('mcb-ojama-received-type-player'), p2: document.getElementById('mcb-ojama-received-type-cpu') }
   };
+
+  // じっくりモード（Phase 6実装指示書）
+  el.puzzleAreaName = document.getElementById('puzzle-area-name');
+  el.puzzleAreaStars = document.getElementById('puzzle-area-stars');
+  el.puzzleStageGrid = document.getElementById('puzzle-stage-grid');
+  el.btnPuzzleContinue = document.getElementById('btn-puzzle-continue');
+  el.puzzleStageLabel = document.getElementById('puzzle-stage-label');
+  el.puzzleMissionText = document.getElementById('puzzle-mission-text');
+  el.puzzleMissionProgress = document.getElementById('puzzle-mission-progress');
+  el.puzzleMovesUsed = document.getElementById('puzzle-moves-used');
+  el.puzzleMoveLimit = document.getElementById('puzzle-move-limit');
+  el.puzzleSwapRemaining = document.getElementById('puzzle-swap-remaining');
+  el.puzzleHudFormula = document.getElementById('puzzle-hud-formula');
+  el.puzzleBoard = document.getElementById('puzzle-board');
+  el.btnPuzzleUndo = document.getElementById('btn-puzzle-undo');
+  el.puzzleHintMessage = document.getElementById('puzzle-hint-message');
+  el.puzzleBlockedOverlay = document.getElementById('puzzle-blocked-overlay');
+  el.puzzleStuckOverlay = document.getElementById('puzzle-stuck-overlay');
+  el.puzzleLeaveConfirm = document.getElementById('puzzle-leave-confirm');
+  el.puzzleSwapTutorial = document.getElementById('puzzle-swap-tutorial');
+  el.puzzleClearTitle = document.getElementById('puzzle-clear-title');
+  el.puzzleClearStars = document.getElementById('puzzle-clear-stars');
+  el.puzzleClearMoves = document.getElementById('puzzle-clear-moves');
+  el.puzzleClearHint = document.getElementById('puzzle-clear-hint');
+  el.puzzleClearBest = document.getElementById('puzzle-clear-best');
+  el.btnPuzzleClearNext = document.getElementById('btn-puzzle-clear-next');
 }
 
 export function init() {
@@ -1694,4 +1720,263 @@ export function clearOjamaEffect(scope, actor) {
   if (row) row.classList.remove('ojama-formula-hide');
   const labelEl = el.ojamaReceivedLabels[scope][actor];
   if (labelEl) labelEl.classList.remove('is-active');
+}
+
+// --- じっくりモード（Phase 6実装指示書） -------------------------------------
+// 得点・保存・タイマー等には一切関与しない、表示専用の関数群。
+// ステージのロック判定・スター集計・つづきから候補はmain.js側で計算し、
+// ここでは渡されたビューモデルをそのまま描画する。
+
+let puzzleCellEls = [];
+
+export function getPuzzleBoardElement() {
+  return el.puzzleBoard;
+}
+
+export function getPuzzleStageGridElement() {
+  return el.puzzleStageGrid;
+}
+
+function starGlyphs(count, max = 3) {
+  let out = '';
+  for (let i = 0; i < max; i++) out += i < count ? '★' : '☆';
+  return out;
+}
+
+// stageViewModels: [{ id, stageNumber, rows, cols, locked, bestStars, isCurrent }]
+export function renderPuzzleStageSelect({ area, stageViewModels, areaStars, areaStarsMax }) {
+  el.puzzleAreaName.textContent = area.name;
+  el.puzzleAreaStars.textContent = `★${areaStars} / ${areaStarsMax}`;
+  el.puzzleStageGrid.innerHTML = '';
+  stageViewModels.forEach((vm) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'puzzle-stage-card' + (vm.locked ? ' is-locked' : '') + (vm.isCurrent ? ' is-current' : '');
+    card.disabled = vm.locked;
+    card.dataset.stageId = vm.id;
+    card.setAttribute('aria-disabled', vm.locked ? 'true' : 'false');
+    card.setAttribute('aria-label', vm.locked
+      ? `ステージ${vm.stageNumber}（未解放）`
+      : `ステージ${vm.stageNumber}、${vm.rows}×${vm.cols}、獲得スター${vm.bestStars}`);
+    const sizeLabel = document.createElement('span');
+    sizeLabel.className = 'puzzle-stage-size';
+    sizeLabel.textContent = `${vm.rows}×${vm.cols}`;
+    const numberLabel = document.createElement('span');
+    numberLabel.className = 'puzzle-stage-number';
+    numberLabel.textContent = String(vm.stageNumber);
+    const starsLabel = document.createElement('span');
+    starsLabel.className = 'puzzle-stage-stars';
+    starsLabel.textContent = vm.locked ? '🔒' : starGlyphs(vm.bestStars);
+    card.append(numberLabel, sizeLabel, starsLabel);
+    el.puzzleStageGrid.appendChild(card);
+  });
+}
+
+export function renderPuzzleBoard(stage, cells) {
+  el.puzzleBoard.style.setProperty('--puzzle-cols', String(stage.cols));
+  el.puzzleBoard.style.setProperty('--puzzle-rows', String(stage.rows));
+  el.puzzleBoard.innerHTML = '';
+  puzzleCellEls = [];
+  for (let i = 0; i < cells.length; i++) {
+    const cellEl = document.createElement('div');
+    cellEl.className = 'cell' + (cells[i] == null ? ' empty' : '');
+    cellEl.dataset.cellIndex = String(i);
+    const valueEl = document.createElement('span');
+    valueEl.className = 'cell-value';
+    valueEl.textContent = cells[i] == null ? '' : String(cells[i]);
+    cellEl.appendChild(valueEl);
+    el.puzzleBoard.appendChild(cellEl);
+    puzzleCellEls.push(cellEl);
+  }
+}
+
+export function updatePuzzleSelection(indices) {
+  const selected = new Set(indices);
+  puzzleCellEls.forEach((cellEl, i) => {
+    cellEl.classList.toggle('selected', selected.has(i));
+    const badge = cellEl.querySelector('.order-badge');
+    if (badge) badge.remove();
+  });
+  indices.forEach((cellIndex, order) => {
+    const badge = document.createElement('span');
+    badge.className = 'order-badge';
+    badge.textContent = String(order + 1);
+    puzzleCellEls[cellIndex].appendChild(badge);
+  });
+}
+
+// 失敗操作：既存のfail-shakeアニメーション（animations.css）を再利用する。
+export function flashPuzzleFail(indices) {
+  indices.forEach((i) => {
+    const cellEl = puzzleCellEls[i];
+    if (!cellEl) return;
+    cellEl.classList.remove('fail-shake');
+    void cellEl.offsetWidth;
+    cellEl.classList.add('fail-shake');
+  });
+}
+
+export function clearPuzzleCells(indices) {
+  indices.forEach((i) => {
+    const cellEl = puzzleCellEls[i];
+    if (!cellEl) return;
+    cellEl.classList.add('empty');
+    cellEl.classList.remove('selected', 'swap-selected');
+    const valueEl = cellEl.querySelector('.cell-value');
+    if (valueEl) valueEl.textContent = '';
+  });
+}
+
+export function updatePuzzleSwapSelect(index) {
+  puzzleCellEls.forEach((c) => c.classList.remove('swap-selected'));
+  if (index != null && puzzleCellEls[index]) puzzleCellEls[index].classList.add('swap-selected');
+}
+
+export function clearPuzzleSwapSelect() {
+  puzzleCellEls.forEach((c) => c.classList.remove('swap-selected'));
+}
+
+export function applyPuzzleSwapVisual(a, b, values) {
+  [a, b].forEach((idx, i) => {
+    const cellEl = puzzleCellEls[idx];
+    if (!cellEl) return;
+    cellEl.classList.remove('swap-selected');
+    const valueEl = cellEl.querySelector('.cell-value');
+    if (valueEl) valueEl.textContent = String(values[i]);
+  });
+}
+
+function puzzleMissionText(stage) {
+  const m = stage.mission;
+  if (m.type === 'makeSum') {
+    return m.exactLength ? `${m.exactLength}マスで${m.targetSum}を作ろう` : `${m.targetSum}を作ろう`;
+  }
+  if (m.type === 'sequence') {
+    return `${m.steps.map((s) => s.sum).join('→')}の順に作ろう`;
+  }
+  if (m.type === 'clearAll') {
+    return `${stage.moveLimit}手以内に全部消そう`;
+  }
+  return '';
+}
+
+export function renderPuzzleMission(stage, sequenceIndex) {
+  el.puzzleMissionText.textContent = puzzleMissionText(stage);
+  if (stage.mission.type === 'sequence') {
+    const step = stage.mission.steps[sequenceIndex];
+    el.puzzleMissionProgress.hidden = false;
+    el.puzzleMissionProgress.textContent = step ? `いまの目標：${step.sum}` : 'クリア！';
+  } else {
+    el.puzzleMissionProgress.hidden = true;
+  }
+}
+
+export function renderPuzzleStageLabel(area, stage) {
+  el.puzzleStageLabel.textContent = `${area.name} - ${stage.stageNumber}`;
+}
+
+export function updatePuzzleMoves(stage, detail) {
+  el.puzzleMovesUsed.textContent = String(detail.movesUsed);
+  el.puzzleMoveLimit.textContent = String(stage.moveLimit);
+  if (stage.allowSwap) {
+    el.puzzleSwapRemaining.hidden = false;
+    el.puzzleSwapRemaining.textContent = `入れかえ残り${stage.swapLimit - detail.swapsUsed}回`;
+  } else {
+    el.puzzleSwapRemaining.hidden = true;
+  }
+  renderPuzzleMission(stage, detail.sequenceIndex);
+}
+
+export function updatePuzzleFormula(indices, values, sum) {
+  el.puzzleHudFormula.textContent = indices.length === 0 ? ' ' : `${values.join(' + ')} = ${sum}`;
+}
+
+export function setPuzzleUndoEnabled(enabled) {
+  el.btnPuzzleUndo.disabled = !enabled;
+}
+
+export function setPuzzleHintMessage(text) {
+  el.puzzleHintMessage.hidden = !text;
+  el.puzzleHintMessage.textContent = text || '';
+}
+
+export function showPuzzleHintHighlight(action) {
+  if (action.type === 'trace') {
+    action.cells.forEach((idx, order) => {
+      const cellEl = puzzleCellEls[idx];
+      if (!cellEl) return;
+      cellEl.classList.add('hint-highlight');
+      const badge = document.createElement('span');
+      badge.className = 'order-badge';
+      badge.textContent = String(order + 1);
+      cellEl.appendChild(badge);
+    });
+  } else if (action.type === 'swap') {
+    if (puzzleCellEls[action.a]) puzzleCellEls[action.a].classList.add('hint-swap-a');
+    if (puzzleCellEls[action.b]) puzzleCellEls[action.b].classList.add('hint-swap-b');
+  }
+}
+
+export function clearPuzzleHintHighlight() {
+  puzzleCellEls.forEach((c) => {
+    c.classList.remove('hint-highlight', 'hint-swap-a', 'hint-swap-b');
+    const badge = c.querySelector('.order-badge');
+    if (badge) badge.remove();
+  });
+}
+
+export function showPuzzleBlocked() {
+  el.puzzleBlockedOverlay.hidden = false;
+}
+
+export function hidePuzzleBlocked() {
+  el.puzzleBlockedOverlay.hidden = true;
+}
+
+export function showPuzzleStuck() {
+  el.puzzleStuckOverlay.hidden = false;
+}
+
+export function hidePuzzleStuck() {
+  el.puzzleStuckOverlay.hidden = true;
+}
+
+export function showPuzzleLeaveConfirm() {
+  el.puzzleLeaveConfirm.hidden = false;
+}
+
+export function hidePuzzleLeaveConfirm() {
+  el.puzzleLeaveConfirm.hidden = true;
+}
+
+export function showPuzzleSwapTutorial() {
+  el.puzzleSwapTutorial.hidden = false;
+}
+
+export function hidePuzzleSwapTutorial() {
+  el.puzzleSwapTutorial.hidden = true;
+}
+
+export function hideAllPuzzleOverlays() {
+  hidePuzzleBlocked();
+  hidePuzzleStuck();
+  hidePuzzleLeaveConfirm();
+  hidePuzzleSwapTutorial();
+}
+
+function starsMarkup(count) {
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    html += i < count ? '<span class="star-filled">★</span>' : '<span>☆</span>';
+  }
+  return html;
+}
+
+export function renderPuzzleClear({ stars, movesUsed, parMoves, hintUsed, isLastStage, isNewBest }) {
+  el.puzzleClearTitle.textContent = isLastStage ? '全ステージクリア！' : 'STAGE CLEAR!';
+  el.puzzleClearStars.innerHTML = starsMarkup(stars);
+  el.puzzleClearMoves.textContent = `使用手数：${movesUsed} / 目標${parMoves}`;
+  el.puzzleClearHint.textContent = hintUsed ? 'ヒント使用' : 'ノーヒント！';
+  el.puzzleClearBest.hidden = !isNewBest;
+  el.btnPuzzleClearNext.textContent = isLastStage ? 'ステージ選択へ' : '次のステージ';
 }

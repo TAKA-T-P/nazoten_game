@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/ojama.css">
 <link rel="stylesheet" href="css/animations.css">
 <link rel="stylesheet" href="css/help.css">
+<link rel="stylesheet" href="css/puzzle.css">
 </head>
 <body>
 <div id="app">
@@ -27,6 +28,10 @@
         <button id="btn-start" class="btn btn-primary" type="button">スコアアタック</button>
         <button id="btn-cpu-battle" class="btn btn-primary" type="button">CPUバトル</button>
         <button id="btn-two-player" class="btn btn-primary" type="button">2人バトル</button>
+        <div class="howto-menu-item">
+          <button id="btn-puzzle" class="btn btn-primary" type="button">じっくり</button>
+          <p class="howto-menu-sub">時間を気にせず、お題に挑戦！</p>
+        </div>
         <button id="btn-howto" class="btn btn-secondary" type="button">遊び方</button>
       </div>
       <p class="best-score">ベストスコア：<span id="title-best-score">0</span></p>
@@ -35,7 +40,7 @@
         <span id="sound-mode-label" class="sound-mode-label" aria-live="polite">効果音のみ</span>
         <button id="btn-sound-next" class="sound-mode-arrow" type="button" aria-label="次のサウンドモードへ">▶</button>
       </div>
-      <p class="version">Phase 5 - v5.0.0</p>
+      <p class="version">Phase 6 - v6.0.0</p>
       <p class="copyright">@2026 T.TAKEMOTO / KEC Glows</p>
     </div>
   </section>
@@ -55,6 +60,10 @@
         <div class="howto-menu-item">
           <button id="btn-howto-menu-mixed" class="btn btn-primary" type="button">ごちゃまぜバトル</button>
           <p class="howto-menu-sub">同じ盤面から数字を奪い合う</p>
+        </div>
+        <div class="howto-menu-item">
+          <button id="btn-howto-menu-puzzle" class="btn btn-primary" type="button">じっくりルール</button>
+          <p class="howto-menu-sub">固定ステージとお題、1手戻す・ヒント</p>
         </div>
         <a id="btn-howto-menu-kec" class="btn btn-secondary" href="https://taka-t-p.github.io/math-app-portal/" target="_blank" rel="noopener noreferrer">KEC数学科ラボへ</a>
         <button id="btn-howto-menu-back" class="btn btn-secondary" type="button">タイトルへ戻る</button>
@@ -693,6 +702,109 @@
           <tr><td>消したパネルの数</td><td id="tp-stat-cleared-p1">0</td><td id="tp-stat-cleared-p2">0</td></tr>
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <section id="screen-puzzle-select" class="screen" data-screen="puzzle-select" hidden>
+    <div class="puzzle-select-inner">
+      <div class="puzzle-select-top">
+        <button id="btn-puzzle-select-title" class="btn btn-secondary puzzle-menu-btn" type="button">タイトルへ</button>
+        <p class="puzzle-select-heading">じっくり</p>
+      </div>
+      <div class="puzzle-area-switch">
+        <button id="btn-puzzle-area-prev" class="puzzle-area-arrow" type="button" aria-label="前のエリアへ">◀</button>
+        <div class="puzzle-area-info">
+          <p id="puzzle-area-name" class="puzzle-area-name">10の入口</p>
+          <p id="puzzle-area-stars" class="puzzle-area-stars">★0 / 18</p>
+        </div>
+        <button id="btn-puzzle-area-next" class="puzzle-area-arrow" type="button" aria-label="次のエリアへ">▶</button>
+      </div>
+      <div id="puzzle-stage-grid" class="puzzle-stage-grid" role="list"></div>
+      <button id="btn-puzzle-continue" class="btn btn-primary puzzle-continue-btn" type="button">つづきから</button>
+    </div>
+  </section>
+
+  <section id="screen-puzzle" class="screen" data-screen="puzzle" hidden>
+    <div class="puzzle-play-inner">
+      <div class="puzzle-play-top">
+        <button id="btn-puzzle-back" class="btn-small btn-top-left" type="button">ステージ選択へ</button>
+        <p id="puzzle-stage-label" class="puzzle-stage-label"></p>
+      </div>
+
+      <div class="puzzle-mission-card">
+        <p id="puzzle-mission-text" class="puzzle-mission-text"></p>
+        <p id="puzzle-mission-progress" class="puzzle-mission-progress" hidden></p>
+      </div>
+
+      <div class="puzzle-moves-row">
+        <span id="puzzle-moves-used" class="puzzle-moves-value">0</span>
+        <span class="puzzle-moves-sep">/</span>
+        <span id="puzzle-move-limit" class="puzzle-moves-value">1</span>
+        <span class="puzzle-moves-label">手</span>
+        <span id="puzzle-swap-remaining" class="puzzle-swap-remaining" hidden></span>
+      </div>
+
+      <div id="puzzle-hud-formula" class="puzzle-hud-formula" aria-live="polite">&nbsp;</div>
+
+      <div class="board-wrap puzzle-board-wrap">
+        <div id="puzzle-board" class="board puzzle-board" role="grid" aria-label="じっくり盤面"></div>
+      </div>
+
+      <div class="puzzle-controls">
+        <button id="btn-puzzle-undo" class="btn btn-secondary" type="button" disabled>1手戻す</button>
+        <button id="btn-puzzle-hint" class="btn btn-secondary" type="button">ヒント</button>
+        <button id="btn-puzzle-restart" class="btn btn-secondary" type="button">やり直す</button>
+      </div>
+
+      <p id="puzzle-hint-message" class="puzzle-hint-message" hidden aria-live="polite"></p>
+
+      <div id="puzzle-blocked-overlay" class="puzzle-overlay" hidden>
+        <p class="puzzle-overlay-title">手数を使い切りました</p>
+        <div class="puzzle-overlay-buttons">
+          <button id="btn-puzzle-blocked-undo" class="btn btn-primary" type="button">1手戻す</button>
+          <button id="btn-puzzle-blocked-restart" class="btn btn-secondary" type="button">やり直す</button>
+          <button id="btn-puzzle-blocked-select" class="btn btn-secondary" type="button">ステージ選択へ</button>
+        </div>
+      </div>
+
+      <div id="puzzle-stuck-overlay" class="puzzle-overlay" hidden>
+        <p class="puzzle-overlay-title">この状態では手詰まりかも。<br>1手戻すか、最初からやり直してみよう。</p>
+        <div class="puzzle-overlay-buttons">
+          <button id="btn-puzzle-stuck-undo" class="btn btn-primary" type="button">1手戻す</button>
+          <button id="btn-puzzle-stuck-restart" class="btn btn-secondary" type="button">最初から</button>
+          <button id="btn-puzzle-stuck-close" class="btn btn-secondary" type="button">閉じる</button>
+        </div>
+      </div>
+
+      <div id="puzzle-leave-confirm" class="puzzle-overlay" hidden>
+        <p class="puzzle-overlay-title">ステージをやめて、ステージ選択に戻りますか？</p>
+        <div class="puzzle-overlay-buttons">
+          <button id="btn-puzzle-leave-yes" class="btn btn-primary" type="button">はい</button>
+          <button id="btn-puzzle-leave-no" class="btn btn-secondary" type="button">いいえ</button>
+        </div>
+      </div>
+
+      <div id="puzzle-swap-tutorial" class="puzzle-overlay" hidden>
+        <p class="puzzle-overlay-title">このステージでは数字を入れかえられます。<br>数字を1つずつタップすると場所を交換できます。<br>入れかえも1手として数えます。</p>
+        <div class="puzzle-overlay-buttons">
+          <button id="btn-puzzle-swap-tutorial-ok" class="btn btn-primary" type="button">はじめる</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-puzzle-clear" class="screen" data-screen="puzzle-clear" hidden>
+    <div class="puzzle-clear-inner">
+      <p id="puzzle-clear-title" class="puzzle-clear-title">STAGE CLEAR!</p>
+      <div id="puzzle-clear-stars" class="puzzle-clear-stars" aria-hidden="true"></div>
+      <p id="puzzle-clear-moves" class="puzzle-clear-moves"></p>
+      <p id="puzzle-clear-hint" class="puzzle-clear-hint"></p>
+      <p id="puzzle-clear-best" class="puzzle-clear-best" hidden>ベスト更新！</p>
+      <div class="result-buttons">
+        <button id="btn-puzzle-clear-next" class="btn btn-primary" type="button">次のステージ</button>
+        <button id="btn-puzzle-clear-retry" class="btn btn-secondary" type="button">もう一度</button>
+      </div>
+      <button id="btn-puzzle-clear-select" class="btn btn-secondary puzzle-clear-select-btn" type="button">ステージ選択へ</button>
     </div>
   </section>
 

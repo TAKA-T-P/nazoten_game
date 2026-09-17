@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>じっくりステージ検証</title>
+<style>
+  body { font-family: system-ui, sans-serif; padding: 20px; background: #fafafa; color: #1a1a1a; }
+  h1 { font-size: 1.2rem; }
+  table { border-collapse: collapse; width: 100%; max-width: 720px; }
+  th, td { border: 1px solid #ccc; padding: 6px 10px; font-size: 0.85rem; text-align: left; }
+  tr.pass td.status { color: #1f9d5c; font-weight: 700; }
+  tr.fail td.status { color: #d8393a; font-weight: 700; }
+  #summary { font-size: 1.1rem; font-weight: 700; margin: 16px 0; }
+  #summary.pass { color: #1f9d5c; }
+  #summary.fail { color: #d8393a; }
+  .errors { color: #d8393a; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<h1>じっくりモード ステージ検証（開発用）</h1>
+<div id="summary">検証中…</div>
+<table>
+  <thead>
+    <tr><th>ステージID</th><th>結果</th><th>公式解法手数</th><th>検証時間</th><th>エラー</th></tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+<script type="module">
+  import { runAllValidations } from './puzzle-validation.js';
+
+  const result = runAllValidations();
+  const tbody = document.getElementById('rows');
+  for (const r of result.stageResults) {
+    const tr = document.createElement('tr');
+    tr.className = r.valid ? 'pass' : 'fail';
+    tr.innerHTML = `
+      <td>${r.id}</td>
+      <td class="status">${r.valid ? 'PASS' : 'FAIL'}</td>
+      <td>${r.solutionMoves}</td>
+      <td>${r.elapsedMs}ms</td>
+      <td class="errors">${r.valid ? '' : r.errors.join(' / ')}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  if (result.listErrors.length > 0) {
+    const tr = document.createElement('tr');
+    tr.className = 'fail';
+    tr.innerHTML = `<td colspan="4">ステージ一覧チェック</td><td class="errors">${result.listErrors.join(' / ')}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  const summary = document.getElementById('summary');
+  summary.textContent = `${result.passCount} / ${result.totalCount} PASS（検証時間 ${result.elapsedMs}ms）`;
+  summary.className = result.allPass ? 'pass' : 'fail';
+</script>
+</body>
+</html>

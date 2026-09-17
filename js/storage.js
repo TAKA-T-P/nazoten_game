@@ -75,6 +75,28 @@ function createMixedBattleRecord() {
   };
 }
 
+// じっくりモード（Phase 6実装指示書 23章）。ステージ別の記録は`stages`に
+// idをキーとして保持し、未クリアのステージはキー自体を持たない
+// （参照時はcreatePuzzleStageRecord()の初期値を返す）。
+function createPuzzleStageRecord() {
+  return {
+    cleared: false,
+    bestStars: 0,
+    bestMoves: null,
+    clearedWithoutHint: false,
+    clearCount: 0
+  };
+}
+
+function createPuzzleProgress() {
+  return {
+    tutorialVersion: 0,
+    swapTutorialSeen: false,
+    lastStageId: 'area1-stage01',
+    stages: {}
+  };
+}
+
 function defaultState() {
   return {
     version: 6,
@@ -92,7 +114,8 @@ function defaultState() {
     },
     legacyRecords: {
       [LEGACY_RECORD_KEY]: { bestScore: 0 }
-    }
+    },
+    puzzleProgress: createPuzzleProgress()
   };
 }
 
@@ -185,6 +208,37 @@ function sanitizeMixedBattleRecord(raw) {
   };
 }
 
+function sanitizePuzzleStageRecord(raw) {
+  const d = createPuzzleStageRecord();
+  if (!raw || typeof raw !== 'object') return d;
+  return {
+    cleared: Boolean(raw.cleared),
+    bestStars: asNumber(raw.bestStars, 0),
+    bestMoves: raw.bestMoves == null ? null : asNumber(raw.bestMoves, null),
+    clearedWithoutHint: Boolean(raw.clearedWithoutHint),
+    clearCount: asNumber(raw.clearCount, 0)
+  };
+}
+
+// puzzleProgressだけが破損していても、既存のベストスコアや対戦記録には
+// 影響させない（他フィールドと独立にsanitizeする、23.4章）。
+function sanitizePuzzleProgress(raw) {
+  const d = createPuzzleProgress();
+  if (!raw || typeof raw !== 'object') return d;
+  const stages = {};
+  if (raw.stages && typeof raw.stages === 'object') {
+    for (const [id, rec] of Object.entries(raw.stages)) {
+      stages[id] = sanitizePuzzleStageRecord(rec);
+    }
+  }
+  return {
+    tutorialVersion: asNumber(raw.tutorialVersion, 0),
+    swapTutorialSeen: Boolean(raw.swapTutorialSeen),
+    lastStageId: typeof raw.lastStageId === 'string' ? raw.lastStageId : d.lastStageId,
+    stages
+  };
+}
+
 // 壊れた/型の不正なデータが来ても、既定値を土台に安全な形へ整える。
 function sanitize(parsed) {
   const d = defaultState();
@@ -214,7 +268,8 @@ function sanitize(parsed) {
       [LEGACY_RECORD_KEY]: {
         bestScore: asNumber(legacyRecord && legacyRecord.bestScore, 0)
       }
-    }
+    },
+    puzzleProgress: sanitizePuzzleProgress(parsed.puzzleProgress)
   };
 }
 
@@ -507,4 +562,60 @@ export function submitMixedBattleResult({ outcome, p1Score, p2Score, ojamaUseCou
 
   persist();
   return { isNewP1Best, isNewP2Best };
+}
+
+// --- じっくりモード（Phase 6実装指示書 23章） -------------------------------
+
+export function hasSeenPuzzleTutorial() {
+  return state.puzzleProgress.tutorialVersion >= CONFIG.puzzle.tutorialVersion;
+}
+
+export function markPuzzleTutorialSeen() {
+  state.puzzleProgress.tutorialVersion = CONFIG.puzzle.tutorialVersion;
+  persist();
+}
+
+export function hasSeenPuzzleSwapTutorial() {
+  return state.puzzleProgress.swapTutorialSeen;
+}
+
+export function markPuzzleSwapTutorialSeen() {
+  state.puzzleProgress.swapTutorialSeen = true;
+  persist();
+}
+
+export function getPuzzleLastStageId() {
+  return state.puzzleProgress.lastStageId;
+}
+
+// ステージ開始時に呼ぶ（21.1章・23.2章：「つづきから」の候補にするため）。
+export function setPuzzleLastStageId(stageId) {
+  state.puzzleProgress.lastStageId = stageId;
+  persist();
+}
+
+export function getPuzzleStageRecord(stageId) {
+  return { ...(state.puzzleProgress.stages[stageId] || createPuzzleStageRecord()) };
+}
+
+export function getAllPuzzleStageRecords() {
+  return { ...state.puzzleProgress.stages };
+}
+
+// ステージクリア確定時に呼ぶ。途中退出では呼び出さないこと（23.2章）。
+// 戻り値：このクリアで過去のベストスター／ベスト手数を更新したか。
+export function submitPuzzleStageClear({ stageId, stars, movesUsed, hintUsed }) {
+  const previous = state.puzzleProgress.stages[stageId] || createPuzzleStageRecord();
+  const isNewBestStars = stars > previous.bestStars;
+  const isNewBestMoves = previous.bestMoves == null || movesUsed < previous.bestMoves;
+
+  state.puzzleProgress.stages[stageId] = {
+    cleared: true,
+    bestStars: Math.max(previous.bestStars ?? 0, stars),
+    bestMoves: previous.bestMoves == null ? movesUsed : Math.min(previous.bestMoves, movesUsed),
+    clearedWithoutHint: Boolean(previous.clearedWithoutHint) || !hintUsed,
+    clearCount: (previous.clearCount ?? 0) + 1
+  };
+  persist();
+  return { isNewBestStars, isNewBestMoves };
 }

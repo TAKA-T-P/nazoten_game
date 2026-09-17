@@ -8,7 +8,8 @@ import * as ui from './ui.js';
 const state = {
   sectionId: null,
   pageIndex: 0,
-  menuFocusEl: null
+  menuFocusEl: null,
+  onExit: null
 };
 
 let dom = null;
@@ -50,16 +51,26 @@ export function init() {
 }
 
 // menuButtonEl: セクションを開いたボタン（メニューへ戻ったときにフォーカスを戻す）。
-export function openSection(sectionId, menuButtonEl) {
+// onExit: 指定すると、メニューへ戻る代わりにこのコールバックを呼ぶ
+// （じっくりモードの初回説明から、あそびかたメニューを経由せず直接
+// ステージ選択へ進むために使う。省略時は従来どおりhowto-menuへ戻る）。
+export function openSection(sectionId, menuButtonEl, onExit = null) {
   state.sectionId = sectionId;
   state.pageIndex = 0;
   state.menuFocusEl = menuButtonEl || null;
+  state.onExit = onExit;
   ui.showScreen('help-page');
   render();
 }
 
 function backToMenu() {
   state.sectionId = null;
+  if (state.onExit) {
+    const onExit = state.onExit;
+    state.onExit = null;
+    onExit();
+    return;
+  }
   ui.showScreen('howto-menu');
   if (state.menuFocusEl) state.menuFocusEl.focus();
 }
@@ -497,6 +508,58 @@ function demoMixedResult() {
   `;
 }
 
+function demoPuzzleIntro() {
+  const values = [1, 2, 1, 9, 3, 3, 8, 6, 4];
+  const opts = {
+    0: { blue: true, order: 1 },
+    1: { blue: true, order: 2 },
+    2: { blue: true, order: 3 },
+    5: { blue: true, order: 4 },
+    4: { blue: true, order: 5 }
+  };
+  return `
+    <div class="help-demo-timer">せいげん時間 <strong>なし</strong></div>
+    ${board(values, opts, 'help-board-sm')}
+    <div class="help-demo-formula">1 ＋ 2 ＋ 1 ＋ 3 ＋ 3 ＝ <strong>10</strong></div>
+  `;
+}
+
+function demoPuzzleMissions() {
+  return `
+    <div class="help-ojama-types">
+      <span class="help-ojama-chip">指定合計</span>
+      <span class="help-ojama-chip">指定マス数</span>
+      <span class="help-ojama-chip">順番</span>
+      <span class="help-ojama-chip">全消去</span>
+    </div>
+    <div class="help-demo-formula">使用手数 <strong>1</strong> / 目標 <strong>1</strong></div>
+  `;
+}
+
+function demoPuzzleNoRefill() {
+  const values = [1, 2, 1, 9, 3, 3, 8, 6, 4];
+  const opts = { 0: { empty: true }, 1: { empty: true } };
+  return `
+    ${board(values, opts, 'help-board-sm')}
+    <div class="help-ojama-types">
+      <span class="help-ojama-chip">1手戻す</span>
+      <span class="help-ojama-chip">ヒント</span>
+      <span class="help-ojama-chip">やり直す</span>
+    </div>
+  `;
+}
+
+function demoPuzzleSwap() {
+  return `
+    <div class="help-swap-demo">
+      ${cell(4, { swap: true })}
+      <span class="help-swap-arrow" aria-hidden="true">⇄</span>
+      ${cell(8, {})}
+    </div>
+    <p class="help-demo-hidden-score">入れかえも1手として数えます</p>
+  `;
+}
+
 const DEMOS = {
   'basic-goal': demoBasicGoal,
   'basic-path': demoBasicPath,
@@ -517,7 +580,11 @@ const DEMOS = {
   'mixed-sync': demoMixedSync,
   'mixed-protect': demoMixedProtect,
   'mixed-fever-ojama': demoMixedFeverOjama,
-  'mixed-result': demoMixedResult
+  'mixed-result': demoMixedResult,
+  'puzzle-intro': demoPuzzleIntro,
+  'puzzle-missions': demoPuzzleMissions,
+  'puzzle-no-refill': demoPuzzleNoRefill,
+  'puzzle-swap': demoPuzzleSwap
 };
 
 function renderDemo(id) {

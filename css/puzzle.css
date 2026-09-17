@@ -1,0 +1,357 @@
+/* じっくりモード（Phase 6実装指示書）。ステージ選択・プレイ・クリア画面と、
+   3×3/4×4/5×5の可変サイズ盤面（--puzzle-cols/--puzzle-rowsで制御）。
+   盤面は正方形ステージのみなので、aspect-ratioは常に1/1でよい。 */
+
+/* --- ステージ選択 --------------------------------------------------------- */
+.puzzle-select-inner {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.puzzle-select-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.puzzle-menu-btn {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.puzzle-select-heading {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-secondary);
+}
+
+.puzzle-area-switch {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.puzzle-area-arrow {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface);
+  box-shadow: 0 2px 0 var(--color-cell-border);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.puzzle-area-info {
+  text-align: center;
+  min-width: 160px;
+}
+
+.puzzle-area-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.puzzle-area-stars {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-forty);
+  font-weight: 700;
+}
+
+.puzzle-stage-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.puzzle-stage-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 3px 0 var(--color-cell-border);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.puzzle-stage-card .puzzle-stage-number {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.puzzle-stage-card .puzzle-stage-size {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+
+.puzzle-stage-card .puzzle-stage-stars {
+  font-size: 0.8rem;
+  color: var(--color-forty);
+  letter-spacing: 1px;
+}
+
+.puzzle-stage-card.is-current {
+  box-shadow: 0 0 0 2px var(--color-secondary), 0 3px 0 var(--color-cell-border);
+}
+
+.puzzle-stage-card.is-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.puzzle-continue-btn {
+  width: 100%;
+  max-width: 280px;
+}
+
+/* --- プレイ画面 ------------------------------------------------------------ */
+.puzzle-play-inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.puzzle-play-top {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.puzzle-stage-label {
+  margin: 0;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.puzzle-mission-card {
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  text-align: center;
+}
+
+.puzzle-mission-text {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.puzzle-mission-progress {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-secondary);
+  font-weight: 700;
+}
+
+.puzzle-moves-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 800;
+}
+
+.puzzle-moves-value {
+  font-size: 1.3rem;
+}
+
+.puzzle-moves-sep {
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.puzzle-moves-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-right: 6px;
+}
+
+.puzzle-swap-remaining {
+  font-size: 0.8rem;
+  color: #a855f7;
+  font-weight: 700;
+}
+
+.puzzle-hud-formula {
+  min-height: 1.2em;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.puzzle-board-wrap {
+  width: min(78vw, 380px);
+  max-width: 380px;
+}
+
+.puzzle-board {
+  display: grid;
+  grid-template-columns: repeat(var(--puzzle-cols, 4), 1fr);
+  grid-template-rows: repeat(var(--puzzle-rows, 4), 1fr);
+  gap: 6px;
+}
+
+.puzzle-board .cell {
+  font-size: clamp(1rem, 5.5vw, 1.6rem);
+}
+
+/* ヒント表示中に強調するマス（矢印・順番の色分けは既存のselected系を再利用）。 */
+.puzzle-board .cell.hint-highlight {
+  border-color: var(--color-forty);
+  background: #fff4cf;
+  animation: puzzle-hint-pulse 0.6s ease-in-out infinite;
+}
+
+.puzzle-board .cell.hint-swap-a,
+.puzzle-board .cell.hint-swap-b {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4);
+}
+
+@keyframes puzzle-hint-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-board .cell.hint-highlight {
+    animation: none;
+  }
+}
+
+.puzzle-controls {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+
+.puzzle-controls .btn {
+  flex: 1;
+  font-size: 0.85rem;
+  padding: 10px 6px;
+}
+
+.puzzle-hint-message {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* --- オーバーレイ（手詰まり・確認ダイアログ・入れかえ説明） ------------------- */
+.puzzle-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.96);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  z-index: 5;
+}
+
+.puzzle-overlay[hidden] {
+  display: none;
+}
+
+#screen-puzzle {
+  position: relative;
+}
+
+.puzzle-overlay-title {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.puzzle-overlay-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 260px;
+}
+
+/* --- クリア画面 ------------------------------------------------------------ */
+.puzzle-clear-inner {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.puzzle-clear-title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--color-forty);
+}
+
+.puzzle-clear-stars {
+  font-size: 2.2rem;
+  letter-spacing: 6px;
+  color: #d8d8d8;
+}
+
+.puzzle-clear-stars .star-filled {
+  color: var(--color-forty);
+}
+
+.puzzle-clear-moves {
+  margin: 0;
+  font-weight: 700;
+}
+
+.puzzle-clear-hint {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.puzzle-clear-best {
+  margin: 0;
+  font-weight: 800;
+  color: var(--color-fail);
+}
+
+.puzzle-clear-select-btn {
+  width: 100%;
+}

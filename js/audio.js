@@ -236,6 +236,51 @@ export function playResult() {
   });
 }
 
+// --- じっくりモード専用SE（Phase 6実装指示書 22.2章） -----------------------
+// 1手戻す：巻き戻すイメージの短い下降音。
+export function playPuzzleUndo() {
+  tone({ freq: 700, freqEnd: 500, duration: 0.1, type: 'sine', volume: 0.35 });
+  tone({ freq: 500, freqEnd: 350, duration: 0.1, type: 'sine', delay: 0.06, volume: 0.3 });
+}
+
+// ヒント表示：気づきを示す短く軽やかな2音。
+export function playPuzzleHint() {
+  tone({ freq: 880, duration: 0.1, type: 'triangle', volume: 0.4 });
+  tone({ freq: 1174.66, duration: 0.16, type: 'triangle', delay: 0.09, volume: 0.4 });
+}
+
+// ステージクリア：短い上昇アルペジオ＋和音。
+export function playPuzzleStageClear() {
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((freq, i) => {
+    tone({ freq, duration: 0.14, type: 'triangle', delay: i * 0.07, volume: 0.5 });
+  });
+  const chordDelay = notes.length * 0.07 + 0.05;
+  tone({ freq: 1046.5, freqEnd: 1568, duration: 0.35, type: 'sine', delay: chordDelay, volume: 0.4 });
+}
+
+// エリアクリア：ステージクリアより1オクターブ厚みのある和音を追加。
+export function playPuzzleAreaClear() {
+  playPuzzleStageClear();
+  const chordDelay = 0.35;
+  [523.25, 659.25, 783.99, 1046.5].forEach((freq) => {
+    tone({ freq, duration: 0.5, type: 'sawtooth', delay: chordDelay, volume: 0.3 });
+  });
+}
+
+// 全24ステージクリア：もっとも豪華なファンファーレ。
+export function playPuzzleAllClear() {
+  const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1568];
+  notes.forEach((freq, i) => {
+    tone({ freq, duration: 0.18, type: 'triangle', delay: i * 0.07, volume: 0.55 });
+  });
+  const chordDelay = notes.length * 0.07 + 0.1;
+  [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((freq) => {
+    tone({ freq, duration: 0.7, type: 'sawtooth', delay: chordDelay, volume: 0.35 });
+  });
+  tone({ freq: 1600, freqEnd: 2600, duration: 0.5, type: 'sine', delay: chordDelay + 0.1, volume: 0.4 });
+}
+
 // --- オジャマ（Phase5実装指示書20章） --------------------------------------
 // 発動者側：ボタンを押した瞬間の短い発動音。
 export function playOjamaActivate() {
@@ -315,6 +360,31 @@ export function stopBgm() {
   if (!bgmAudioEl) return;
   bgmAudioEl.pause();
   bgmAudioEl.currentTime = 0;
+}
+
+// --- じっくりモード専用BGM（Phase 6実装指示書 22.4章） ----------------------
+// 最初のステージ開始時にだけ1曲選び、以後はクリア画面・ステージ選択へ戻っても
+// 同じ曲をループ再生し続ける。曲別の開始タイミング（triggerBgmStart）は
+// 60秒プレイ用のため、じっくりモードでは使わず先頭からそのまま再生する。
+let puzzleBgmStarted = false;
+
+export function startPuzzleBgm() {
+  if (puzzleBgmStarted) return;
+  puzzleBgmStarted = true;
+  chooseRandomBgmTrack();
+  if (!bgmEnabled) return;
+  const el = getBgmAudioElement();
+  el.loop = true;
+  el.currentTime = 0;
+  el.play().catch(() => {
+    // 自動再生が拒否された場合も、プレイ自体は継続する。
+  });
+}
+
+export function stopPuzzleBgm() {
+  puzzleBgmStarted = false;
+  stopBgm();
+  if (bgmAudioEl) bgmAudioEl.loop = false;
 }
 
 // --- 対戦結果ジングル（CPU戦・2人対戦の結果画面用） -------------------------
