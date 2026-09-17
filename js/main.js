@@ -691,6 +691,7 @@ function main() {
     const indices = e.detail.indices;
     const values = indices.map((i) => puzzle.state.cells[i]);
     const sum = values.reduce((a, b) => a + b, 0);
+    ui.updatePuzzleSelection(indices);
     ui.updatePuzzleFormula(indices, values, sum);
   });
 

@@ -1806,6 +1806,8 @@ export function updatePuzzleSelection(indices) {
 }
 
 // 失敗操作：既存のfail-shakeアニメーション（animations.css）を再利用する。
+// border-colorはアニメーションと独立した静的プロパティのため、他画面と同様に
+// animationend時にクラス自体を外さないと赤枠が残り続ける。
 export function flashPuzzleFail(indices) {
   indices.forEach((i) => {
     const cellEl = puzzleCellEls[i];
@@ -1813,6 +1815,7 @@ export function flashPuzzleFail(indices) {
     cellEl.classList.remove('fail-shake');
     void cellEl.offsetWidth;
     cellEl.classList.add('fail-shake');
+    cellEl.addEventListener('animationend', () => cellEl.classList.remove('fail-shake'), { once: true });
   });
 }
 

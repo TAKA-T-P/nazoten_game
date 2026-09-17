@@ -75,11 +75,15 @@ export class PuzzleController extends EventTarget {
       doubleTapThresholdMs: CONFIG.doubleTapThresholdMs,
       longPressThresholdMs: CONFIG.longPressThresholdMs,
       onSelectionStart: (i, sel) => {
-        this._clearSwapSelection();
         audio.playTraceNote(0);
         this._emitSelectionUpdate(sel);
       },
       onCellAdded: (i, sel) => {
+        // 2マス目が追加された時点で初めて「なぞり操作」と確定するため、ここで
+        // 交換選択を解除する（12.2章）。onSelectionStartは単純なタップの
+        // pointerdownでも発火するため、そこで解除すると入れかえの2回目の
+        // タップ自体が無効化されてしまう（実際に発生していた不具合）。
+        this._clearSwapSelection();
         audio.playTraceNote(sel.length - 1);
         this._emitSelectionUpdate(sel);
       },
