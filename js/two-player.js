@@ -2,7 +2,7 @@
 // （盤面・Pointer入力・得点・シルバー・フィーバー・入れかえ選択）を持つ。
 // P2側の画面をCSSで180度回転させるだけで、盤面のセル順序やロジックは
 // P1・P2で共通のまま扱う（仕様書7.2章）。
-import { CONFIG, BGM_DELAY_TRIGGER_MS } from './config.js';
+import { CONFIG, BGM_DELAY_TRIGGER_MS, BGM_EARLY_START_OFFSET_MS } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
 import {
@@ -258,6 +258,17 @@ export class TwoPlayerController extends EventTarget {
         this.dispatchEvent(new CustomEvent('countdown', { detail: { label } }));
         if (label === 'BATTLE!') this._beginPlaying();
       }, delay);
+      this.countdownTimers.push(id);
+    });
+
+    // BGM03・BGM04は、対応するカウントダウンの表示タイミングより1秒早く
+    // 再生を開始する（曲の盛り上がりに合わせるための専用タイミング）。
+    [
+      { trigger: 'bgm03Start', stepIndex: 2 },
+      { trigger: 'bgm04Start', stepIndex: 3 }
+    ].forEach(({ trigger, stepIndex }) => {
+      const delay = Math.max(0, stepIndex * CONFIG.countdownStepMs - BGM_EARLY_START_OFFSET_MS);
+      const id = setTimeout(() => audio.triggerBgmStart(trigger), delay);
       this.countdownTimers.push(id);
     });
   }
@@ -521,12 +532,14 @@ export class TwoPlayerController extends EventTarget {
   _showResult() {
     this._setStatus(STATUS.RESULT);
     audio.stopBgm();
-    audio.playResult();
 
     let outcome;
     if (this.scores.p1 > this.scores.p2) outcome = OUTCOME.P1_WIN;
     else if (this.scores.p1 < this.scores.p2) outcome = OUTCOME.P2_WIN;
     else outcome = OUTCOME.DRAW;
+    // 2人対戦は「1人称のYOU」がいないため、引き分け以外は常にWINジングル、
+    // 引き分けのときだけLOSEジングルを鳴らす。
+    audio.playBattleResultSound(outcome !== OUTCOME.DRAW);
 
     this.dispatchEvent(new CustomEvent('result', {
       detail: {

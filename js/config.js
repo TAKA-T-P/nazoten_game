@@ -99,18 +99,26 @@ export const BGM_BASE_PATH = 'assets/bgm/';
 
 // ゲーム開始のたびにこの中から1曲をランダムに選ぶ。各曲は長さが微妙に異なるため、
 // 曲ごとに再生開始タイミング（startTrigger）を変えて、曲の盛り上がりとゲーム進行を
-// 合わせる。startTriggerの値はgame.jsが発火するタイミング名と対応させる。
+// 合わせる。startTriggerの値はgame.js等の各コントローラが発火するタイミング名と
+// 対応させる。
 //   countdown3 / countdown2 / countdown1 / start … カウントダウンの「3」「2」「1」「START!」と同時
+//   bgm03Start / bgm04Start                    … 対応するカウントダウン（1秒早く）の
+//                                                 タイミングより1秒早いタイミング
+//                                                 （bgm03Start＝「1」の1秒前、
+//                                                   bgm04Start＝「START!」の1秒前）
 //   delay3s                                    … ゲーム開始（START!）から3秒後（残り57秒）
 export const BGM_TRACKS = [
   { id: 'bgm01', file: 'BGM01_焦りは禁物.mp3', startTrigger: 'countdown3' },
   { id: 'bgm02', file: 'BGM02_てんやわんやなお嬢様.mp3', startTrigger: 'countdown2' },
-  { id: 'bgm03', file: 'BGM03_和風ロックBGM.mp3', startTrigger: 'countdown1' },
-  { id: 'bgm04', file: 'BGM04_ColdHeart.mp3', startTrigger: 'start' },
-  { id: 'bgm05', file: 'BGM05_達成！.mp3', startTrigger: 'delay3s' }
+  { id: 'bgm03', file: 'BGM03_和風ロックBGM.mp3', startTrigger: 'bgm03Start' },
+  { id: 'bgm04', file: 'BGM04_ColdHeart.mp3', startTrigger: 'bgm04Start' },
+  { id: 'bgm05', file: 'BGM05_達成！.mp3', startTrigger: 'countdown2' }
 ];
 
 export const BGM_DELAY_TRIGGER_MS = 3_000;
+
+// BGM03・BGM04を、通常のカウントダウンのタイミングより早く鳴らすための前倒し量。
+export const BGM_EARLY_START_OFFSET_MS = 1_000;
 
 // CPUバトルの強さ別パラメータ（Phase3実装指示書 11章）。実装後のテストプレイで調整する仮値。
 export const CPU_LEVEL_ORDER = ['1', '2', '3', '4', '5', 'MAX'];

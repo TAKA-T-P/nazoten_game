@@ -1,6 +1,6 @@
 // CPUバトルの進行管理：共通タイマー、両者のスコア・盤面、フィーバー、ゲージ、勝敗
 //（Phase3実装指示書 8〜16章）。既存の1人用NazotenGameとは責務を分離した独立クラスとする。
-import { CONFIG, CPU_LEVELS, BGM_DELAY_TRIGGER_MS } from './config.js';
+import { CONFIG, CPU_LEVELS, BGM_DELAY_TRIGGER_MS, BGM_EARLY_START_OFFSET_MS } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
 import {
@@ -234,6 +234,17 @@ export class BattleController extends EventTarget {
         this.dispatchEvent(new CustomEvent('countdown', { detail: { label } }));
         if (label === 'BATTLE!') this._beginPlaying();
       }, delay);
+      this.countdownTimers.push(id);
+    });
+
+    // BGM03・BGM04は、対応するカウントダウンの表示タイミングより1秒早く
+    // 再生を開始する（曲の盛り上がりに合わせるための専用タイミング）。
+    [
+      { trigger: 'bgm03Start', stepIndex: 2 },
+      { trigger: 'bgm04Start', stepIndex: 3 }
+    ].forEach(({ trigger, stepIndex }) => {
+      const delay = Math.max(0, stepIndex * CONFIG.countdownStepMs - BGM_EARLY_START_OFFSET_MS);
+      const id = setTimeout(() => audio.triggerBgmStart(trigger), delay);
       this.countdownTimers.push(id);
     });
   }
@@ -515,12 +526,12 @@ export class BattleController extends EventTarget {
   _showResult() {
     this._setStatus(STATUS.RESULT);
     audio.stopBgm();
-    audio.playResult();
 
     let outcome;
     if (this.playerScore > this.cpuScore) outcome = OUTCOME.WIN;
     else if (this.playerScore < this.cpuScore) outcome = OUTCOME.LOSE;
     else outcome = OUTCOME.DRAW;
+    audio.playBattleResultSound(outcome === OUTCOME.WIN);
 
     this.dispatchEvent(new CustomEvent('result', {
       detail: {

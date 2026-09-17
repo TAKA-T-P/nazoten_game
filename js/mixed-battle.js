@@ -6,7 +6,7 @@
 // 競合の勝敗は「JSは単一スレッドである」性質を利用し、確定直前にBoard側の状態を
 // 再検証するだけで解決する（cpu.jsの_resolveSelectionと同じ手法。revision番号は
 // 使わず、状態ベースの再検証で必要十分な整合性を保証する）。
-import { CONFIG, BGM_DELAY_TRIGGER_MS } from './config.js';
+import { CONFIG, BGM_DELAY_TRIGGER_MS, BGM_EARLY_START_OFFSET_MS } from './config.js';
 import { Board } from './board.js';
 import { SelectionController } from './input.js';
 import {
@@ -272,6 +272,17 @@ export class MixedBattleController extends EventTarget {
         this.dispatchEvent(new CustomEvent('countdown', { detail: { label } }));
         if (label === 'BATTLE!') this._beginPlaying();
       }, delay);
+      this.countdownTimers.push(id);
+    });
+
+    // BGM03・BGM04は、対応するカウントダウンの表示タイミングより1秒早く
+    // 再生を開始する（曲の盛り上がりに合わせるための専用タイミング）。
+    [
+      { trigger: 'bgm03Start', stepIndex: 2 },
+      { trigger: 'bgm04Start', stepIndex: 3 }
+    ].forEach(({ trigger, stepIndex }) => {
+      const delay = Math.max(0, stepIndex * CONFIG.countdownStepMs - BGM_EARLY_START_OFFSET_MS);
+      const id = setTimeout(() => audio.triggerBgmStart(trigger), delay);
       this.countdownTimers.push(id);
     });
   }
@@ -561,12 +572,14 @@ export class MixedBattleController extends EventTarget {
   _showResult() {
     this._setStatus(STATUS.RESULT);
     audio.stopBgm();
-    audio.playResult();
 
     let outcome;
     if (this.scores.p1 > this.scores.p2) outcome = OUTCOME.P1_WIN;
     else if (this.scores.p1 < this.scores.p2) outcome = OUTCOME.P2_WIN;
     else outcome = OUTCOME.DRAW;
+    // 2人対戦は「1人称のYOU」がいないため、引き分け以外は常にWINジングル、
+    // 引き分けのときだけLOSEジングルを鳴らす。
+    audio.playBattleResultSound(outcome !== OUTCOME.DRAW);
 
     this.dispatchEvent(new CustomEvent('result', {
       detail: {

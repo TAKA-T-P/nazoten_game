@@ -316,3 +316,29 @@ export function stopBgm() {
   bgmAudioEl.pause();
   bgmAudioEl.currentTime = 0;
 }
+
+// --- 対戦結果ジングル（CPU戦・2人対戦の結果画面用） -------------------------
+// サウンドモードがBGM系（bgmRandom／bgm1〜5）のときは、結果発表の合成SEの
+// 代わりにWIN/LOSEジングルのmp3を1回だけ再生する（ループなし）。
+// 「効果音のみ」「音なし」のときは従来どおりplayResult()の合成SEを使う
+// （音なし時はplayResult内部のtone/noiseBurstがseEnabledで自動的に無音になる）。
+const RESULT_JINGLE_FILES = {
+  win: 'WINジングル.mp3',
+  lose: 'LOSEジングル.mp3'
+};
+
+export function playBattleResultSound(isWin) {
+  if (!bgmEnabled) {
+    playResult();
+    return;
+  }
+  const el = getBgmAudioElement();
+  el.pause();
+  el.loop = false;
+  el.currentTime = 0;
+  el.src = encodeURI(BGM_BASE_PATH + RESULT_JINGLE_FILES[isWin ? 'win' : 'lose']);
+  el.load();
+  el.play().catch(() => {
+    // 自動再生が拒否された場合も、結果画面の表示自体は継続する。
+  });
+}
