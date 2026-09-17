@@ -102,36 +102,36 @@
 
 .ojama-meteor-overlay .meteor-star {
   position: absolute;
-  top: -20%;
-  left: 100%;
+  top: -50%;
+  left: 140%;
   --x-offset: 0%;
-  font-size: clamp(2rem, 18vw, 3.4rem);
+  font-size: clamp(4rem, 36vw, 6.8rem);
   opacity: 0;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
 .ojama-meteor-overlay.ojama-meteor-anim .meteor-star {
-  animation: ojama-meteor-fall 0.8s linear infinite;
+  animation: ojama-meteor-fall 0.4s linear infinite;
 }
 
 .ojama-meteor-overlay .meteor-star:nth-child(1)  { --x-offset: -10%; animation-delay: 0s; }
-.ojama-meteor-overlay .meteor-star:nth-child(2)  { --x-offset: 30%;  animation-delay: 0.15s; }
-.ojama-meteor-overlay .meteor-star:nth-child(3)  { --x-offset: 55%;  animation-delay: 0.3s; }
-.ojama-meteor-overlay .meteor-star:nth-child(4)  { --x-offset: -35%; animation-delay: 0.45s; }
-.ojama-meteor-overlay .meteor-star:nth-child(5)  { --x-offset: 10%;  animation-delay: 0.6s; }
-.ojama-meteor-overlay .meteor-star:nth-child(6)  { --x-offset: 45%;  animation-delay: 0.75s; }
+.ojama-meteor-overlay .meteor-star:nth-child(2)  { --x-offset: 30%;  animation-delay: 0.03s; }
+.ojama-meteor-overlay .meteor-star:nth-child(3)  { --x-offset: 55%;  animation-delay: 0.07s; }
+.ojama-meteor-overlay .meteor-star:nth-child(4)  { --x-offset: -35%; animation-delay: 0.1s; }
+.ojama-meteor-overlay .meteor-star:nth-child(5)  { --x-offset: 10%;  animation-delay: 0.13s; }
+.ojama-meteor-overlay .meteor-star:nth-child(6)  { --x-offset: 45%;  animation-delay: 0.17s; }
 .ojama-meteor-overlay .meteor-star:nth-child(7)  { --x-offset: -20%; animation-delay: 0.2s; }
-.ojama-meteor-overlay .meteor-star:nth-child(8)  { --x-offset: 20%;  animation-delay: 0.35s; }
-.ojama-meteor-overlay .meteor-star:nth-child(9)  { --x-offset: 60%;  animation-delay: 0.5s; }
-.ojama-meteor-overlay .meteor-star:nth-child(10) { --x-offset: -45%; animation-delay: 0.65s; }
-.ojama-meteor-overlay .meteor-star:nth-child(11) { --x-offset: 0%;   animation-delay: 0.05s; }
-.ojama-meteor-overlay .meteor-star:nth-child(12) { --x-offset: 35%;  animation-delay: 0.4s; }
+.ojama-meteor-overlay .meteor-star:nth-child(8)  { --x-offset: 20%;  animation-delay: 0.23s; }
+.ojama-meteor-overlay .meteor-star:nth-child(9)  { --x-offset: 60%;  animation-delay: 0.27s; }
+.ojama-meteor-overlay .meteor-star:nth-child(10) { --x-offset: -45%; animation-delay: 0.3s; }
+.ojama-meteor-overlay .meteor-star:nth-child(11) { --x-offset: 0%;   animation-delay: 0.33s; }
+.ojama-meteor-overlay .meteor-star:nth-child(12) { --x-offset: 35%;  animation-delay: 0.37s; }
 
 @keyframes ojama-meteor-fall {
-  0%   { top: -20%; left: calc(100% + var(--x-offset)); opacity: 0; }
-  12%  { opacity: 1; }
-  85%  { opacity: 1; }
-  100% { top: 120%;  left: calc(-30% + var(--x-offset)); opacity: 0; }
+  0%   { top: -50%; left: calc(140% + var(--x-offset)); opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 170%;  left: calc(-70% + var(--x-offset)); opacity: 0; }
 }
 
 /* ハイド：盤面上部の数式表示（「3+3+4=10」など）を黒い矩形で完全に覆う
