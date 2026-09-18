@@ -16,15 +16,15 @@
   justify-content: flex-start;
 }
 
-/* 見出しとバトル開始/タイトルへボタンの間の余白を13.0px→2.0pxに縮小する
+/* 見出しとバトル開始/タイトルへボタンの間の余白を12.0pxにする
    （h2の既定マージンを打ち消し、ボタン行のmargin-topで間隔を調整する。
-   flex gap 12pxが常に加わるため、負のmargin-topで打ち消して縮める）。 */
+   flex gap 12pxがすでに間隔として加わるため、margin-topは0でよい）。 */
 #screen-cpu-select h2 {
   margin: 0;
 }
 
 #screen-cpu-select h2 + .result-buttons {
-  margin-top: -10px;
+  margin-top: 0;
 }
 
 /* オジャマON/OFFの上下の余白も大幅に縮小する（flex gap 12pxを負の
