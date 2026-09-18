@@ -34,22 +34,6 @@ export function setSoundMode(mode) {
   if (!bgmEnabled) stopBgm();
 }
 
-// じっくりモードはBGMを鳴らさない。タイトルで選ばれているサウンドモードが
-// 「音なし」でなければ効果音のみ鳴らす（「効果音のみ」モードへ一時的に
-// 切り替え、じっくりモードを抜けたら元のモードへ戻す）。
-let savedSoundModeBeforePuzzle = null;
-
-export function enterPuzzleAudioMode() {
-  savedSoundModeBeforePuzzle = soundMode;
-  if (soundMode !== 'off') setSoundMode('bgmOff');
-}
-
-export function exitPuzzleAudioMode() {
-  if (savedSoundModeBeforePuzzle === null) return;
-  setSoundMode(savedSoundModeBeforePuzzle);
-  savedSoundModeBeforePuzzle = null;
-}
-
 function now() {
   return ctx ? ctx.currentTime : 0;
 }
@@ -378,10 +362,37 @@ export function stopBgm() {
   bgmAudioEl.currentTime = 0;
 }
 
-// じっくりモードはBGMを鳴らさず、効果音のみ再生する（サウンドモードが
-// 「音なし」以外なら効果音は通常どおり鳴る）。main.js側でステージ開始前後に
-// サウンドモードを一時的に「効果音のみ」へ切り替えることで実現しており、
-// BGM再生用の専用関数はここでは不要。
+// --- じっくりモード専用BGM ---------------------------------------------------
+// サウンドモードが「BGMランダム」または「BGM1〜5」のときだけ、専用の1曲を
+// タイトルからじっくりモードに入った時点でループ再生する（「効果音のみ」
+// 「音なし」のときは鳴らさず、効果音のみ従来どおり鳴る）。ステージ選択・
+// プレイ・クリア・次ステージへの移動をまたいでも停止・再開せず、タイトルへ
+// 戻ったときだけ止める。puzzleBgmStartedにより、再入場やステージ再挑戦での
+// 二重再生を防ぐ。
+const PUZZLE_BGM_FILE = 'BGMじっくり_Kawara.mp3';
+let puzzleBgmStarted = false;
+
+export function startPuzzleBgm() {
+  if (puzzleBgmStarted) return;
+  puzzleBgmStarted = true;
+  if (!bgmEnabled) return;
+  const el = getBgmAudioElement();
+  el.pause();
+  el.loop = true;
+  el.currentTime = 0;
+  el.src = encodeURI(BGM_BASE_PATH + PUZZLE_BGM_FILE);
+  el.load();
+  el.play().catch(() => {
+    // 自動再生が拒否された場合も、じっくりモードの操作自体は継続する。
+  });
+}
+
+export function stopPuzzleBgm() {
+  if (!puzzleBgmStarted) return;
+  puzzleBgmStarted = false;
+  stopBgm();
+  if (bgmAudioEl) bgmAudioEl.loop = false;
+}
 
 // --- 対戦結果ジングル（CPU戦・2人対戦の結果画面用） -------------------------
 // サウンドモードがBGM系（bgmRandom／bgm1〜5）のときは、結果発表の合成SEの

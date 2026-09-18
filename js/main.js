@@ -873,14 +873,14 @@ function main() {
   });
 
   document.getElementById('btn-puzzle').addEventListener('click', () => {
-    audio.enterPuzzleAudioMode();
+    audio.startPuzzleBgm();
     currentPuzzleAreaIndex = areaIndexForStageId(storage.getPuzzleLastStageId());
     renderCurrentPuzzleArea();
     ui.showScreen('puzzle-select');
   });
 
   document.getElementById('btn-puzzle-select-title').addEventListener('click', () => {
-    audio.exitPuzzleAudioMode();
+    audio.stopPuzzleBgm();
     ui.showScreen('title');
   });
 
