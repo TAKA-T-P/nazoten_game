@@ -56,10 +56,8 @@ function cacheDom() {
   // CPUバトル関連
   el.btnCpuBattle = document.getElementById('btn-cpu-battle');
   el.cpuLevelSlider = document.getElementById('cpu-level-slider');
-  el.cpuLevelDescription = document.getElementById('cpu-level-description');
   el.cpuLevelRecord = document.getElementById('cpu-level-record');
   el.cpuCharacterCard = document.getElementById('cpu-character-card');
-  el.cpuCharacterLevel = document.getElementById('cpu-character-level');
   el.cpuCharacterEmoji = document.getElementById('cpu-character-emoji');
   el.cpuCharacterName = document.getElementById('cpu-character-name');
   el.cpuCharacterFlavor = document.getElementById('cpu-character-flavor');
@@ -619,10 +617,8 @@ function formatRecord(record) {
 export function updateCpuLevelSelection(level) {
   const index = CPU_LEVEL_ORDER.indexOf(level);
   el.cpuLevelSlider.value = String(index >= 0 ? index : 0);
-  el.cpuLevelDescription.textContent = CPU_LEVELS[level].description;
 
   const character = getCpuCharacter(level);
-  el.cpuCharacterLevel.textContent = CPU_LEVELS[level].label;
   el.cpuCharacterEmoji.textContent = character.emoji;
   el.cpuCharacterName.textContent = character.name;
   el.cpuCharacterFlavor.textContent = character.flavor;

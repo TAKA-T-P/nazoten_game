@@ -68,13 +68,6 @@
   padding: 0 2px;
 }
 
-.cpu-level-description {
-  min-height: 1.4em;
-  font-weight: 700;
-  color: var(--color-secondary);
-  margin: 0;
-}
-
 .cpu-level-record {
   font-size: 0.85rem;
   color: var(--color-text-muted);
@@ -95,15 +88,16 @@
   box-shadow: 0 3px 0 var(--color-cell-border);
 }
 
-.cpu-character-level {
-  margin: 0;
-  font-weight: 900;
-  font-size: 1.1rem;
-  color: var(--color-fail);
+/* 絵文字とキャラ名を同じ行に並べる。 */
+.cpu-character-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .cpu-character-emoji {
-  font-size: 56px;
+  font-size: 40px;
   line-height: 1;
 }
 

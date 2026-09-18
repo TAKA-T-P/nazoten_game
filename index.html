@@ -234,6 +234,10 @@
   <section id="screen-cpu-select" class="screen" data-screen="cpu-select" hidden>
     <div class="cpu-select-inner">
       <h2>バトル形式とCPUの強さを選ぶ</h2>
+      <div class="result-buttons">
+        <button id="btn-cpu-select-back" class="btn btn-secondary" type="button">タイトルへ</button>
+        <button id="btn-cpu-start" class="btn btn-primary" type="button">バトル開始</button>
+      </div>
       <div class="battle-format-options">
         <button id="btn-cpu-format-score" class="battle-format-btn selected" data-format="score" type="button">
           <span class="battle-format-label">スコアバトル</span>
@@ -260,16 +264,12 @@
         </div>
       </div>
       <div id="cpu-character-card" class="cpu-character-card">
-        <p id="cpu-character-level" class="cpu-character-level">強さ1</p>
-        <div id="cpu-character-emoji" class="cpu-character-emoji" aria-hidden="true">🐥</div>
-        <p id="cpu-character-name" class="cpu-character-name">ナゾピヨ</p>
-        <p id="cpu-character-flavor" class="cpu-character-flavor"></p>
-        <p id="cpu-level-description" class="cpu-level-description">のんびりプレイする最弱CPU</p>
+        <div class="cpu-character-header">
+          <div id="cpu-character-emoji" class="cpu-character-emoji" aria-hidden="true">🐥</div>
+          <p id="cpu-character-name" class="cpu-character-name">ナゾピヨ</p>
+        </div>
         <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝</p>
-      </div>
-      <div class="result-buttons">
-        <button id="btn-cpu-start" class="btn btn-primary" type="button">バトル開始</button>
-        <button id="btn-cpu-select-back" class="btn btn-secondary" type="button">タイトルへ</button>
+        <p id="cpu-character-flavor" class="cpu-character-flavor"></p>
       </div>
     </div>
   </section>
