@@ -9,14 +9,28 @@
   gap: 12px;
 }
 
-/* 見出しとバトル開始/タイトルへボタンの間の余白を、元の約30%に縮小する
-   （h2の既定マージンを打ち消し、ボタン行のmargin-topだけで間隔を作る）。 */
+/* 画面全体が縦中央寄せ（.screenのjustify-content: center）のため、内容が
+   ビューポートより低いと見出し上部に大きな余白ができてしまう。上寄せに
+   変更して見出し上部の余白を縮小する。 */
+#screen-cpu-select {
+  justify-content: flex-start;
+}
+
+/* 見出しとバトル開始/タイトルへボタンの間の余白を13.0px→2.0pxに縮小する
+   （h2の既定マージンを打ち消し、ボタン行のmargin-topで間隔を調整する。
+   flex gap 12pxが常に加わるため、負のmargin-topで打ち消して縮める）。 */
 #screen-cpu-select h2 {
   margin: 0;
 }
 
 #screen-cpu-select h2 + .result-buttons {
-  margin-top: 1px;
+  margin-top: -10px;
+}
+
+/* オジャマON/OFFの上下の余白も大幅に縮小する（flex gap 12pxを負の
+   marginで打ち消し、行の上下を4pxに詰める）。 */
+#screen-cpu-select .ojama-toggle-row {
+  margin: -8px 0;
 }
 
 .cpu-level-slider-wrap {
