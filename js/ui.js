@@ -1908,13 +1908,21 @@ export function applyPuzzleSwapVisual(a, b, values) {
   });
 }
 
+// sequenceのステップにもmakeSumと同様にexactLengthが設定されることがある
+// （ランダム生成問題実装指示書13.3章の例を参照）。マス数条件を表示しないと、
+// 合計だけ合わせたのに不正解になる理由が伝わらないため、makeSumと同じ
+// 「Xマスで」の形式で必ず表示する。
+function formatSequenceStep(step) {
+  return step.exactLength ? `${step.exactLength}マスで${step.sum}` : `${step.sum}`;
+}
+
 function puzzleMissionText(stage) {
   const m = stage.mission;
   if (m.type === 'makeSum') {
     return m.exactLength ? `${m.exactLength}マスで${m.targetSum}を作ろう` : `${m.targetSum}を作ろう`;
   }
   if (m.type === 'sequence') {
-    return `${m.steps.map((s) => s.sum).join('→')}の順に作ろう`;
+    return `${m.steps.map(formatSequenceStep).join('→')}の順に作ろう`;
   }
   if (m.type === 'clearAll') {
     return `${stage.moveLimit}手以内に全部消そう`;
@@ -1927,7 +1935,7 @@ export function renderPuzzleMission(stage, sequenceIndex) {
   if (stage.mission.type === 'sequence') {
     const step = stage.mission.steps[sequenceIndex];
     el.puzzleMissionProgress.hidden = false;
-    el.puzzleMissionProgress.textContent = step ? `いまの目標：${step.sum}` : 'クリア！';
+    el.puzzleMissionProgress.textContent = step ? `いまの目標：${formatSequenceStep(step)}` : 'クリア！';
   } else {
     el.puzzleMissionProgress.hidden = true;
   }
