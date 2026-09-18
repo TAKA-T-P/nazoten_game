@@ -712,4 +712,9 @@
 
 .result-buttons .btn {
   flex: 1;
+  /* 2つ並んだ状態では左右28pxの既定パディングだと文言が折り返す
+     組み合わせがあるため、横方向のパディングを詰めて1行に収める。 */
+  padding-left: 12px;
+  padding-right: 12px;
+  white-space: nowrap;
 }
