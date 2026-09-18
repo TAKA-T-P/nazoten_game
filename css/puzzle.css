@@ -466,6 +466,28 @@
   color: var(--color-forty);
 }
 
+/* 星3つ（満点）クリア時は光るエフェクトで演出する。 */
+.puzzle-clear-stars--perfect .star-filled {
+  animation: puzzle-clear-star-glow 1s ease-in-out infinite;
+}
+
+@keyframes puzzle-clear-star-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 4px rgba(255, 193, 7, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 16px 6px rgba(255, 193, 7, 0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-clear-stars--perfect .star-filled {
+    animation: none;
+    text-shadow: 0 0 12px 4px rgba(255, 193, 7, 0.8);
+  }
+}
+
 .puzzle-clear-moves {
   margin: 0;
   font-weight: 700;
@@ -483,6 +505,3 @@
   color: var(--color-fail);
 }
 
-.puzzle-clear-select-btn {
-  width: 100%;
-}

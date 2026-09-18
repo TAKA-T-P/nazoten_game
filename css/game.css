@@ -699,6 +699,12 @@
   width: 100%;
 }
 
+/* author由来のdisplay:flexはUA由来の[hidden]{display:none}より優先されて
+   しまうため、hidden属性を確実に効かせる明示的な上書きが必要。 */
+.result-buttons[hidden] {
+  display: none;
+}
+
 .result-buttons .btn {
   flex: 1;
 }

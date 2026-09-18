@@ -988,6 +988,10 @@ function main() {
     renderCurrentPuzzleArea();
     ui.showScreen('puzzle-select');
   });
+  document.getElementById('btn-puzzle-clear-title').addEventListener('click', () => {
+    audio.stopPuzzleBgm();
+    ui.showScreen('title');
+  });
 
   document.getElementById('btn-puzzle-clear-random-next').addEventListener('click', () => {
     ui.showPuzzleGeneratingLoading();
@@ -1002,6 +1006,10 @@ function main() {
     currentPuzzleAreaIndex = Math.max(0, PUZZLE_AREAS.findIndex((a) => a.id === puzzle.stage.areaId));
     renderCurrentPuzzleArea();
     ui.showScreen('puzzle-select');
+  });
+  document.getElementById('btn-puzzle-clear-random-title').addEventListener('click', () => {
+    audio.stopPuzzleBgm();
+    ui.showScreen('title');
   });
 
   // --- おてがるスコアアタック（おてがるモード実装指示書） ---------------------

@@ -311,9 +311,9 @@ function cacheDom() {
   el.puzzleClearStreak = document.getElementById('puzzle-clear-streak');
   el.puzzleClearProblemId = document.getElementById('puzzle-clear-problem-id');
   el.puzzleClearFixedButtons = document.getElementById('puzzle-clear-fixed-buttons');
-  el.btnPuzzleClearSelect = document.getElementById('btn-puzzle-clear-select');
+  el.puzzleClearSelectRow = document.getElementById('puzzle-clear-select-row');
   el.puzzleClearRandomButtons = document.getElementById('puzzle-clear-random-buttons');
-  el.btnPuzzleClearRandomSelect = document.getElementById('btn-puzzle-clear-random-select');
+  el.puzzleClearRandomSelectRow = document.getElementById('puzzle-clear-random-select-row');
 
   // おてがるスコアアタック（おてがるモード実装指示書）
   el.easyBoard = document.getElementById('easy-board');
@@ -2138,12 +2138,13 @@ export function renderPuzzleClear({ stars, movesUsed, parMoves, hintUsed, isLast
   el.puzzleClearStreak.hidden = true;
   el.puzzleClearProblemId.hidden = true;
   el.puzzleClearFixedButtons.hidden = false;
-  el.btnPuzzleClearSelect.hidden = false;
+  el.puzzleClearSelectRow.hidden = false;
   el.puzzleClearRandomButtons.hidden = true;
-  el.btnPuzzleClearRandomSelect.hidden = true;
+  el.puzzleClearRandomSelectRow.hidden = true;
 
   el.puzzleClearTitle.textContent = isLastStage ? '全ステージクリア！' : 'STAGE CLEAR!';
   el.puzzleClearStars.innerHTML = starsMarkup(stars);
+  el.puzzleClearStars.classList.toggle('puzzle-clear-stars--perfect', stars === 3);
   el.puzzleClearMoves.textContent = `使用手数：${movesUsed} / 目標${parMoves}`;
   el.puzzleClearHint.textContent = hintUsed ? 'ヒント使用' : 'ノーヒント！';
   el.puzzleClearBest.hidden = !isNewBest;
@@ -2159,11 +2160,12 @@ function difficultyStars(difficulty) {
 // 一切付与しない。
 export function renderPuzzleRandomClear({ areaName, difficulty, movesUsed, parMoves, hintUsed, isPerfect, currentClearStreak, problemId }) {
   el.puzzleClearStars.hidden = true;
+  el.puzzleClearStars.classList.remove('puzzle-clear-stars--perfect');
   el.puzzleClearBest.hidden = true;
   el.puzzleClearFixedButtons.hidden = true;
-  el.btnPuzzleClearSelect.hidden = true;
+  el.puzzleClearSelectRow.hidden = true;
   el.puzzleClearRandomButtons.hidden = false;
-  el.btnPuzzleClearRandomSelect.hidden = false;
+  el.puzzleClearRandomSelectRow.hidden = false;
 
   el.puzzleClearTitle.textContent = 'RANDOM CLEAR!';
   el.puzzleClearRandomMeta.hidden = false;
