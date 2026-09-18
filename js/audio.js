@@ -112,7 +112,7 @@ export function playDestroy() {
 
 // タイトル・メニュー系画面のボタン押下で鳴らす、軽く短いクリック音。
 export function playButtonClick() {
-  tone({ freq: 880, duration: 0.05, type: 'sine', volume: 0.3 });
+  tone({ freq: 440, duration: 0.05, type: 'sine', volume: 0.3 });
 }
 
 // 数字入れかえ：1つ目の数字を選んだときの短い「ピッ」という音。
