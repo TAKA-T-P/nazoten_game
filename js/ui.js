@@ -283,6 +283,7 @@ function cacheDom() {
   el.puzzleSwapRemaining = document.getElementById('puzzle-swap-remaining');
   el.puzzleHudFormula = document.getElementById('puzzle-hud-formula');
   el.puzzleBoard = document.getElementById('puzzle-board');
+  el.puzzleBoardWrap = document.querySelector('.puzzle-board-wrap');
   el.btnPuzzleUndo = document.getElementById('btn-puzzle-undo');
   el.btnPuzzleHint = document.getElementById('btn-puzzle-hint');
   el.puzzleHintMessage = document.getElementById('puzzle-hint-message');
@@ -1913,6 +1914,8 @@ export function renderPuzzleStageSelect({ area, stageViewModels, areaStars, area
 export function renderPuzzleBoard(stage, cells) {
   el.puzzleBoard.style.setProperty('--puzzle-cols', String(stage.cols));
   el.puzzleBoard.style.setProperty('--puzzle-rows', String(stage.rows));
+  // 3×3盤面はマス数が少なく1マスが大きくなりすぎるため、パネルサイズを80%に縮小する。
+  el.puzzleBoardWrap.classList.toggle('puzzle-board-wrap--compact', stage.cols === 3 && stage.rows === 3);
   el.puzzleBoard.innerHTML = '';
   puzzleCellEls = [];
   for (let i = 0; i < cells.length; i++) {

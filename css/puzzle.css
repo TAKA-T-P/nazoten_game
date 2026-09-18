@@ -334,6 +334,12 @@
   max-width: 380px;
 }
 
+/* 3×3盤面は1マスが大きくなりすぎるため、盤面全体を80%サイズに縮小する。 */
+.puzzle-board-wrap.puzzle-board-wrap--compact {
+  width: min(62.4vw, 304px);
+  max-width: 304px;
+}
+
 .puzzle-board {
   display: grid;
   grid-template-columns: repeat(var(--puzzle-cols, 4), 1fr);
