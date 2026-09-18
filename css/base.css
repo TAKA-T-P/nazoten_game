@@ -78,6 +78,12 @@ body {
   background: linear-gradient(160deg, #ffeaf1 0%, #fff6e6 35%, #eaf7f1 70%, #eaf0ff 100%);
 }
 
+/* あそびかた説明ページはページごとに説明文の長さが違うため、縦中央寄せのままだと
+   ページによって「前へ」「次へ」ボタンの高さが上下してしまう。上寄せに固定する。 */
+#screen-help-page {
+  justify-content: flex-start;
+}
+
 .btn {
   font-family: inherit;
   font-size: 1.05rem;
