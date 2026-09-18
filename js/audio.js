@@ -110,6 +110,11 @@ export function playDestroy() {
   tone({ freq: 4600, duration: 0.03, type: 'triangle', delay: 0.025, volume: 0.3 });
 }
 
+// タイトル・メニュー系画面のボタン押下で鳴らす、軽く短いクリック音。
+export function playButtonClick() {
+  tone({ freq: 880, duration: 0.05, type: 'sine', volume: 0.3 });
+}
+
 // 数字入れかえ：1つ目の数字を選んだときの短い「ピッ」という音。
 export function playSwapSelect() {
   tone({ freq: 700, duration: 0.08, type: 'sine', volume: 0.4 });

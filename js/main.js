@@ -40,12 +40,31 @@ function preventDoubleTapZoom() {
   }, { passive: false });
 }
 
+// タイトル・メニュー系画面（実際のゲームプレイ中の操作は専用の効果音を
+// 個別に鳴らしているため対象外）でボタンを押したときに、軽く短い
+// クリック音を鳴らす。
+const MENU_CLICK_SOUND_SCREENS = new Set([
+  'title', 'howto-menu', 'help-page', 'score-attack-select', 'easy-result',
+  'result', 'cpu-select', 'battle-result', 'mixed-cpu-battle-result',
+  'battle-format', 'mixed-battle-result', 'two-player-result',
+  'puzzle-select', 'puzzle-generating', 'puzzle-clear'
+]);
+
+function playMenuClickSound(e) {
+  const btn = e.target.closest('button, a.btn');
+  if (!btn) return;
+  const screen = btn.closest('.screen');
+  if (!screen || !MENU_CLICK_SOUND_SCREENS.has(screen.dataset.screen)) return;
+  audio.playButtonClick();
+}
+
 function main() {
   // 起動のたびに必ず「効果音のみ」から始める（前回の選択は引き継がない）。
   storage.setSoundMode('bgmOff');
   ui.init();
   audio.setSoundMode(storage.getSoundMode());
   preventDoubleTapZoom();
+  document.addEventListener('click', playMenuClickSound);
 
   // 最初のユーザー操作でAudioContextを開始する（モバイルの自動再生制限対策）。
   window.addEventListener('pointerdown', initAudioOnce, { once: true });
