@@ -616,6 +616,12 @@ function formatRecord(record) {
   return `${record.wins}勝`;
 }
 
+// 「！」「、」の直後で改行し、フレーバーテキストを読みやすくする
+// （.cpu-character-flavorのwhite-space: pre-lineと組み合わせて改行を反映する）。
+function insertFlavorLineBreaks(text) {
+  return text.replace(/([！、])/g, '$1\n');
+}
+
 export function updateCpuLevelSelection(level) {
   const index = CPU_LEVEL_ORDER.indexOf(level);
   el.cpuLevelSlider.value = String(index >= 0 ? index : 0);
@@ -623,7 +629,7 @@ export function updateCpuLevelSelection(level) {
   const character = getCpuCharacter(level);
   el.cpuCharacterEmoji.textContent = character.emoji;
   el.cpuCharacterName.textContent = character.name;
-  el.cpuCharacterFlavor.textContent = character.flavor;
+  el.cpuCharacterFlavor.textContent = insertFlavorLineBreaks(character.flavor);
   el.cpuCharacterCard.setAttribute('aria-label', `CPU ${CPU_LEVELS[level].label} ${character.name}`);
 
   // スライダー操作中の連続更新でアニメーションキューをためないよう、
@@ -639,7 +645,7 @@ export function getCpuLevelFromSliderValue() {
 }
 
 export function updateCpuLevelRecord(record) {
-  el.cpuLevelRecord.textContent = `通算成績：${formatRecord(record)}`;
+  el.cpuLevelRecord.textContent = `通算：${formatRecord(record)}`;
 }
 
 export function updateBattleCpuLevelLabel(level) {

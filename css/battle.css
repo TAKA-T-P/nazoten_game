@@ -9,6 +9,16 @@
   gap: 12px;
 }
 
+/* 見出しとバトル開始/タイトルへボタンの間の余白を、元の約30%に縮小する
+   （h2の既定マージンを打ち消し、ボタン行のmargin-topだけで間隔を作る）。 */
+#screen-cpu-select h2 {
+  margin: 0;
+}
+
+#screen-cpu-select h2 + .result-buttons {
+  margin-top: 1px;
+}
+
 .cpu-level-slider-wrap {
   width: 100%;
   padding: 4px 4px 0;
@@ -88,12 +98,18 @@
   box-shadow: 0 3px 0 var(--color-cell-border);
 }
 
-/* 絵文字とキャラ名を同じ行に並べる。 */
+/* 絵文字・キャラ名・通算成績を同じ行に並べる。 */
 .cpu-character-header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  row-gap: 2px;
+}
+
+.cpu-character-header .cpu-character-emoji {
+  align-self: center;
 }
 
 .cpu-character-emoji {
@@ -112,6 +128,7 @@
   font-size: 0.85rem;
   color: var(--color-text-muted);
   text-align: center;
+  white-space: pre-line;
 }
 
 .cpu-character-card.cpu-character-card-pop {
