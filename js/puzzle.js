@@ -47,7 +47,12 @@ export class PuzzleController extends EventTarget {
     this.stage = null;
     this.state = null;
     this.history = [];
+    // hintUsed: このステージで一度でもヒントを見たか（星評価・クリア記録用。
+    // やり直す/restart()では絶対にリセットしない。リセットはstartStage()のみ）。
     this.hintUsed = false;
+    // hintButtonUsed: 現在の挑戦でヒントボタンを使用済みか（ボタンの有効/無効用）。
+    // restart()でリセットされ、やり直した直後は再度ヒントを使用できる。
+    this.hintButtonUsed = false;
     this.swapSelection = null;
     this.hintAnimating = false;
     this.hintTimer = null;
@@ -68,6 +73,7 @@ export class PuzzleController extends EventTarget {
     this.state = createInitialState(stage);
     this.history = [];
     this.hintUsed = false;
+    this.hintButtonUsed = false;
     this.swapSelection = null;
     this.hintAnimating = false;
     this.status = STATUS.PLAYING;
@@ -243,10 +249,11 @@ export class PuzzleController extends EventTarget {
     this._clearSwapSelection();
     this.state = createInitialState(this.stage);
     this.history = [];
-    // 「やり直す」は同じ挑戦の継続として扱うため、ヒント使用済みフラグは
-    // 引き継ぐ（一度ヒントを見た場合は、やり直した後に正解しても星3を
-    // 取れない）。ヒント使用の完全なリセットはstartStage()（ステージ選択
-    // からの再入場・クリア後の「もう一度」）でのみ行う。
+    // 「やり直す」を押すとヒントの使用権は復活し、再度ヒントを見られる
+    // （hintButtonUsedをリセット）。ただし星評価・クリア記録では、このステージで
+    // 一度でもヒントを見たことは消えない（hintUsedは引き継ぎ、リセットは
+    // startStage()＝ステージ選択からの再入場・クリア後の「もう一度」でのみ行う）。
+    this.hintButtonUsed = false;
     this.status = STATUS.PLAYING;
     this.dispatchEvent(new CustomEvent('restart', { detail: { cells: this.state.cells.slice() } }));
     this._emitMovesUpdate();
@@ -258,9 +265,9 @@ export class PuzzleController extends EventTarget {
   // （hintTimeBudgetMs）で打ち切るため、メインスレッドを長時間占有しない。
   requestHint() {
     if (this.status !== STATUS.PLAYING || this.hintAnimating) return false;
-    // 1ステージ（1挑戦）につきヒントは1回まで。restart()では引き継がれ、
-    // startStage()でのみリセットされる。
-    if (this.hintUsed) return false;
+    // 1回の挑戦につきヒントは1回まで。restart()（やり直す）を押すと
+    // hintButtonUsedはリセットされ、再度使用できる。
+    if (this.hintButtonUsed) return false;
     this._cancelHint();
     this.dispatchEvent(new CustomEvent('hintthinking', {}));
     const token = {};
@@ -289,6 +296,7 @@ export class PuzzleController extends EventTarget {
       return;
     }
     this.hintUsed = true;
+    this.hintButtonUsed = true;
     this.hintAnimating = true;
     const action = hint.actions[0];
     this.dispatchEvent(new CustomEvent('hintfound', {

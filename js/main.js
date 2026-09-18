@@ -738,7 +738,7 @@ function main() {
       sequenceIndex: puzzle.state.sequenceIndex
     });
     ui.setPuzzleUndoEnabled(puzzle.history.length > 0);
-    ui.setPuzzleHintEnabled(!puzzle.hintUsed);
+    ui.setPuzzleHintEnabled(!puzzle.hintButtonUsed);
     ui.updatePuzzleFormula([], [], 0);
     ui.hidePuzzleBlocked();
     ui.hidePuzzleStuck();
