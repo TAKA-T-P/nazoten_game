@@ -271,6 +271,7 @@ function cacheDom() {
   };
 
   // じっくりモード（Phase 6実装指示書）
+  el.puzzleSelectHeading = document.getElementById('puzzle-select-heading');
   el.puzzleAreaName = document.getElementById('puzzle-area-name');
   el.puzzleAreaStars = document.getElementById('puzzle-area-stars');
   el.puzzleStageGrid = document.getElementById('puzzle-stage-grid');
@@ -1865,6 +1866,8 @@ function starGlyphs(count, max = 3) {
 // stageViewModels: [{ id, stageNumber, rows, cols, locked, bestStars, isCurrent }]
 // randomViewModel: { areaId, locked, clearCount } | null（じっくりランダム生成問題実装指示書 5.1章）。
 export function renderPuzzleStageSelect({ area, stageViewModels, areaStars, areaStarsMax, randomViewModel = null }) {
+  const areaNumber = area.id.replace(/^area/, '');
+  el.puzzleSelectHeading.textContent = `じっくり　エリア${areaNumber}`;
   el.puzzleAreaName.textContent = area.name;
   el.puzzleAreaStars.textContent = `★${areaStars} / ${areaStarsMax}`;
   el.puzzleStageGrid.innerHTML = '';
