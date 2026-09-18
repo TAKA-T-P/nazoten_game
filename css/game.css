@@ -175,6 +175,11 @@
   gap: 16px;
 }
 
+/* 見出し「あそびかた」の上下の余白を、既定（約19.92px）の半分に縮小する。 */
+.howto-inner h2 {
+  margin: 10px 0;
+}
+
 /* ゲーム画面 */
 #screen-game {
   position: relative;
