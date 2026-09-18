@@ -1,5 +1,5 @@
 // 初期化、各モジュールの接続（仕様書 15.1章）。
-import { CONFIG } from './config.js';
+import { CONFIG, getCpuBattleState } from './config.js';
 import * as storage from './storage.js';
 import * as audio from './audio.js';
 import * as ui from './ui.js';
@@ -181,9 +181,13 @@ function main() {
     ui.updateBattleTimer(CONFIG.gameDurationMs);
     ui.renderBattleBoards(e.detail.playerBoard, e.detail.cpuBoard);
     ui.updateBattleCpuLevelLabel(e.detail.level);
+    ui.initCpuCharacterHud('battle', e.detail.level);
   });
   battle.addEventListener('countdown', (e) => ui.showBattleCountdown(e.detail.label));
-  battle.addEventListener('feverstart', () => ui.setBattleFeverActive(true));
+  battle.addEventListener('feverstart', () => {
+    ui.setBattleFeverActive(true);
+    ui.updateCpuCharacterHudScale('battle', 'even');
+  });
   battle.addEventListener('playersilverfeverstart', () => ui.setBattlePlayerSilverFeverActive(true));
   battle.addEventListener('playersilverfeverend', () => ui.setBattlePlayerSilverFeverActive(false));
   battle.addEventListener('cpusilverfeverstart', () => ui.setBattleCpuSilverFeverActive(true));
@@ -200,12 +204,17 @@ function main() {
   battle.addEventListener('cpufail', (e) => ui.playBattleFailEffect('cpu', e.detail.indices));
   battle.addEventListener('cpucellsclear', (e) => ui.clearBattleCells('cpu', e.detail.indices));
   battle.addEventListener('cpucellsrefill', (e) => ui.refillBattleCells('cpu', e.detail.cells));
-  battle.addEventListener('gaugeupdate', (e) => ui.updateBattleGauge(e.detail));
+  battle.addEventListener('gaugeupdate', (e) => {
+    ui.updateBattleGauge(e.detail);
+    const cpuRatio = (100 - e.detail.playerPercent) / 100;
+    ui.updateCpuCharacterHudScale('battle', getCpuBattleState(cpuRatio, !e.detail.visible));
+  });
   battle.addEventListener('timeup', () => ui.showBattleTimeUp());
   battle.addEventListener('result', (e) => {
     const { outcome, level, playerScore, cpuScore, playerStats, cpuStats } = e.detail;
     const isNewBest = storage.submitCpuBattleResult({ level, outcome, playerScore, cpuScore });
     ui.renderBattleResult({ outcome, level, playerScore, cpuScore, playerStats, cpuStats, isNewBest });
+    ui.renderCpuResultReaction('battle', { level, playerScore, cpuScore });
     ui.showScreen('battle-result');
   });
 
@@ -221,16 +230,29 @@ function main() {
     battle.startBattle(level, cpuOjamaEnabled);
   }
 
-  // 通算成績はスコアバトル・ごちゃまぜバトルの勝利数を合算して表示する
-  // （どちらの形式で勝っても同じ「通算勝利数」に積み上がる）。
-  function getCombinedCpuLevelWins(level) {
-    return storage.getCpuRecord(level).wins + storage.getMixedCpuRecord(level).wins;
+  // CPU戦のバトル形式（スコアバトル/ごちゃまぜバトル）・オジャマON/OFF。
+  // 2人バトル側のselectedBattleFormat/ojamaEnabledとは独立した状態として持つ
+  // （仕様：CPU戦にも同様の選択画面を用意するが、選択内容は別枠）。
+  let selectedCpuBattleFormat = 'score';
+  let cpuOjamaEnabled = CONFIG.ojama.defaultEnabled;
+
+  // 敵キャラクターカードの通算成績は、選択中の対戦形式に対応する勝利数を
+  // 表示する（CPU戦キャラクター演出実装指示書 5.1章）。
+  function getCpuLevelWinsForSelectedFormat(level) {
+    return selectedCpuBattleFormat === 'mixed'
+      ? storage.getMixedCpuRecord(level).wins
+      : storage.getCpuRecord(level).wins;
+  }
+
+  function refreshCpuLevelRecordDisplay() {
+    const level = storage.getSelectedCpuLevel();
+    ui.updateCpuLevelRecord({ wins: getCpuLevelWinsForSelectedFormat(level) });
   }
 
   function showCpuSelectScreen() {
     const level = storage.getSelectedCpuLevel();
     ui.updateCpuLevelSelection(level);
-    ui.updateCpuLevelRecord({ wins: getCombinedCpuLevelWins(level) });
+    refreshCpuLevelRecordDisplay();
     ui.updateCpuBattleFormatSelection(selectedCpuBattleFormat);
     ui.updateCpuBattleOjamaToggle(cpuOjamaEnabled);
     ui.showScreen('cpu-select');
@@ -244,19 +266,14 @@ function main() {
     const level = ui.getCpuLevelFromSliderValue();
     storage.setSelectedCpuLevel(level);
     ui.updateCpuLevelSelection(level);
-    ui.updateCpuLevelRecord({ wins: getCombinedCpuLevelWins(level) });
+    refreshCpuLevelRecordDisplay();
   });
-
-  // CPU戦のバトル形式（スコアバトル/ごちゃまぜバトル）・オジャマON/OFF。
-  // 2人バトル側のselectedBattleFormat/ojamaEnabledとは独立した状態として持つ
-  // （仕様：CPU戦にも同様の選択画面を用意するが、選択内容は別枠）。
-  let selectedCpuBattleFormat = 'score';
-  let cpuOjamaEnabled = CONFIG.ojama.defaultEnabled;
 
   document.querySelectorAll('#screen-cpu-select .battle-format-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       selectedCpuBattleFormat = btn.dataset.format;
       ui.updateCpuBattleFormatSelection(selectedCpuBattleFormat);
+      refreshCpuLevelRecordDisplay();
     });
   });
 
@@ -313,9 +330,13 @@ function main() {
     ui.updateMixedCpuTimer(CONFIG.gameDurationMs);
     ui.renderMixedCpuBattleBoards(e.detail.board);
     ui.updateMixedCpuCpuLevelLabel(e.detail.level);
+    ui.initCpuCharacterHud('mcb', e.detail.level);
   });
   mixedCpuBattle.addEventListener('countdown', (e) => ui.showMixedCpuCountdown(e.detail.label));
-  mixedCpuBattle.addEventListener('feverstart', () => ui.setMixedCpuFeverActive(true));
+  mixedCpuBattle.addEventListener('feverstart', () => {
+    ui.setMixedCpuFeverActive(true);
+    ui.updateCpuCharacterHudScale('mcb', 'even');
+  });
   mixedCpuBattle.addEventListener('p1silverfeverstart', () => ui.setMixedCpuSilverFeverActive('p1', true));
   mixedCpuBattle.addEventListener('p1silverfeverend', () => ui.setMixedCpuSilverFeverActive('p1', false));
   mixedCpuBattle.addEventListener('p2silverfeverstart', () => ui.setMixedCpuSilverFeverActive('p2', true));
@@ -335,10 +356,15 @@ function main() {
   mixedCpuBattle.addEventListener('sharedcellsrefill', (e) => ui.refillMixedCpuCells(e.detail.cells));
   mixedCpuBattle.addEventListener('p1swapselectionupdate', (e) => ui.updateMixedCpuSwapSelection(e.detail.index));
   mixedCpuBattle.addEventListener('sharedswap', (e) => ui.applyMixedCpuSwap(e.detail.indices, e.detail.values));
-  mixedCpuBattle.addEventListener('gaugeupdate', (e) => ui.updateMixedCpuGauge(e.detail));
+  mixedCpuBattle.addEventListener('gaugeupdate', (e) => {
+    ui.updateMixedCpuGauge(e.detail);
+    const cpuRatio = (100 - e.detail.p1Percent) / 100;
+    ui.updateCpuCharacterHudScale('mcb', getCpuBattleState(cpuRatio, !e.detail.visible));
+  });
   mixedCpuBattle.addEventListener('timeup', () => ui.showMixedCpuTimeUp());
   mixedCpuBattle.addEventListener('result', (e) => {
     const { outcome, level, playerScore, cpuScore, playerStats, cpuStats, ojamaTotalUses } = e.detail;
+    ui.renderCpuResultReaction('mcb', { level, playerScore, cpuScore });
     storage.submitMixedCpuBattleResult({
       level,
       outcome,

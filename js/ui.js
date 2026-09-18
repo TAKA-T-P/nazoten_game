@@ -1,6 +1,9 @@
 // 画面切替、表示更新、演出呼出（仕様書 8章・12章、Phase2実装指示書 6・8章、Phase3実装指示書 6・9・15章）。
 import * as storage from './storage.js';
-import { CONFIG, CPU_LEVELS, CPU_LEVEL_ORDER } from './config.js';
+import {
+  CONFIG, CPU_LEVELS, CPU_LEVEL_ORDER,
+  getCpuCharacter, getCpuBattleState, getCpuCharacterScale, getCpuResultCategory, getCpuResultLine
+} from './config.js';
 import { getTitleForScore, getTitleForLevel, getTitleLevel, getTitleNameForScore, getEasyTitleLevel, calcSuccessRate } from './scoring.js';
 
 const el = {};
@@ -53,14 +56,46 @@ function cacheDom() {
   // CPUバトル関連
   el.btnCpuBattle = document.getElementById('btn-cpu-battle');
   el.cpuLevelSlider = document.getElementById('cpu-level-slider');
-  el.cpuLevelCurrentName = document.getElementById('cpu-level-current-name');
   el.cpuLevelDescription = document.getElementById('cpu-level-description');
   el.cpuLevelRecord = document.getElementById('cpu-level-record');
+  el.cpuCharacterCard = document.getElementById('cpu-character-card');
+  el.cpuCharacterLevel = document.getElementById('cpu-character-level');
+  el.cpuCharacterEmoji = document.getElementById('cpu-character-emoji');
+  el.cpuCharacterName = document.getElementById('cpu-character-name');
+  el.cpuCharacterFlavor = document.getElementById('cpu-character-flavor');
   // CPU戦のバトル形式選択（スコアバトル/ごちゃまぜバトル）とオジャマON/OFF。
   // 2人バトルの形式選択（.battle-format-btn/#btn-ojama-toggle）とはIDが異なる
   // 別要素のため、状態が混ざらないよう画面単位でクエリする。
   el.cpuFormatButtons = document.querySelectorAll('#screen-cpu-select .battle-format-btn');
   el.cpuOjamaToggleBtn = document.getElementById('btn-cpu-ojama-toggle');
+
+  // CPU戦キャラクター演出（CPU戦キャラクター演出実装指示書）。プレイ画面HUDと
+  // 結果画面のリアクションは、スコアバトルCPU戦（battle）・ごちゃまぜバトル
+  // CPU戦（mcb）の両方に用意する。
+  el.cpuCharacterHud = {
+    battle: {
+      hud: document.getElementById('battle-cpu-character-hud'),
+      emoji: document.getElementById('battle-cpu-character-emoji'),
+      name: document.getElementById('battle-cpu-character-name')
+    },
+    mcb: {
+      hud: document.getElementById('mcb-cpu-character-hud'),
+      emoji: document.getElementById('mcb-cpu-character-emoji'),
+      name: document.getElementById('mcb-cpu-character-name')
+    }
+  };
+  el.cpuResultReaction = {
+    battle: {
+      emoji: document.getElementById('battle-cpu-reaction-emoji'),
+      name: document.getElementById('battle-cpu-reaction-name'),
+      line: document.getElementById('battle-cpu-reaction-line')
+    },
+    mcb: {
+      emoji: document.getElementById('mcb-cpu-reaction-emoji'),
+      name: document.getElementById('mcb-cpu-reaction-name'),
+      line: document.getElementById('mcb-cpu-reaction-line')
+    }
+  };
 
   el.screenBattle = document.getElementById('screen-battle');
   el.cpuBoard = document.getElementById('cpu-board');
@@ -584,8 +619,20 @@ function formatRecord(record) {
 export function updateCpuLevelSelection(level) {
   const index = CPU_LEVEL_ORDER.indexOf(level);
   el.cpuLevelSlider.value = String(index >= 0 ? index : 0);
-  el.cpuLevelCurrentName.textContent = CPU_LEVELS[level].name;
   el.cpuLevelDescription.textContent = CPU_LEVELS[level].description;
+
+  const character = getCpuCharacter(level);
+  el.cpuCharacterLevel.textContent = CPU_LEVELS[level].label;
+  el.cpuCharacterEmoji.textContent = character.emoji;
+  el.cpuCharacterName.textContent = character.name;
+  el.cpuCharacterFlavor.textContent = character.flavor;
+  el.cpuCharacterCard.setAttribute('aria-label', `CPU ${CPU_LEVELS[level].label} ${character.name}`);
+
+  // スライダー操作中の連続更新でアニメーションキューをためないよう、
+  // クラスを一度外して強制リフローしてから再度付け直す（100〜180ms想定、5.3章）。
+  el.cpuCharacterCard.classList.remove('cpu-character-card-pop');
+  void el.cpuCharacterCard.offsetWidth;
+  el.cpuCharacterCard.classList.add('cpu-character-card-pop');
 }
 
 // スライダーの現在値（0〜5）を強さレベル（'1'〜'5'・'MAX'）へ変換する。
@@ -599,6 +646,42 @@ export function updateCpuLevelRecord(record) {
 
 export function updateBattleCpuLevelLabel(level) {
   el.battleCpuLevelLabel.textContent = CPU_LEVELS[level].label;
+}
+
+// --- CPU戦キャラクター演出（CPU戦キャラクター演出実装指示書） ----------------
+
+// プレイ中に「同じ戦況区分内では再アニメーションしない」（6.4章）ための
+// 直近適用済み区分をtarget（'battle'|'mcb'）ごとに覚えておく。
+const lastCpuBattleState = { battle: null, mcb: null };
+
+// 対戦開始時に一度だけ呼び、絵文字・名前を設定して等倍へ戻す
+// （6.5章：開始前・カウントダウン中は等倍）。
+export function initCpuCharacterHud(target, level) {
+  const refs = el.cpuCharacterHud[target];
+  const character = getCpuCharacter(level);
+  refs.emoji.textContent = character.emoji;
+  refs.name.textContent = character.name;
+  refs.hud.setAttribute('aria-label', `CPU ${CPU_LEVELS[level].label} ${character.name}`);
+  refs.emoji.style.transform = 'scale(1)';
+  lastCpuBattleState[target] = 'even';
+}
+
+// 得点確定・優劣ゲージ更新のたびに呼ぶ。同じ戦況区分内では何もしない。
+export function updateCpuCharacterHudScale(target, battleState) {
+  if (lastCpuBattleState[target] === battleState) return;
+  lastCpuBattleState[target] = battleState;
+  const scale = getCpuCharacterScale(battleState);
+  el.cpuCharacterHud[target].emoji.style.transform = `scale(${scale})`;
+}
+
+export function renderCpuResultReaction(target, { level, playerScore, cpuScore }) {
+  const character = getCpuCharacter(level);
+  const category = getCpuResultCategory({ playerScore, cpuScore });
+  const line = getCpuResultLine({ cpuLevel: level, category });
+  const refs = el.cpuResultReaction[target];
+  refs.emoji.textContent = character.emoji;
+  refs.name.textContent = character.name;
+  refs.line.textContent = line;
 }
 
 export function getPlayerBoardElement() {

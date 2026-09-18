@@ -9,24 +9,6 @@
   gap: 12px;
 }
 
-.cpu-level-current {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.cpu-level-label {
-  font-weight: 900;
-  font-size: 1.3rem;
-  color: var(--color-fail);
-}
-
-.cpu-level-name {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
 .cpu-level-slider-wrap {
   width: 100%;
   padding: 4px 4px 0;
@@ -97,6 +79,188 @@
   font-size: 0.85rem;
   color: var(--color-text-muted);
   margin: 0;
+}
+
+/* --- CPU戦キャラクター演出（CPU戦キャラクター演出実装指示書） -------------- */
+
+.cpu-character-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 3px 0 var(--color-cell-border);
+}
+
+.cpu-character-level {
+  margin: 0;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: var(--color-fail);
+}
+
+.cpu-character-emoji {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.cpu-character-name {
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.3rem;
+}
+
+.cpu-character-flavor {
+  margin: 2px 0 4px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.cpu-character-card.cpu-character-card-pop {
+  animation: cpu-character-card-pop 180ms ease-out;
+}
+
+@keyframes cpu-character-card-pop {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpu-character-card.cpu-character-card-pop {
+    animation: none;
+  }
+}
+
+/* プレイ画面：CPU盤面右側のキャラクターHUD。position:absoluteで盤面の
+   中央位置・操作領域に一切影響させない（6.2章）。 */
+.cpu-character-hud {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+  width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.cpu-character-hud-emoji {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  line-height: 1;
+  transition: transform 300ms ease-out;
+}
+
+.cpu-character-hud-name {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  max-height: 2.4em;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpu-character-hud-emoji {
+    transition: none;
+  }
+}
+
+/* --- 結果画面：キャラクターリアクション ------------------------------------ */
+
+.cpu-result-reaction {
+  width: 100%;
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 3px 0 var(--color-cell-border);
+}
+
+.cpu-result-reaction-side {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 72px;
+}
+
+.cpu-result-reaction-emoji {
+  font-size: 56px;
+  line-height: 1;
+  animation: cpu-result-reaction-pop 250ms ease-out;
+}
+
+@keyframes cpu-result-reaction-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpu-result-reaction-emoji {
+    animation: none;
+  }
+}
+
+.cpu-result-reaction-name {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cpu-result-reaction-bubble {
+  flex: 1 1 auto;
+  position: relative;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.cpu-result-reaction-bubble::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 8px 8px 8px 0;
+  border-style: solid;
+  border-color: transparent var(--color-bg) transparent transparent;
+}
+
+.cpu-result-reaction-line {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 /* バトル画面。高さが不足する場合はCPU盤面・余白・ラベルの順に縮め、

@@ -248,9 +248,6 @@
         <span class="ojama-toggle-label">オジャマ</span>
         <button id="btn-cpu-ojama-toggle" class="ojama-toggle-btn" type="button" aria-pressed="true">ON</button>
       </div>
-      <div class="cpu-level-current">
-        <span id="cpu-level-current-name" class="cpu-level-name">ゆっくり</span>
-      </div>
       <div class="cpu-level-slider-wrap">
         <input id="cpu-level-slider" class="cpu-level-slider" type="range" min="0" max="5" step="1" value="0" aria-label="CPUの強さ">
         <div class="cpu-level-slider-ticks" aria-hidden="true">
@@ -262,8 +259,14 @@
           <span>MAX</span>
         </div>
       </div>
-      <p id="cpu-level-description" class="cpu-level-description">のんびりプレイする最弱CPU</p>
-      <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝</p>
+      <div id="cpu-character-card" class="cpu-character-card">
+        <p id="cpu-character-level" class="cpu-character-level">強さ1</p>
+        <div id="cpu-character-emoji" class="cpu-character-emoji" aria-hidden="true">🐥</div>
+        <p id="cpu-character-name" class="cpu-character-name">ナゾピヨ</p>
+        <p id="cpu-character-flavor" class="cpu-character-flavor"></p>
+        <p id="cpu-level-description" class="cpu-level-description">のんびりプレイする最弱CPU</p>
+        <p id="cpu-level-record" class="cpu-level-record">通算成績：0勝</p>
+      </div>
       <div class="result-buttons">
         <button id="btn-cpu-start" class="btn btn-primary" type="button">バトル開始</button>
         <button id="btn-cpu-select-back" class="btn btn-secondary" type="button">タイトルへ</button>
@@ -284,6 +287,10 @@
         <div id="cpu-board" class="board battle-cpu-board" aria-hidden="true"></div>
         <div id="battle-ojama-overlay-cpu" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
         <div id="battle-ojama-meteor-cpu" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
+        <div id="battle-cpu-character-hud" class="cpu-character-hud">
+          <div id="battle-cpu-character-emoji" class="cpu-character-hud-emoji" aria-hidden="true"></div>
+          <p id="battle-cpu-character-name" class="cpu-character-hud-name" aria-hidden="true"></p>
+        </div>
       </div>
     </div>
 
@@ -355,6 +362,16 @@
         </div>
       </div>
 
+      <div id="battle-cpu-reaction" class="cpu-result-reaction">
+        <div class="cpu-result-reaction-side">
+          <div id="battle-cpu-reaction-emoji" class="cpu-result-reaction-emoji" aria-hidden="true"></div>
+          <p id="battle-cpu-reaction-name" class="cpu-result-reaction-name"></p>
+        </div>
+        <div class="cpu-result-reaction-bubble">
+          <p id="battle-cpu-reaction-line" class="cpu-result-reaction-line"></p>
+        </div>
+      </div>
+
       <div class="result-buttons">
         <button id="btn-battle-rematch" class="btn btn-primary" type="button">もう一度</button>
         <button id="btn-battle-change-level" class="btn btn-secondary" type="button">強さ変更</button>
@@ -395,6 +412,10 @@
         <div id="mcb-board-cpu" class="board battle-cpu-board" aria-label="共有盤面（CPU視点）" aria-hidden="true"></div>
         <div id="mcb-ojama-overlay-cpu" class="ojama-hidden-overlay" hidden aria-hidden="true">🙂</div>
         <div id="mcb-ojama-meteor-cpu" class="ojama-meteor-overlay" hidden aria-hidden="true"><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span><span class="meteor-star">⭐</span></div>
+        <div id="mcb-cpu-character-hud" class="cpu-character-hud">
+          <div id="mcb-cpu-character-emoji" class="cpu-character-hud-emoji" aria-hidden="true"></div>
+          <p id="mcb-cpu-character-name" class="cpu-character-hud-name" aria-hidden="true"></p>
+        </div>
       </div>
     </div>
 
@@ -454,6 +475,16 @@
         <div id="mcb-score-card-cpu" class="battle-score-card battle-score-cpu">
           <span class="battle-score-label">CPU（<span id="mcb-result-level-label">強さ1</span>）</span>
           <span id="mcb-cpu-score" class="battle-score-value">0</span>
+        </div>
+      </div>
+
+      <div id="mcb-cpu-reaction" class="cpu-result-reaction">
+        <div class="cpu-result-reaction-side">
+          <div id="mcb-cpu-reaction-emoji" class="cpu-result-reaction-emoji" aria-hidden="true"></div>
+          <p id="mcb-cpu-reaction-name" class="cpu-result-reaction-name"></p>
+        </div>
+        <div class="cpu-result-reaction-bubble">
+          <p id="mcb-cpu-reaction-line" class="cpu-result-reaction-line"></p>
         </div>
       </div>
 

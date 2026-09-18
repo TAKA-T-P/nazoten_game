@@ -305,3 +305,154 @@ export const CPU_LEVELS = {
     noMoveDestroyMs: 2000
   }
 };
+
+// CPU戦キャラクター演出（CPU戦キャラクター演出実装指示書）。強さごとの
+// 絵文字・名前・フレーバーテキスト・結果セリフを一元管理する。CPUの思考
+// パラメータ（CPU_LEVELS・js/cpu.js）とは完全に独立させ、表示のためだけに
+// 参照する（キャラクター判定が思考ロジックへ混ざらないようにする）。
+export const CPU_CHARACTERS = {
+  1: {
+    emoji: '🐥',
+    name: 'ナゾピヨ',
+    flavor: 'まだまだ練習中！失敗しても元気いっぱいのひよっこファイター。',
+    resultLines: {
+      bigWin: '「ピヨッ！今日はボク、すっごくひらめいたよ！」',
+      win: '「やったー！いっぱい見つけられたよ！」',
+      closeWin: '「あぶなかった～！ほんのちょっとだけ勝ち！」',
+      draw: '「おんなじ点だ！いっしょに強くなろうね！」',
+      closeLose: '「あとちょっとだったのに～！もう一回！」',
+      lose: '「まけちゃった！でも次はがんばるぞ！」',
+      bigLose: '「ピヨヨ……すごすぎるよ！弟子にして～！」'
+    }
+  },
+  2: {
+    emoji: '🐺',
+    name: 'テンウルフ',
+    flavor: '答えを見つけたら一気に攻める、負けず嫌いの若きライバル。',
+    resultLines: {
+      bigWin: '「遠慮はしない。これがオレの本気だ！」',
+      win: '「よし！この勝負、オレの勝ちだ！」',
+      closeWin: '「紙一重だったな。いい勝負だった！」',
+      draw: '「引き分けか……次こそ決着をつけよう！」',
+      closeLose: '「くっ、あと一手……次は負けない！」',
+      lose: '「やるな！でも、このままでは終わらないぞ！」',
+      bigLose: '「完敗だ……その強さ、しっかり覚えたぞ！」'
+    }
+  },
+  3: {
+    emoji: '🥷',
+    name: 'ナゾリシノビ',
+    flavor: '盤面を静かに見極め、すばやく数字を仕留める忍者。',
+    resultLines: {
+      bigWin: '「すべて見切った。これぞ迅速の術。」',
+      win: '「勝負あり。拙者の一手が上でござった。」',
+      closeWin: '「危うし……されど、勝ちは勝ち。」',
+      draw: '「互角とは見事。再戦を所望する。」',
+      closeLose: '「一瞬の迷いが勝敗を分けたか……。」',
+      lose: '「見事な手さばき。拙者の負けでござる。」',
+      bigLose: '「完膚なきまで……さらなる修行が必要だ。」'
+    }
+  },
+  4: {
+    emoji: '🧙',
+    name: 'ひらめきメイジ',
+    flavor: '数の組み合わせを知り尽くし、先の手まで読む知恵の魔導士。',
+    resultLines: {
+      bigWin: '「数の流れは、最初からすべて見えていたよ。」',
+      win: '「計算どおり。よい勝負だったね。」',
+      closeWin: '「ふむ、最後まで油断できなかったよ。」',
+      draw: '「互いの知恵が釣り合ったようだね。」',
+      closeLose: '「なるほど、その一手までは読めなかったよ。」',
+      lose: '「見事だ。君のひらめきに拍手を送ろう。」',
+      bigLose: '「これは驚いた……君の力は想像以上だ。」'
+    }
+  },
+  5: {
+    emoji: '🐉',
+    name: 'フォーティドラゴン',
+    flavor: '高得点の一手を狙い続ける、圧倒的な力を持つドラゴン。',
+    resultLines: {
+      bigWin: '「我が力、とくとその目に焼き付けよ！」',
+      win: '「よく挑んだ。だが勝者はこの我だ！」',
+      closeWin: '「ぬう……我をここまで追い詰めるとは！」',
+      draw: '「決着は預ける。次こそ真の勝負だ！」',
+      closeLose: '「あと一歩で我を超えるとは……見事！」',
+      lose: '「我を倒す者が現れるとは！強くなったな！」',
+      bigLose: '「この我が圧倒されるとは……君こそ真の強者だ！」'
+    }
+  },
+  max: {
+    emoji: '🤖',
+    name: 'NAZOTEN-X',
+    flavor: '盤面を高速解析し、最適解を追い続ける最強の演算AI。',
+    resultLines: {
+      bigWin: '「解析完了。勝率予測どおりの結果です。」',
+      win: '「演算終了。NAZOTEN-Xの勝利を確認しました。」',
+      closeWin: '「警告。想定を上回る接戦でした。」',
+      draw: '「同一スコアを検出。再戦を要求します。」',
+      closeLose: '「誤差範囲を超える敗北……再計算します。」',
+      lose: '「敗北を確認。あなたの戦略を学習しました。」',
+      bigLose: '「予測不能……あなたを最高危険度に認定します。」'
+    }
+  }
+};
+
+// 保存済みのCPUレベル値（'1'〜'5'・'MAX'）や、MAXの表現ゆれ（'MAX'/'max'/6/'6'）を
+// キャラクターマスターのキー（'1'〜'5'・'max'）へ正規化する。保存値・戦績キー
+// 自体は一切書き換えない（13章）。
+export function normalizeCpuCharacterKey(cpuLevel) {
+  const str = String(cpuLevel).trim().toUpperCase();
+  return str === 'MAX' || str === '6' ? 'max' : str;
+}
+
+export function getCpuCharacter(cpuLevel) {
+  return CPU_CHARACTERS[normalizeCpuCharacterKey(cpuLevel)];
+}
+
+// 優劣ゲージのCPU側比率（0〜1、1に近いほどCPUが優勢）から5段階の戦況区分を
+// 求める（6.3章）。ミリオン・フィーバー中は常に接戦扱いとし、キャラクター
+// サイズから戦況を推測できないようにする（6.5章）。
+const CPU_BATTLE_STATE_THRESHOLDS = [
+  { max: 0.34, state: 'bigBehind' },
+  { max: 0.46, state: 'behind' },
+  { max: 0.53, state: 'even' },
+  { max: 0.65, state: 'ahead' },
+  { max: 1.01, state: 'bigAhead' }
+];
+
+export function getCpuBattleState(cpuGaugeRatio, isMillionFever) {
+  if (isMillionFever) return 'even';
+  const ratio = Math.max(0, Math.min(1, cpuGaugeRatio));
+  for (const { max, state } of CPU_BATTLE_STATE_THRESHOLDS) {
+    if (ratio <= max) return state;
+  }
+  return 'even';
+}
+
+const CPU_CHARACTER_SCALE_BY_STATE = {
+  bigBehind: 0.72,
+  behind: 0.86,
+  even: 1.00,
+  ahead: 1.18,
+  bigAhead: 1.36
+};
+
+export function getCpuCharacterScale(battleState) {
+  return CPU_CHARACTER_SCALE_BY_STATE[battleState] ?? 1.00;
+}
+
+// CPU視点での勝敗・点差を7区分へ分類する（8章）。得点の絶対差ではなく割合で
+// 判定する。同点は得点にかかわらずdrawとする。
+export function getCpuResultCategory({ playerScore, cpuScore }) {
+  if (cpuScore === playerScore) return 'draw';
+  const scoreDiff = cpuScore - playerScore;
+  const diffRate = Math.abs(scoreDiff) / Math.max(cpuScore, playerScore, 1);
+  const cpuWins = scoreDiff > 0;
+  if (diffRate >= 0.30) return cpuWins ? 'bigWin' : 'bigLose';
+  if (diffRate >= 0.10) return cpuWins ? 'win' : 'lose';
+  return cpuWins ? 'closeWin' : 'closeLose';
+}
+
+export function getCpuResultLine({ cpuLevel, category }) {
+  return getCpuCharacter(cpuLevel).resultLines[category];
+}
