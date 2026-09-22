@@ -63,6 +63,7 @@ export class EasyScoreAttackController extends EventTarget {
     this.selectionController = null;
     this.startedAt = null;
     this.endsAt = null;
+    this.lastTickSecond = null;
 
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
@@ -120,6 +121,7 @@ export class EasyScoreAttackController extends EventTarget {
     // 追跡する。両方とも発生していない状態で正解すると+20点のボーナスが付く。
     this.questionHasMiss = false;
     this.questionHasSwap = false;
+    this.lastTickSecond = null;
     audio.chooseRandomBgmTrack(this.rng);
 
     this.currentPattern = this._getPatternForQuestionNumber(1);
@@ -230,7 +232,18 @@ export class EasyScoreAttackController extends EventTarget {
     const now = performance.now();
     this.remainingMs = Math.max(0, this.endsAt - now);
     this.dispatchEvent(new CustomEvent('timeupdate', { detail: { remainingMs: this.remainingMs } }));
-    if (this.remainingMs <= 0) this._timeUp();
+    if (this.remainingMs <= 0) {
+      this._timeUp();
+      return;
+    }
+
+    // スタンダードと同様、残り10秒からカウントダウンの効果音を鳴らす
+    // （おてがるにはフィーバー倍率がないため、SE再生のみ行う）。
+    const seconds = Math.ceil(this.remainingMs / 1000);
+    if (seconds >= 1 && seconds <= 10 && seconds !== this.lastTickSecond) {
+      this.lastTickSecond = seconds;
+      audio.playFeverTick(seconds);
+    }
   }
 
   _loop() {
