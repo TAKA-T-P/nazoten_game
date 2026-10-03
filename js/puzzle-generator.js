@@ -286,34 +286,8 @@ function generateArea1Attempt(rng) {
 }
 
 // --- エリア2「ぴったりルート」：指定マス数・順番（13章） ---------------------
-
-function generateArea2MakeSum(rng, boardSize) {
-  const { rows, cols } = boardSize;
-  const sum = pickOne(VALID_SUMS, rng);
-  const maxLen = Math.min(5, rows * cols);
-  const length = sum === 40 ? 5 : pickLengthForSum(sum, maxLen, rng);
-  if (!length || length > rows * cols) return null;
-
-  const path = pickRandomPath({ rows, cols, length, rng });
-  if (!path) return null;
-  const numbers = generateNumberComposition({ total: sum, length, rng });
-  if (!numbers) return null;
-
-  const cells = new Array(rows * cols).fill(null);
-  path.forEach((cellIndex, i) => { cells[cellIndex] = numbers[i]; });
-  fillRemainingCells(cells, rng);
-  if (!countOccurrencesOk(cells)) return null;
-
-  return {
-    rows, cols, cells,
-    mission: { type: 'makeSum', targetSum: sum, exactLength: length },
-    moveLimit: 1,
-    parMoves: 1,
-    allowSwap: false,
-    swapLimit: 0,
-    officialSolution: [{ type: 'trace', cells: path }]
-  };
-}
+// エリア1（1手クリア専用）との差別化のため、エリア2のランダム問題は常に
+// 2手以上のsequenceミッションのみを出題する（makeSum＝1手の生成は行わない）。
 
 function generateArea2Sequence(rng, boardSize) {
   const { rows, cols } = boardSize;
@@ -358,9 +332,7 @@ function generateArea2Sequence(rng, boardSize) {
 
 function generateArea2Attempt(rng, difficulty) {
   const boardSize = pickBoardSize('area2', difficulty, rng);
-  return rng() < 0.5
-    ? generateArea2MakeSum(rng, boardSize)
-    : generateArea2Sequence(rng, boardSize);
+  return generateArea2Sequence(rng, boardSize);
 }
 
 // --- エリア3「ぜんぶ消しの森」：全消去（14章） --------------------------------

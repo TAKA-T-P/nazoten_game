@@ -85,9 +85,28 @@ export const PUZZLE_STAGES = [
     officialSolution: [{ type: 'trace', cells: [0, 1, 2, 5, 4] }]
   },
   {
+    // エリア1は1手クリアの問題に統一する（エリア2との差別化）。自由なマス数で
+    // 30を作る、エリア1最後にふさわしい難しさの1手問題に差し替えた。
     id: 'area1-stage06',
     areaId: 'area1',
     stageNumber: 6,
+    title: '30を作ろう！',
+    rows: 3,
+    cols: 3,
+    cells: [9, 6, 8, 7, 1, 5, 4, 3, 2],
+    mission: { type: 'makeSum', targetSum: 30, exactLength: null },
+    moveLimit: 1,
+    parMoves: 1,
+    allowSwap: false,
+    swapLimit: 0,
+    officialSolution: [{ type: 'trace', cells: [2, 1, 0, 3] }]
+  },
+
+  // --- エリア2：ぴったりルート（指定マス数・順番。2手以上でエリア1と差別化） --
+  {
+    id: 'area2-stage01',
+    areaId: 'area2',
+    stageNumber: 1,
     title: '10のあと20！',
     rows: 3,
     cols: 3,
@@ -108,55 +127,53 @@ export const PUZZLE_STAGES = [
       { type: 'trace', cells: [3, 4, 5] }
     ]
   },
-
-  // --- エリア2：ぴったりルート（指定マス数・順番） --------------------------
-  {
-    id: 'area2-stage01',
-    areaId: 'area2',
-    stageNumber: 1,
-    title: '4マスで20！',
-    rows: 3,
-    cols: 3,
-    cells: [5, 6, 9, 5, 4, 8, 7, 3, 2],
-    mission: { type: 'makeSum', targetSum: 20, exactLength: 4 },
-    moveLimit: 1,
-    parMoves: 1,
-    allowSwap: false,
-    swapLimit: 0,
-    officialSolution: [{ type: 'trace', cells: [0, 1, 4, 3] }]
-  },
   {
     id: 'area2-stage02',
     areaId: 'area2',
     stageNumber: 2,
-    title: '5マスで10！',
+    title: '20のあと10！',
     rows: 4,
     cols: 4,
-    cells: [1, 2, 1, 9, 8, 3, 3, 7, 6, 5, 4, 9, 8, 7, 6, 5],
-    mission: { type: 'makeSum', targetSum: 10, exactLength: 5 },
-    moveLimit: 1,
-    parMoves: 1,
+    cells: [9, 8, 3, 2, 7, 5, 1, 9, 6, 4, 8, 3, 5, 2, 7, 6],
+    mission: {
+      type: 'sequence',
+      steps: [
+        { sum: 20, exactLength: null },
+        { sum: 10, exactLength: null }
+      ]
+    },
+    moveLimit: 2,
+    parMoves: 2,
     allowSwap: false,
     swapLimit: 0,
-    officialSolution: [{ type: 'trace', cells: [0, 1, 2, 6, 5] }]
+    officialSolution: [
+      { type: 'trace', cells: [0, 1, 2] },
+      { type: 'trace', cells: [8, 9] }
+    ]
   },
   {
-    // 元の設計表は「3マスで30」だが、3マスの最大合計は27（9+9+9）のため
-    // 数学的に不可能。難易度帯を保ったまま「3マスで20」へ変更した
-    // （16.3章：難易度調整の理由をここに残す）。
     id: 'area2-stage03',
     areaId: 'area2',
     stageNumber: 3,
-    title: '3マスで20！',
+    title: '30のあと20！',
     rows: 4,
     cols: 4,
-    cells: [9, 8, 3, 2, 4, 6, 1, 5, 9, 7, 8, 6, 2, 3, 4, 1],
-    mission: { type: 'makeSum', targetSum: 20, exactLength: 3 },
-    moveLimit: 1,
-    parMoves: 1,
+    cells: [9, 8, 7, 6, 4, 5, 1, 7, 3, 6, 2, 8, 2, 9, 6, 3],
+    mission: {
+      type: 'sequence',
+      steps: [
+        { sum: 30, exactLength: null },
+        { sum: 20, exactLength: null }
+      ]
+    },
+    moveLimit: 2,
+    parMoves: 2,
     allowSwap: false,
     swapLimit: 0,
-    officialSolution: [{ type: 'trace', cells: [0, 1, 2] }]
+    officialSolution: [
+      { type: 'trace', cells: [0, 1, 2, 3] },
+      { type: 'trace', cells: [12, 13, 14, 15] }
+    ]
   },
   {
     id: 'area2-stage04',
