@@ -24,6 +24,8 @@ export class SelectionController {
     this.handlers = handlers;
     this.pointerId = null;
     this.selection = [];
+    // 押した後に別のマスへ動いたか（なぞりの途中で戻って1マスに戻った場合を単発タップ扱いにしないため）。
+    this.gestureMoved = false;
     // 同じマスへの連続タップ（破壊操作）を検出するための直近タップ記録。
     this.lastTapIndex = null;
     this.lastTapTime = 0;
@@ -92,6 +94,7 @@ export class SelectionController {
     }
     this.selection = [index];
     this.longPressFired = false;
+    this.gestureMoved = false;
     this._startLongPressTimer(index);
     this.handlers.onSelectionStart(index, this.selection.slice());
   }
@@ -107,6 +110,7 @@ export class SelectionController {
     // 直前のマスへ戻った場合のみ、最後の1マスを取り消す。
     if (this.selection.length >= 2 && index === this.selection[this.selection.length - 2]) {
       this.selection.pop();
+      this.gestureMoved = true;
       this.handlers.onCellRemoved(this.selection.slice());
       return;
     }
@@ -118,6 +122,7 @@ export class SelectionController {
 
     // 2マス目へ広がった時点でなぞり動作が確定するため、長押し判定は打ち切る。
     this._clearLongPressTimer();
+    this.gestureMoved = true;
     this.selection.push(index);
     this.handlers.onCellAdded(index, this.selection.slice());
   }
@@ -127,9 +132,11 @@ export class SelectionController {
     this._clearLongPressTimer();
     const indices = this.selection.slice();
     const wasLongPress = this.longPressFired;
+    const wasMoved = this.gestureMoved;
     this.pointerId = null;
     this.selection = [];
     this.longPressFired = false;
+    this.gestureMoved = false;
 
     if (cancelled) {
       this.lastTapIndex = null;
@@ -139,6 +146,13 @@ export class SelectionController {
 
     if (wasLongPress) {
       // 長押しの効果はonLongPress側で既に処理済み。ここでは見た目のハイライトだけ解除する。
+      this.handlers.onSelectionCancel(indices);
+      return;
+    }
+
+    // なぞって戻り、結果的に1マスだけ残った場合は、単発タップではなく「なぞりの取り消し」とみなす。
+    if (indices.length === 1 && wasMoved) {
+      this.lastTapIndex = null;
       this.handlers.onSelectionCancel(indices);
       return;
     }
